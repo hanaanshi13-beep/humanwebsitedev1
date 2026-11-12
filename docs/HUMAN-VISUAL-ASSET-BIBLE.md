@@ -1,5 +1,7 @@
 # HUMAN — Visual Asset Bible (V5)
 
+> **Superseded by `HUMAN-VISUAL-ASSET-BIBLE-V6-LUXURY-EDITION.md`.** Kept for its technical notes only; do not generate from the prompts below.
+
 **Date:** 12 November 2026. **Status:** every asset below is *outstanding* unless marked existing. Nothing here has been generated.
 
 This session cannot control Chrome, so it cannot run Gemini or Flow. The founder generates each image and uploads it here; the site picks it up by filename. The layouts are already built and photo-ready: each empty slot currently shows abstract artwork, so nothing looks broken while images are pending.
