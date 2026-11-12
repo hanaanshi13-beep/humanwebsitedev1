@@ -7,3 +7,5 @@ input/
 exports/
 *.log
 .DS_Store
+*.zip
+*.bundle
