@@ -1,6 +1,6 @@
 # HUMAN — Visual Asset Bible (V5)
 
-> **Superseded by `HUMAN-VISUAL-ASSET-BIBLE-V7-FINAL.md`.** Kept for its technical notes only; do not generate from the prompts below.
+> **Superseded by `HUMAN-VISUAL-ASSET-BIBLE-V8.md`.** Kept for its technical notes only; do not generate from the prompts below.
 
 **Date:** 12 November 2026. **Status:** every asset below is *outstanding* unless marked existing. Nothing here has been generated.
 
