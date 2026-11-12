@@ -1,5 +1,7 @@
 # HUMAN — Visual Asset Bible V6, Luxury Edition
 
+> **Superseded by `HUMAN-VISUAL-ASSET-BIBLE-V7-FINAL.md`.** Kept for reference; do not generate from the prompts below.
+
 **Date:** 12 November 2026. **Supersedes:** `HUMAN-VISUAL-ASSET-BIBLE.md` (V5), which is kept for its technical notes only.
 **Status:** nothing in this document has been generated. No image was created and no credit was spent in writing it. The website code is unchanged by this document.
 
