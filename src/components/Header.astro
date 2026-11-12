@@ -6,6 +6,7 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
 
 <header class="site-header" data-header>
   <div class="wrap">
+    <div class="site-header__shell">
     <a class="wordmark" href="/" aria-label="HUMAN — home">HUMAN</a>
     <nav class="nav" aria-label="Primary">
       {
@@ -17,14 +18,20 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       }
       <a class="btn btn--sm" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
     </nav>
-    <button class="menu-btn" type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-menu">Menu</button>
+    <a class="btn btn--sm site-header__cta" href="/waitlist" aria-label="Join the waitlist">Join<span class="long">&nbsp;the waitlist</span> <span class="arr" aria-hidden="true">→</span></a>
+    <button class="menu-btn" type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-menu" aria-expanded="false">
+      <span class="menu-btn__ico" aria-hidden="true"></span><span class="vh">Menu</span>
+    </button>
+    </div>
   </div>
 </header>
 
 <dialog class="mobile-menu" id="mobile-menu" aria-label="Menu" data-menu>
   <div class="mobile-menu__top">
     <a class="wordmark" href="/" aria-label="HUMAN — home">HUMAN</a>
-    <button class="menu-btn" type="button" data-menu-close>Close</button>
+    <button class="menu-btn menu-btn--close" type="button" data-menu-close>
+      <span class="menu-btn__ico" aria-hidden="true"></span><span class="vh">Close menu</span>
+    </button>
   </div>
   <nav aria-label="Mobile">
     {
@@ -50,12 +57,18 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
   const openBtn = document.querySelector<HTMLButtonElement>('[data-menu-open]');
   openBtn?.addEventListener('click', () => {
     menu?.showModal();
+    openBtn.setAttribute('aria-expanded', 'true');
     document.documentElement.style.overflow = 'hidden';
   });
   menu?.querySelector('[data-menu-close]')?.addEventListener('click', () => menu.close());
   menu?.addEventListener('close', () => {
     document.documentElement.style.overflow = '';
+    openBtn?.setAttribute('aria-expanded', 'false');
     openBtn?.focus();
+  });
+  // A tap on the dimmed scrim (outside the sheet) closes the menu.
+  menu?.addEventListener('click', (e) => {
+    if (e.target === menu) menu.close();
   });
   // Close the menu if the viewport grows to desktop while it is open.
   window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => {

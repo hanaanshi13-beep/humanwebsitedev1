@@ -146,12 +146,14 @@ await test('SIG-3', 'Connected Thread: all six stages readable; selecting a stag
   const p = await ctx();
   await go(p, '/#scene-06');
   assert((await p.locator('.s6__stage').count()) === 6, 'six stages');
-  for (const d of await p.locator('.s6__detail').all()) assert(await d.isVisible(), 'a stage description is hidden');
+  // V4: on desktop the stages are a rail with one description pane; every stage name stays visible.
+  for (const d of await p.locator('.s6__name').all()) assert(await d.isVisible(), 'a stage name is hidden');
+  assert((await p.locator('.s6__detail:visible').count()) === 1, 'exactly one description pane should show');
   await p.locator('.s6__stage').nth(4).locator('button').click();
-  assert((await p.locator('.s6__stage.is-active .s6__name').innerText()).trim() === 'RETEST', 'RETEST not active');
+  assert((await p.locator('.s6__stage.is-active .s6__name').innerText()).trim() === 'Retest', 'Retest not active');
   await p.mouse.wheel(0, 120);
   await p.waitForTimeout(200);
-  assert((await p.locator('.s6__stage.is-active .s6__name').innerText()).trim() === 'RETEST', 'scroll overrode selection');
+  assert((await p.locator('.s6__stage.is-active .s6__name').innerText()).trim() === 'Retest', 'scroll overrode selection');
   await p.context().close();
 });
 

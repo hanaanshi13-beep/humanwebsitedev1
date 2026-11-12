@@ -337,6 +337,10 @@ const live = WAITLIST_ENDPOINT !== '';
   .wl__panel {
     background: var(--panel);
     border: 1px solid var(--rule);
+    border-radius: var(--radius-panel);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 24px 60px rgba(20, 20, 16, 0.1);
     padding: clamp(22px, 3vw, 44px);
   }
   .wl__panel--bare {
@@ -387,10 +391,15 @@ const live = WAITLIST_ENDPOINT !== '';
     background: var(--field);
     color: var(--text);
     border: 1px solid var(--muted);
-    border-radius: 2px;
+    border-radius: 14px;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.07),
+      0 1px 0 rgba(255, 255, 255, 0.5);
     font: inherit;
     font-size: 1rem; /* 16px: avoids iOS zoom-on-focus */
-    transition: border-color 150ms var(--ease-out);
+    transition:
+      border-color 160ms var(--ease-human),
+      box-shadow 160ms var(--ease-human);
   }
   .field select option {
     color: #14191c;
@@ -398,8 +407,9 @@ const live = WAITLIST_ENDPOINT !== '';
   }
   .field input:focus-visible,
   .field select:focus-visible {
-    outline: 2px solid var(--focus-c);
-    outline-offset: 1px;
+    outline: 3px solid var(--focus-c);
+    outline-offset: 2px;
+    border-radius: 14px;
     border-color: var(--text);
   }
   .field [aria-invalid='true'] {
@@ -535,19 +545,26 @@ const live = WAITLIST_ENDPOINT !== '';
     gap: 12px;
     margin-left: auto;
   }
-  .wl[data-chapter='you'] .wl__bar .btn:not(.btn--ghost),
-  .wl[data-chapter='consent'] .wl__bar .btn:not(.btn--ghost) {
-    background: var(--ink);
-    color: var(--paper);
-  }
-  .wl[data-chapter='you'] .btn--ghost:hover,
-  .wl[data-chapter='consent'] .btn--ghost:hover {
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
-  }
   .wl__bar .btn--sm {
     min-height: 52px;
+  }
+  /* light chapters: the Back control becomes clear glass with ink text */
+  .wl[data-chapter='you'] .btn--ghost,
+  .wl[data-chapter='consent'] .btn--ghost {
+    --btn-fg: var(--ink);
+    --btn-body: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(236, 232, 223, 0.74) 100%);
+    --btn-pool: rgba(255, 255, 255, 0.6);
+    --btn-edge: rgba(20, 25, 28, 0.3);
+    --btn-top: #fff;
+    --btn-caustic: rgba(20, 25, 28, 0.08);
+    --btn-drop: 0 8px 20px rgba(25, 26, 28, 0.12);
+    text-shadow: none;
+  }
+  .wl[data-chapter='you'] .wl__bar .btn:not(.btn--ghost),
+  .wl[data-chapter='consent'] .wl__bar .btn:not(.btn--ghost) {
+    --btn-body: linear-gradient(180deg, #4a3a1d 0%, #25201a 46%, #131414 100%);
+    --btn-edge: rgba(20, 25, 28, 0.85);
+    --btn-drop: 0 12px 26px rgba(40, 32, 16, 0.26), 0 1px 2px rgba(20, 25, 28, 0.4);
   }
   @media (max-width: 899px) {
     .wl__stage {

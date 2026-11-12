@@ -200,6 +200,7 @@ export function createWaitlist(root: HTMLElement) {
 
     submitting = true;
     nextBtn.disabled = true;
+    nextBtn.setAttribute('aria-busy', 'true');
     nextLabel.textContent = 'Submitting…';
     showNotice('Submitting…', 'Please wait a moment.');
     idempotencyKey ||= crypto.randomUUID();
@@ -238,6 +239,7 @@ export function createWaitlist(root: HTMLElement) {
     } finally {
       clearTimeout(timer);
       submitting = false;
+      nextBtn.removeAttribute('aria-busy');
       if (!accepted) {
         nextBtn.disabled = false;
         nextLabel.textContent = LABELS.consent;

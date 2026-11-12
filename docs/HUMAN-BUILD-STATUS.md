@@ -50,3 +50,26 @@ Only one pin is used on the whole site (Scene 03). Full per-cue status: `docs/HU
 
 ## Resume
 `npm install && npm run dev`, then continue with whichever blocked item is unblocked first.
+
+## V4 improvement pass 1 (2026-11-12)
+
+Directive: `HUMAN-FIRST-BUILD-IMPROVEMENT-MASTER-V4` plus the founder's "ultra-premium liquid glass button" brief.
+
+**Implemented**
+- Central optical-glass button system in `src/styles/global.css`: primary (smoked amber glass, ivory text), secondary (clear charcoal / clear neutral on ivory), utility icon buttons. Layers: tinted body, pointer-following light pool, upper refractive edge, inner border, lower caustic, specular band, one-pass hover reflection. Hover lifts 2px, press settles 1px. States: default, hover, focus-visible, pressed, disabled, loading (`aria-busy`). Garnet / teal light on the Her / Him pages. Fallbacks for no `backdrop-filter`, reduced transparency, reduced motion, forced colours.
+- Arrows are now one SVG glyph (CSS mask) instead of text characters.
+- Header is a floating glass shell that fades in on scroll; nav hover pills; current page marked. Mobile header now carries a "Join" button. Mobile menu is a bounded glass sheet over a dim scrim; tap outside or Escape closes; `aria-expanded` kept in sync.
+- Status pill, FAQ toggles, waitlist panel, fields and Back button restyled to the same system.
+- Scene 03 Reveal Lens: glass rim, filament artwork with inner parallax, pointer steering, and a labelled slider ("Explore beneath the surface") for keyboard, touch and reduced motion. Pin shortened from 190vh to 170vh.
+- Scene 06 Connected Thread: on desktop the six stages are one glass rail with a single description pane (no layout jump); arrow keys, Home and End work. Mobile keeps the vertical list, tightened.
+- Section padding reduced. Desktop homepage height at 1440px: about 14,240px before, 12,760px after.
+- Fixed: finished reveals no longer clip button shadows.
+
+**Not done / blocked**
+- No new photography. This cloud session has no Chrome control, so Gemini and Flow could not be operated. Prompts for manual generation: `docs/HUMAN-IMAGE-BRIEF-V4.md`.
+- Because of that, Scenes 01, 02, 04, 07 and the Her / Him portals are unchanged apart from the shared controls.
+- Scene 05 report-to-clarity rework, Scene 08, final CTA tray: not started.
+- App section: still the honest "coming soon" state; no prototype folder received.
+- Not measured: Lighthouse / Core Web Vitals, Safari, Firefox, real devices, screen readers.
+
+**Evidence**: before = `docs/reviews-v3-baseline/`; after = `docs/reviews/` and close-ups in `docs/reviews/v4-controls/`. e2e: 43/43 (Chromium).

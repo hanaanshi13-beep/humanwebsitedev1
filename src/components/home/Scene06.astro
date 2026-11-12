@@ -76,7 +76,10 @@ const status = [
   if (root) {
     const stages = Array.from(root.querySelectorAll<HTMLElement>('.s6__stage'));
     let locked = false;
+    let current = -1;
     const setActive = (i: number) => {
+      if (i === current) return;
+      current = i;
       stages.forEach((s, n) => {
         s.classList.toggle('is-active', n === i);
         s.classList.toggle('is-done', n < i);
@@ -96,6 +99,21 @@ const status = [
         setActive(i);
       }),
     );
+    setActive(0);
+    // Arrow keys move along the rail (the buttons stay ordinary tab stops too).
+    root.addEventListener('keydown', (e) => {
+      const i = stages.findIndex((st) => st.contains(document.activeElement));
+      if (i < 0) return;
+      const horizontal = getComputedStyle(stages[0]).display === 'contents';
+      const fwd = horizontal ? 'ArrowRight' : 'ArrowDown';
+      const back = horizontal ? 'ArrowLeft' : 'ArrowUp';
+      const to = e.key === fwd ? i + 1 : e.key === back ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? stages.length - 1 : -1;
+      if (to < 0 || to >= stages.length || to === i) return;
+      e.preventDefault();
+      const b = stages[to].querySelector('button')!;
+      b.focus();
+      b.click();
+    });
     // Release the lock once the journey has left the viewport, so a later visit scrubs again.
     new IntersectionObserver(([en]) => {
       if (!en.isIntersecting) {
@@ -266,6 +284,169 @@ const status = [
     }
     .s6__intro {
       position: static;
+    }
+    .s6__name {
+      font-size: min(8.5vw, 2.4rem);
+    }
+    .s6__stage {
+      padding-bottom: 22px;
+    }
+  }
+
+  /* Desktop with JS: the six stages become one compact glass rail with a single description pane.
+     All six panes share one grid cell, so switching never changes the layout height. */
+  @media (min-width: 1024px) {
+    :global(.js) .s6__grid {
+      row-gap: 44px;
+    }
+    :global(.js) .s6__intro {
+      grid-column: 1 / -1;
+      position: static;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      column-gap: clamp(20px, 3vw, 48px);
+      align-items: end;
+    }
+    :global(.js) .s6__intro > .eyebrow,
+    :global(.js) .s6__intro > h2 {
+      grid-column: 1 / span 6;
+    }
+    :global(.js) .s6__intro > h2 {
+      margin-bottom: 0;
+    }
+    :global(.js) .s6__intro > .lede {
+      grid-column: 8 / span 5;
+      grid-row: 2;
+    }
+    :global(.js) .s6__intro > .s6__planned {
+      grid-column: 8 / span 5;
+      margin-top: 18px;
+    }
+    :global(.js) .s6__journey {
+      grid-column: 1 / -1;
+    }
+    :global(.js) .s6__stages {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: 64px auto;
+      column-gap: 4px;
+      padding-inline: 6px;
+    }
+    :global(.js) .s6__stages::before {
+      content: '';
+      grid-area: 1 / 1 / 2 / -1;
+      margin-inline: -6px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-dark-edge);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: var(--glass-inner-line), 0 14px 40px rgba(0, 0, 0, 0.35);
+    }
+    :global(.js) .s6__stage {
+      display: contents;
+    }
+    :global(.js) .s6__btn {
+      grid-row: 1;
+      position: relative;
+      align-self: center;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      transition:
+        background var(--motion-control) var(--ease-human),
+        border-color var(--motion-control) var(--ease-human),
+        box-shadow var(--motion-control) var(--ease-human);
+    }
+    :global(.js) .s6__stage:nth-child(1) .s6__btn { grid-column: 1; }
+    :global(.js) .s6__stage:nth-child(2) .s6__btn { grid-column: 2; }
+    :global(.js) .s6__stage:nth-child(3) .s6__btn { grid-column: 3; }
+    :global(.js) .s6__stage:nth-child(4) .s6__btn { grid-column: 4; }
+    :global(.js) .s6__stage:nth-child(5) .s6__btn { grid-column: 5; }
+    :global(.js) .s6__stage:nth-child(6) .s6__btn { grid-column: 6; }
+    :global(.js) .s6__btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+    :global(.js) .s6__btn:focus-visible {
+      border-radius: 999px;
+    }
+    :global(.js) .s6__node {
+      display: none;
+    }
+    :global(.js) .s6__name {
+      font-size: clamp(0.875rem, 1.15vw, 1.0625rem);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-transform: none;
+      line-height: 1.1;
+    }
+    :global(.js) .s6__stage.is-active .s6__btn {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(232, 165, 35, 0.7);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 0 4px rgba(232, 165, 35, 0.08);
+    }
+    :global(.js) .s6__stage.is-active .s6__n {
+      color: var(--amber);
+    }
+    :global(.js) .s6__text {
+      grid-area: 2 / 1 / 3 / -1;
+      max-width: none;
+      margin: 52px -6px 0;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      column-gap: clamp(20px, 3vw, 48px);
+      align-items: start;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity var(--motion-control) var(--ease-human),
+        transform 420ms var(--ease-human),
+        visibility 0s linear var(--motion-control);
+    }
+    :global(.js) .s6__stage.is-active .s6__text {
+      visibility: visible;
+      opacity: 1;
+      transform: none;
+      transition-delay: 0s;
+    }
+    :global(.js) .s6__line {
+      grid-column: 1 / span 6;
+      font-size: clamp(1.9rem, 3vw, 2.9rem);
+      line-height: 1.08;
+    }
+    :global(.js) .s6__detail {
+      grid-column: 8 / span 5;
+      margin-top: 6px;
+      font-size: 1.0625rem;
+      color: var(--text-on-dark);
+    }
+    /* the thread runs under the rail and fills left to right */
+    :global(.js) .s6__track {
+      left: 24px;
+      right: 24px;
+      top: 82px;
+      bottom: auto;
+      width: auto;
+      height: 1px;
+    }
+    :global(.js) .s6__fill {
+      transform-origin: left;
+      transform: scaleX(var(--p));
+    }
+    :global(.js) .s6__journey.is-locked .s6__fill {
+      transform: scaleX(1);
+    }
+    :global(.js) .s6__status {
+      margin-top: clamp(56px, 6vw, 96px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .s6__text,
+    .s6__btn {
+      transition: none !important;
     }
   }
   @media (max-width: 599px) {
