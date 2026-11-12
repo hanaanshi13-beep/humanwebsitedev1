@@ -18,3 +18,20 @@
 - No people photography exists for Scenes 01, 02, 07, the portals, `/women`, `/men` or the waitlist chapters. Nothing was generated and **no credits were spent**.
 - No video. `FLOW-HERO-01`, `FLOW-REVEAL-01`, `FLOW-PORTAL-01`: not started.
 - All images are decorative (`alt=""`); every word on the site is real HTML.
+
+## Campaign photographs received 2026-11-12 (founder-generated, via chat upload)
+
+All ten are AI-generated images of fictional models, supplied by the founders. Generation tool and image model: **not yet stated by the founders**. Files arrived as chat uploads, so they may be compressed copies; originals requested. Status of all ten: INTEGRATED, awaiting founder sign-off. Flow video: dropped by founder decision.
+
+| File (`src/assets/human/`) | Pixels | Used in | Notes |
+|---|---|---|---|
+| `portal-her.jpg` | 896×1200 | Homepage Her portal; /women hero | Matches brief. Small for its 636×738 slot on high-density screens |
+| `portal-him.jpg` | 1493×2000 | Homepage Him portal; /men hero | Framed closer than the Her portrait; `object-position: 42% 12%` |
+| `care-walk.jpg` | 1264×848 | Scene 01, top frame | Matches brief |
+| `care-meal.jpg` | 928×1152 | Scene 01, lower-left | Departs from brief (woman at a table, not a top-down still life) |
+| `care-rest.jpg` | 928×1152 | Scene 01, lower-right | Matches brief |
+| `progress-stride.jpg` | 928×1152 | Scene 02 | Departs from brief: sports bra and leggings seen from behind; flagged to founders |
+| `feeling-fine.jpg` | 1264×848 | Scene 04 | Matches brief |
+| `journey-professional.jpg` | 928×1152 | Scene 07, small frame | Matches brief |
+| `journey-parent.jpg` | 1264×848 | Scene 07, upper-right | Matches brief |
+| `journey-elder.jpg` | 928×1152 | Scene 07, tall frame | Subject reads about 50–55, not 66–70; moved to the largest Scene 07 frame |

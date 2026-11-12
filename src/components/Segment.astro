@@ -72,7 +72,7 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
   <section class="page-hero seg__hero" aria-labelledby="seg-title" data-reveal-eager>
     <Material tone={c.tone} shape={her ? 'a' : 'c'} />
     <Material tone={c.tone} shape={her ? 'd' : 'b'} opacity={0.5} />
-    {hasPhoto && <Slot name={photo} ratio="auto" tone={c.tone} position={her ? '62% 26%' : '38% 26%'} sizes="(max-width: 899px) 100vw, 55vw" eager class="seg__hero-photo" />}
+    {hasPhoto && <Slot name={photo} ratio="auto" tone={c.tone} position={her ? '62% 26%' : '42% 12%'} sizes="(max-width: 899px) 100vw, 55vw" eager class="seg__hero-photo" />}
     <div class="wrap seg__hero-inner">
       <p class="eyebrow" data-reveal><span>{c.eyebrow}</span></p>
       <h1 class="display" id="seg-title" data-reveal="mask" style="--d:80ms">
