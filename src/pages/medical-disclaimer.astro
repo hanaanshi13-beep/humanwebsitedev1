@@ -1,0 +1,16 @@
+---
+import Legal from '../components/Legal.astro';
+const sections = [
+  { h: 'Information, not medical advice', items: ['This website describes a planned preventive-health concept. It is not medical advice, diagnosis or treatment.'] },
+  { h: 'Professional guidance', items: ['Decisions about your health should be made with a licensed professional who knows your circumstances.'] },
+  { h: 'Urgent situations', items: ['Wording on what to do in an emergency, to be reviewed by counsel and qualified clinicians.'] },
+  { h: 'Examples and illustrations', items: ['Health markers named on this site are examples of categories only. Testing needs vary by person and clinical context.', 'Diagrams and any prototype previews are illustrative and do not represent a real person or assessment.'] },
+  { h: 'No outcomes promised', items: ['HUMAN does not promise any health outcome.'] },
+];
+---
+
+<Legal
+  title="Medical disclaimer"
+  intro="Where this website stops and medical care begins."
+  sections={sections}
+/>

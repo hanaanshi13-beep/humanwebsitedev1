@@ -1,0 +1,189 @@
+---
+import Base from '../layouts/Base.astro';
+import Material from '../components/Material.astro';
+import { STAGES } from '../data/site';
+const beliefs = [
+  { t: 'Understanding', d: 'Information is only useful when you can make sense of it. Clarity comes before action.' },
+  { t: 'Continuity', d: 'Health is a line, not a dot. What changes over time often matters more than a single reading.' },
+  { t: 'Individual context', d: 'Age, lifestyle, history and priorities shape what deserves attention. There is no universal checklist.' },
+];
+---
+
+<Base
+  title="About HUMAN — health is more than a moment in time"
+  description="What HUMAN believes, what it intends to build, and where things stand today. HUMAN is in development."
+>
+  <section class="page-hero on-dark" aria-labelledby="about-title" data-reveal-eager>
+    <Material tone="amber" shape="d" opacity={0.5} />
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><span>About</span></p>
+      <h1 class="display" id="about-title" data-reveal="mask" style="--d:80ms">
+        <span class="mask"><span>Health is more than</span></span>
+        <span class="mask" style="--i:1"><span><em>a moment in time.</em></span></span>
+      </h1>
+      <p class="lede" data-reveal style="--d:300ms">
+        HUMAN is a preventive-health membership being built in India. This page says what we believe, what we intend to
+        build, and — plainly — where things stand.
+      </p>
+    </div>
+  </section>
+
+  <section class="section on-light" aria-labelledby="believe-title">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><span class="num">01</span><span>What we believe</span></p>
+      <h2 class="vh" id="believe-title">What we believe</h2>
+      <ul class="about__beliefs">
+        {
+          beliefs.map((b, i) => (
+            <li data-reveal style={`--d:${i * 100}ms`}>
+              <h3>{b.t}</h3>
+              <p>{b.d}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section on-dark" aria-labelledby="building-title">
+    <div class="wrap split">
+      <div class="a">
+        <p class="eyebrow" data-reveal><span class="num">02</span><span>What we’re building</span></p>
+        <h2 class="display" id="building-title" data-reveal="mask">
+          <span class="mask"><span>Six stages,</span></span>
+          <span class="mask" style="--i:1"><span><em>connected.</em></span></span>
+        </h2>
+        <p class="prose" data-reveal style="margin-top:26px">
+          The aspiration is one membership that joins up what usually happens in pieces. It is a plan, not a product you
+          can use today.
+        </p>
+      </div>
+      <ol class="b about__stages" data-reveal>
+        {
+          STAGES.map((s, i) => (
+            <li>
+              <span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <strong>{s.name}</strong>
+              <em>{s.line}</em>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section on-light on-ivory" aria-labelledby="now-title">
+    <div class="wrap split">
+      <div class="a">
+        <p class="eyebrow" data-reveal><span class="num">03</span><span>What’s happening now</span></p>
+        <h2 class="display" id="now-title" data-reveal="mask">
+          <span class="mask"><span>In development.</span></span>
+          <span class="mask" style="--i:1"><span><em>Honestly.</em></span></span>
+        </h2>
+      </div>
+      <div class="b prose" data-reveal style="--d:120ms">
+        <p><strong>HUMAN is not yet an operating service.</strong> No tests, consultations or memberships are available.</p>
+        <p>A first pilot is planned for Delhi NCR. Plans can change, and we’ll say so when they do.</p>
+        <p>The waitlist is open to interest from across India. Joining registers interest only.</p>
+        <p>Pricing, what’s included, and the clinical details are still being worked out and reviewed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section on-light" aria-labelledby="people-title">
+    <div class="wrap about__people">
+      <p class="eyebrow" data-reveal><span class="num">04</span><span>The people</span></p>
+      <h2 class="about__pending" id="people-title" data-reveal>
+        Our story is still being written — more about the people building HUMAN will be shared soon.
+      </h2>
+    </div>
+  </section>
+
+  <section class="section on-dark cta-band" aria-labelledby="aboutcta-title">
+    <Material tone="amber" shape="b" opacity={0.6} />
+    <div class="wrap">
+      <h2 class="display" id="aboutcta-title" data-reveal="mask">
+        <span class="mask"><span>Be part of what</span></span>
+        <span class="mask" style="--i:1"><span><em>we’re building.</em></span></span>
+      </h2>
+      <p class="lede" data-reveal>Register your interest and, if you opt in, hear about HUMAN as it develops.</p>
+      <div class="actions">
+        <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
+        <a class="link" href="/faq">Read the FAQ <span class="arr" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about__beliefs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(20px, 3vw, 48px);
+    margin-top: clamp(32px, 4vw, 56px);
+  }
+  .about__beliefs li {
+    border-top: 1px solid var(--text);
+    padding-top: 18px;
+  }
+  .about__beliefs h3 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2rem, 3.6vw, 3.2rem);
+    line-height: 1.05;
+    margin-bottom: 14px;
+  }
+  .about__beliefs p {
+    color: var(--muted);
+    max-width: 24em;
+  }
+  .about__stages li {
+    display: grid;
+    grid-template-columns: 40px minmax(120px, 1fr) 2fr;
+    gap: 12px;
+    align-items: baseline;
+    padding: 16px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .about__stages li:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  .about__stages span {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .about__stages strong {
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    font-size: 1.25rem;
+  }
+  .about__stages em {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    color: var(--muted);
+  }
+  .about__pending {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.8rem, 3.8vw, 3.4rem);
+    line-height: 1.12;
+    max-width: 20em;
+    margin-top: 26px;
+    text-wrap: balance;
+  }
+  @media (max-width: 767px) {
+    .about__beliefs {
+      grid-template-columns: 1fr;
+    }
+    .about__stages li {
+      grid-template-columns: 34px 1fr;
+    }
+    .about__stages em {
+      grid-column: 2;
+    }
+  }
+</style>

@@ -46,6 +46,9 @@
 *::after {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 html {
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: calc(var(--header-h) + 12px);
@@ -191,6 +194,7 @@ button {
   letter-spacing: -0.025em;
   text-transform: uppercase;
   text-wrap: balance;
+  overflow-wrap: break-word;
 }
 .display em,
 .serif {

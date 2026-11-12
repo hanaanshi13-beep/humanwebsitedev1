@@ -1,0 +1,587 @@
+---
+// /waitlist — five chapters (Welcome, You, Location, Stay connected, Success); three data steps (G00–G08).
+// PREVIEW MODE: with no approved endpoint configured, no network request is made and Success can never be shown.
+import Base from '../layouts/Base.astro';
+import Material from '../components/Material.astro';
+import { STATES_AND_UTS, WAITLIST_ENDPOINT } from '../data/site';
+const live = WAITLIST_ENDPOINT !== '';
+---
+
+<Base
+  title="Join the waitlist — HUMAN"
+  description="Register your interest in HUMAN, a preventive-health membership being built in India. Preview: registrations are not being accepted yet."
+  chrome={false}
+  bodyClass="wl-body"
+>
+  <div class="wl" data-wl data-endpoint={WAITLIST_ENDPOINT} data-chapter="welcome">
+    <!-- chapter atmospheres: one shared set of layers, cross-faded -->
+    <div class="wl__art" aria-hidden="true">
+      <div data-art="welcome"><Material tone="amber" shape="a" /><Material tone="amber" shape="d" opacity={0.5} /></div>
+      <div data-art="you"><Material tone="ivory" shape="b" opacity={0.9} /></div>
+      <div data-art="location">
+        <svg class="material wl__contours" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+          <g fill="none" stroke="#e8a523" stroke-width="1" opacity="0.5">
+            <path d="M620 180c120 20 210 110 220 230s-60 250-190 290-270-10-330-130-20-270 90-340 130-62 210-50z"></path>
+            <path d="M615 240c95 15 165 85 172 180s-48 196-150 228-212-8-258-102-16-212 70-266 102-50 166-40z" opacity="0.8"></path>
+            <path d="M610 300c70 11 121 62 126 132s-35 144-110 167-156-6-190-75-12-156 52-196 75-36 122-28z" opacity="0.6"></path>
+            <path d="M604 362c44 7 76 39 79 83s-22 90-69 105-98-4-119-47-7-98 33-123 47-23 76-18z" opacity="0.45"></path>
+          </g>
+        </svg>
+      </div>
+      <div data-art="consent"></div>
+      <div data-art="success"><Material tone="amber" shape="c" opacity={0.7} /></div>
+    </div>
+
+    <header class="wl__top">
+      <a class="wordmark" href="/" aria-label="HUMAN — home">HUMAN</a>
+      <p class="wl__mode">{live ? 'Waitlist' : 'Preview — registrations are not being accepted yet'}</p>
+      <a class="link wl__close" href="/">Close <span class="vh">and return to home</span><span aria-hidden="true">×</span></a>
+    </header>
+
+    <div class="wl__stage">
+      <!-- 00 Welcome -->
+      <section class="wl__ch" data-ch="welcome" aria-labelledby="wl-h-welcome">
+        <div class="wl__lead">
+          <p class="eyebrow"><span>The HUMAN waitlist</span></p>
+          <h1 class="display" id="wl-h-welcome" tabindex="-1">Your health. <em>Beyond what you can see.</em></h1>
+        </div>
+        <div class="wl__panel wl__panel--bare">
+          <p class="lede">
+            We’re building a more considered way to understand and manage your health — from relevant testing and
+            clearer information to meaningful follow-through.
+          </p>
+          <ul class="wl__facts">
+            <li>For people across India. First pilot planned in Delhi NCR.</li>
+            <li>A few details. No medical information required.</li>
+            <li>Joining registers interest only. HUMAN is still in development.</li>
+          </ul>
+          <noscript>
+            <p class="wl__notice">
+              The registration preview needs JavaScript. Registrations are not being accepted yet, so you are not
+              missing anything — <a class="text-link" href="/">return to the home page</a>.
+            </p>
+          </noscript>
+        </div>
+      </section>
+
+      <!-- 01 You -->
+      <form class="wl__ch" data-ch="you" id="wl-f-you" novalidate hidden aria-labelledby="wl-h-you">
+        <div class="wl__lead">
+          <p class="eyebrow"><span class="num">01</span><span>A little about you</span></p>
+          <h1 class="display" id="wl-h-you" tabindex="-1">Let’s start <em>with you.</em></h1>
+          <p class="prose">We’d love to know who’s joining us on this journey.</p>
+        </div>
+        <div class="wl__panel">
+          <div class="field">
+            <label for="wl-name">Full name</label>
+            <input id="wl-name" name="fullName" type="text" autocomplete="name" maxlength="120" required aria-describedby="wl-name-err" />
+            <p class="err" id="wl-name-err"></p>
+          </div>
+          <div class="field">
+            <label for="wl-email">Email address</label>
+            <input id="wl-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="254" required aria-describedby="wl-email-err" />
+            <p class="err" id="wl-email-err"></p>
+          </div>
+        </div>
+      </form>
+
+      <!-- 02 Location -->
+      <form class="wl__ch" data-ch="location" id="wl-f-location" novalidate hidden aria-labelledby="wl-h-location">
+        <div class="wl__lead">
+          <p class="eyebrow"><span class="num">02</span><span>Where you’re joining from</span></p>
+          <h1 class="display" id="wl-h-location" tabindex="-1">Where are you <em>joining us from?</em></h1>
+          <p class="prose">
+            HUMAN is being built for people across India. We’re starting with a pilot planned in Delhi NCR.
+          </p>
+        </div>
+        <div class="wl__panel">
+          <div class="field">
+            <label for="wl-city">City</label>
+            <input id="wl-city" name="city" type="text" autocomplete="address-level2" maxlength="80" required aria-describedby="wl-city-err" />
+            <p class="err" id="wl-city-err"></p>
+          </div>
+          <div class="field">
+            <label for="wl-state">State or union territory</label>
+            <select id="wl-state" name="stateOrUT" autocomplete="address-level1" required aria-describedby="wl-state-err">
+              <option value="">Select…</option>
+              {STATES_AND_UTS.slice().sort().map((s) => <option value={s}>{s}</option>)}
+            </select>
+            <p class="err" id="wl-state-err"></p>
+          </div>
+          <div class="field">
+            <label for="wl-phone">WhatsApp number <span class="opt">Optional</span></label>
+            <input id="wl-phone" name="whatsappPhone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" aria-describedby="wl-phone-help wl-phone-err" />
+            <p class="help" id="wl-phone-help">
+              Leaving this blank doesn’t affect your place on the waitlist. A number is not consent to be messaged.
+            </p>
+            <p class="err" id="wl-phone-err"></p>
+          </div>
+        </div>
+      </form>
+
+      <!-- 03 Stay connected -->
+      <form class="wl__ch" data-ch="consent" id="wl-f-consent" novalidate hidden aria-labelledby="wl-h-consent">
+        <div class="wl__lead">
+          <p class="eyebrow"><span class="num">03</span><span>One last thing</span></p>
+          <h1 class="display" id="wl-h-consent" tabindex="-1">Stay in the loop. <em>On your terms.</em></h1>
+          <dl class="wl__summary">
+            <div>
+              <dt>You</dt>
+              <dd><span data-sum="fullName"></span><br /><span data-sum="email"></span></dd>
+              <dd class="wl__edit"><button type="button" class="text-link" data-edit="you">Edit<span class="vh"> name and email</span></button></dd>
+            </div>
+            <div>
+              <dt>Location</dt>
+              <dd><span data-sum="place"></span><br /><span data-sum="phone"></span></dd>
+              <dd class="wl__edit"><button type="button" class="text-link" data-edit="location">Edit<span class="vh"> location and WhatsApp number</span></button></dd>
+            </div>
+          </dl>
+        </div>
+        <div class="wl__panel">
+          <fieldset class="wl__consents">
+            <legend class="vh">Consent</legend>
+            <div class="check">
+              <input id="wl-c1" name="operationalConsent" type="checkbox" required aria-describedby="wl-c1-err" />
+              <label for="wl-c1">
+                I agree that HUMAN can collect and use the information I’ve provided to administer my waitlist
+                registration, in accordance with its
+                <a class="text-link" href="/privacy" target="_blank" rel="noopener">Privacy Notice<span class="vh"> (opens in a new tab)</span></a>.
+                <span class="req">Required</span>
+              </label>
+            </div>
+            <p class="err" id="wl-c1-err"></p>
+            <div class="check">
+              <input id="wl-c2" name="marketingConsent" type="checkbox" />
+              <label for="wl-c2">
+                I’d like to receive updates from HUMAN about its development, launch and membership plans. I understand
+                that I can opt out at any time.
+                <span class="opt">Optional</span>
+              </label>
+            </div>
+          </fieldset>
+          <p class="note">Consent wording is a working draft and is awaiting legal review.</p>
+          <div class="wl__notice" data-notice role="status" aria-live="polite" hidden></div>
+        </div>
+      </form>
+
+      <!-- 04 Success — rendered hidden; shown only after an approved backend returns an accepted result -->
+      <section class="wl__ch" data-ch="success" hidden aria-labelledby="wl-h-success">
+        <div class="wl__lead">
+          <span class="wl__halo" aria-hidden="true"></span>
+          <h1 class="display" id="wl-h-success" tabindex="-1">You’re on the list. <em>Welcome to HUMAN.</em></h1>
+        </div>
+        <div class="wl__panel wl__panel--bare">
+          <p class="lede">
+            Thank you for being interested in what we’re building. Something more thoughtful about your health is taking
+            shape.
+          </p>
+          <p class="prose"><strong>Your registration has been received.</strong></p>
+          <p><a class="btn" href="/">Back to home <span class="arr" aria-hidden="true">→</span></a></p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="wl__bar">
+      <p class="wl__progress" data-progress-label aria-live="polite"></p>
+      <div class="wl__actions">
+        <button type="button" class="btn btn--ghost btn--sm" data-back hidden>Back</button>
+        <button type="button" class="btn" data-next>
+          <span data-next-label>Begin your registration</span> <span class="arr" aria-hidden="true">→</span>
+        </button>
+      </div>
+    </footer>
+    <p class="vh" data-announce role="alert"></p>
+  </div>
+</Base>
+
+<script>
+  import { createWaitlist } from '../scripts/waitlist.ts';
+  const root = document.querySelector<HTMLElement>('[data-wl]');
+  if (root) createWaitlist(root);
+</script>
+
+<style is:global>
+  .wl-body {
+    background: var(--carbon);
+  }
+  .wl {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    background: var(--bg);
+    color: var(--text);
+    transition:
+      background 450ms var(--ease-out),
+      color 450ms var(--ease-out);
+    /* chapter palettes */
+    --bg: var(--carbon);
+    --text: var(--text-on-dark);
+    --muted: var(--muted-on-dark);
+    --rule: var(--rule-on-dark);
+    --accent: var(--amber);
+    --panel: rgba(20, 25, 28, 0.86);
+    --field: rgba(243, 239, 230, 0.06);
+    --focus-c: var(--focus);
+  }
+  .wl[data-chapter='you'],
+  .wl[data-chapter='consent'] {
+    --bg: var(--paper);
+    --text: var(--text-on-light);
+    --muted: var(--muted-on-light);
+    --rule: var(--rule-on-light);
+    --accent: var(--amber-deep);
+    --panel: #fffdf8;
+    --field: #fff;
+    --focus-c: #14191c;
+  }
+  .wl[data-chapter='consent'] {
+    --bg: var(--ivory);
+  }
+  .wl[data-chapter='location'] {
+    --bg: var(--ink);
+    --panel: rgba(11, 13, 15, 0.9);
+  }
+  .wl :focus-visible {
+    outline-color: var(--focus-c);
+  }
+  .wl__art,
+  .wl__art > div {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+  .wl__art > div {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out);
+  }
+  .wl[data-chapter='welcome'] [data-art='welcome'],
+  .wl[data-chapter='you'] [data-art='you'],
+  .wl[data-chapter='location'] [data-art='location'],
+  .wl[data-chapter='success'] [data-art='success'] {
+    opacity: 1;
+  }
+  .wl__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: var(--header-h);
+    padding-inline: var(--gutter);
+    border-bottom: 1px solid var(--rule);
+  }
+  .wl__mode {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--text);
+  }
+  .wl__close {
+    background-image: none;
+  }
+  .wl__close span[aria-hidden] {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+  .wl__stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: var(--max);
+    margin-inline: auto;
+    padding: clamp(32px, 5vw, 72px) var(--gutter);
+  }
+  .wl__ch {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 6fr 5fr;
+    gap: 32px clamp(24px, 6vw, 112px);
+    align-items: center;
+  }
+  .wl__ch[hidden] {
+    display: none;
+  }
+  .js-motion .wl__ch:not([hidden]) .wl__lead,
+  .js-motion .wl__ch:not([hidden]) .wl__panel {
+    animation: wl-in 450ms var(--ease-out) both;
+  }
+  .js-motion .wl__ch:not([hidden]) .wl__panel {
+    animation-name: wl-fade;
+  }
+  @keyframes wl-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @keyframes wl-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  .wl__lead h1 {
+    margin: 20px 0 22px;
+    font-size: clamp(2.2rem, 5vw, 4.6rem);
+  }
+  .wl__lead h1:focus {
+    outline: none;
+  }
+  .wl__lead h1 em {
+    display: block;
+  }
+  .wl__panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: clamp(22px, 3vw, 44px);
+  }
+  .wl__panel--bare {
+    background: none;
+    border: 0;
+    padding: 0;
+    display: grid;
+    gap: 22px;
+  }
+  .wl__facts li {
+    padding: 14px 0;
+    border-top: 1px solid var(--rule);
+    color: var(--text);
+    font-size: 0.9375rem;
+  }
+  .wl__facts li:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+  .field + .field {
+    margin-top: 6px;
+  }
+  .field label,
+  .check label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .opt,
+  .req {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 1px 8px;
+    vertical-align: 2px;
+  }
+  .field input,
+  .field select {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+    background: var(--field);
+    color: var(--text);
+    border: 1px solid var(--muted);
+    border-radius: 2px;
+    font: inherit;
+    font-size: 1rem; /* 16px: avoids iOS zoom-on-focus */
+    transition: border-color 150ms var(--ease-out);
+  }
+  .field select option {
+    color: #14191c;
+    background: #fff;
+  }
+  .field input:focus-visible,
+  .field select:focus-visible {
+    outline: 2px solid var(--focus-c);
+    outline-offset: 1px;
+    border-color: var(--text);
+  }
+  .field [aria-invalid='true'] {
+    border-color: var(--err);
+    border-width: 2px;
+  }
+  .wl {
+    --err: #ffb4a8;
+  }
+  .wl[data-chapter='you'],
+  .wl[data-chapter='consent'] {
+    --err: #a3271a;
+  }
+  .err {
+    min-height: 1.5rem; /* reserved so errors never shift the layout (WL1-05) */
+    margin-top: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--err);
+  }
+  .help {
+    margin-top: 8px;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+  .check {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 14px 0 6px;
+  }
+  .check input {
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    accent-color: #14191c;
+  }
+  .check label {
+    font-weight: 400;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .wl__consents {
+    border: 0;
+    padding: 0;
+    margin: 0 0 12px;
+  }
+  .wl__summary {
+    margin: 8px 0 0;
+    border-top: 1px solid var(--rule);
+    max-width: 30em;
+  }
+  .wl__summary > div {
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.9375rem;
+  }
+  .wl__summary dt {
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    padding-top: 3px;
+  }
+  .wl__summary dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .wl__edit button {
+    background: none;
+    border: 0;
+    padding: 0;
+    min-height: 44px;
+    min-width: 44px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .wl__notice {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border: 1px solid var(--text);
+    font-size: 0.9375rem;
+  }
+  .wl__notice strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .wl__halo {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow:
+      0 0 0 10px rgba(232, 165, 35, 0.16),
+      0 0 0 26px rgba(232, 165, 35, 0.07);
+    margin: 26px;
+  }
+  .wl__bar {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding: 14px var(--gutter);
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    background: var(--bg);
+    border-top: 1px solid var(--rule);
+    transition: background 450ms var(--ease-out);
+  }
+  html:not(.js) .wl__bar {
+    display: none;
+  }
+  .wl[data-chapter='success'] .wl__bar {
+    display: none;
+  }
+  .wl__progress {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .wl__actions {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+  }
+  .wl[data-chapter='you'] .wl__bar .btn:not(.btn--ghost),
+  .wl[data-chapter='consent'] .wl__bar .btn:not(.btn--ghost) {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .wl[data-chapter='you'] .btn--ghost:hover,
+  .wl[data-chapter='consent'] .btn--ghost:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .wl__bar .btn--sm {
+    min-height: 52px;
+  }
+  @media (max-width: 899px) {
+    .wl__stage {
+      align-items: flex-start;
+    }
+    .wl__ch {
+      grid-template-columns: 1fr;
+    }
+    .wl__top {
+      flex-wrap: wrap;
+      row-gap: 0;
+    }
+    .wl__mode {
+      order: 3;
+      width: 100%;
+      text-align: left;
+      padding-bottom: 12px;
+      letter-spacing: 0.12em;
+    }
+    .wl__bar {
+      position: static; /* natural scroll with the software keyboard open (WL2-09) */
+      flex-wrap: wrap;
+    }
+    .wl__actions {
+      width: 100%;
+    }
+    .wl__actions .btn:not(.btn--ghost) {
+      flex: 1;
+    }
+  }
+  /* The preview notice must stay visible on small screens, where the top-bar label is hidden. */
+  @media (max-width: 899px) {
+    .wl__progress:empty {
+      display: none;
+    }
+  }
+</style>

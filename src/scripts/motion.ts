@@ -16,17 +16,23 @@ function initReveals() {
     (entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {
-          e.target.classList.add('is-in');
+          (watched.get(e.target) ?? [e.target]).forEach((t) => t.classList.add('is-in'));
           io.unobserve(e.target);
         }
       }
     },
     { rootMargin: '0px 0px -14% 0px', threshold: 0.01 },
   );
+  // A fully clipped element has no visible area, so the observer never reports it. Watch its parent instead.
+  const watched = new Map<Element, Element[]>();
   els.forEach((el) => {
     // Anything already above the fold line on load (deep link, reload mid-page, Back) shows at once.
     if (el.closest('[data-reveal-eager]') || el.getBoundingClientRect().top < window.innerHeight * 0.86) el.classList.add('is-in');
-    else io.observe(el);
+    else if (el.dataset.reveal === 'clip' && el.parentElement) {
+      const parent = el.parentElement;
+      watched.set(parent, [...(watched.get(parent) ?? []), el]);
+      io.observe(parent);
+    } else io.observe(el);
   });
 }
 
@@ -61,7 +67,7 @@ function initProgress() {
       }
       p = Math.min(1, Math.max(0, p));
       el.style.setProperty('--p', p.toFixed(4));
-      el.dispatchEvent(new CustomEvent('progress', { detail: p }));
+      el.dispatchEvent(new CustomEvent('scrollprogress', { detail: p }));
     });
   };
   const request = () => {
