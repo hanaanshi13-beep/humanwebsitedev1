@@ -1,0 +1,211 @@
+---
+// Scene 05 — GETTING TESTED IS ONLY THE BEGINNING. Signature 2: FROM NUMBERS TO CLARITY (V3-SIG-09..14).
+// An illustrative report sheet (blank bars only — no values, names or ranges) quietens as you scroll (--p),
+// leaving one question, which branches into three non-clinical questions. All copy is always in the DOM and visible.
+const rows = [62, 38, 80, 46, 70, 30, 56, 74, 42, 64];
+const questions = [
+  { q: 'What matters?', a: 'Which parts of a report deserve attention first — and which are simply context.' },
+  { q: 'What should I ask?', a: 'The questions worth taking to a qualified professional.' },
+  { q: 'What happens next?', a: 'What following through could look like, and when it makes sense to look again.' },
+];
+---
+
+<section class="section on-light on-ivory s5" id="scene-05" aria-labelledby="s5-title" data-progress>
+  <div class="wrap">
+    <div class="s5__head">
+      <p class="eyebrow" data-reveal><span class="num">05</span><span>After the report</span></p>
+      <h2 class="display" id="s5-title" data-reveal="mask">
+        <span class="mask"><span>Getting tested</span></span>
+        <span class="mask" style="--i:1"><span><em>is only the beginning.</em></span></span>
+      </h2>
+    </div>
+
+    <div class="s5__grid">
+      <figure class="s5__report" data-reveal>
+        <div class="s5__sheet" aria-hidden="true">
+          <div class="s5__sheet-head"><span></span><span></span></div>
+          {
+            rows.map((w, i) => (
+              <div class="s5__row" style={`--w:${w}%;--k:${(i % 5) / 5}`}>
+                <span />
+                <span />
+                <span />
+              </div>
+            ))
+          }
+        </div>
+        <figcaption class="note">Concept illustration. It contains no values and is not a real report.</figcaption>
+      </figure>
+
+      <div class="s5__body">
+        <div class="prose" data-reveal>
+          <p>
+            You got your report. Looked through the numbers. Maybe searched a few things.
+            <strong>But what happened next?</strong>
+          </p>
+          <p>
+            Did you know which results mattered, where to start, how to follow through, or whether anything had
+            changed when you checked again?
+          </p>
+        </div>
+
+        <p class="s5__one" data-reveal>What does this mean <em>for me?</em></p>
+
+        <ol class="s5__qs">
+          {
+            questions.map((x, i) => (
+              <li data-reveal style={`--d:${i * 120}ms`}>
+                <h3>{x.q}</h3>
+                <p>{x.a}</p>
+              </li>
+            ))
+          }
+        </ol>
+
+        <p class="prose s5__close" data-reveal>
+          <strong>Getting information is a start. Understanding it and knowing what to do makes it useful.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .s5 {
+    --p: 0.55;
+  }
+  .s5__head h2 {
+    margin: 22px 0 0;
+  }
+  .s5__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    row-gap: 48px;
+    margin-top: clamp(48px, 6vw, 88px);
+    align-items: start;
+  }
+  .s5__report {
+    grid-column: 1 / span 4;
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+  }
+  .s5__sheet {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    padding: clamp(18px, 2.2vw, 30px);
+    aspect-ratio: 3 / 4;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    box-shadow: 0 30px 60px -40px rgba(20, 25, 28, 0.35);
+  }
+  .s5__sheet-head {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .s5__sheet-head span {
+    height: 9px;
+    width: 34%;
+    background: var(--text);
+    opacity: 0.8;
+  }
+  .s5__sheet-head span + span {
+    width: 16%;
+    opacity: 0.25;
+  }
+  .s5__row {
+    display: grid;
+    grid-template-columns: var(--w) 1fr 12%;
+    gap: 10px;
+    align-items: center;
+    /* rows quieten at different rates as --p rises; three stay to carry the eye */
+    opacity: calc(1 - var(--p) * (0.55 + var(--k)));
+  }
+  .s5__row:nth-child(4),
+  .s5__row:nth-child(7),
+  .s5__row:nth-child(10) {
+    opacity: 1;
+  }
+  .s5__row:nth-child(4) span:first-child,
+  .s5__row:nth-child(7) span:first-child,
+  .s5__row:nth-child(10) span:first-child {
+    background: var(--accent);
+    opacity: 1;
+  }
+  .s5__row span {
+    height: 6px;
+    background: var(--text);
+    opacity: 0.55;
+  }
+  .s5__row span:nth-child(2) {
+    opacity: 0;
+  }
+  .s5__row span:nth-child(3) {
+    opacity: 0.22;
+  }
+  .s5__body {
+    grid-column: 6 / span 7;
+  }
+  .s5__one {
+    margin: clamp(40px, 5vw, 72px) 0 clamp(28px, 3vw, 44px);
+    font-size: clamp(2rem, 4.4vw, 4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+  .s5__one em {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.08em;
+  }
+  .s5__qs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(16px, 2vw, 32px);
+    position: relative;
+  }
+  .s5__qs li {
+    border-top: 1px solid var(--accent);
+    padding-top: 16px;
+  }
+  .s5__qs h3 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .s5__qs p {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .s5__close {
+    margin-top: clamp(36px, 4vw, 60px);
+  }
+  @media (max-width: 899px) {
+    .s5__report,
+    .s5__body {
+      grid-column: 1 / -1;
+    }
+    .s5__report {
+      position: static;
+      max-width: 300px;
+    }
+    .s5__sheet {
+      aspect-ratio: 4 / 3;
+    }
+    .s5__row:nth-child(n + 8) {
+      display: none;
+    }
+    .s5__qs {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

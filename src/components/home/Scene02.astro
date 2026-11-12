@@ -1,0 +1,155 @@
+---
+// Scene 02 — YOU KNOW THE PROGRESS YOU CAN SEE. Three concepts drawn as line art. No numbers, no dashboard.
+const frames = [
+  {
+    key: 'movement',
+    label: 'Movement',
+    text: 'You know how much you can lift. How far you can run.',
+    // a rising stride
+    path: 'M10 150 C 60 150, 70 110, 110 110 S 160 70, 200 70 S 250 30, 290 30',
+  },
+  {
+    key: 'rest',
+    label: 'Rest',
+    text: 'Whether you’ve been sleeping better.',
+    // a slow, even wave
+    path: 'M10 100 C 45 40, 80 40, 115 100 S 185 160, 220 100 S 265 60, 290 80',
+  },
+  {
+    key: 'routine',
+    label: 'Routine',
+    text: 'You can see the changes. You know when something is working.',
+    // steady, repeating marks
+    path: 'M10 120 H 50 V 90 H 90 V 120 H 130 V 90 H 170 V 120 H 210 V 90 H 250 V 120 H 290',
+  },
+];
+---
+
+<section class="section on-light on-ivory s2" id="scene-02" aria-labelledby="s2-title">
+  <div class="wrap">
+    <div class="s2__head">
+      <p class="eyebrow" data-reveal><span class="num">02</span><span>What you can see</span></p>
+      <h2 class="display" id="s2-title" data-reveal="mask">
+        <span class="mask"><span>You know the progress</span></span>
+        <span class="mask" style="--i:1"><span><em>you can see.</em></span></span>
+      </h2>
+    </div>
+
+    <ul class="s2__frames">
+      {
+        frames.map((f, i) => (
+          <li class="s2__frame" data-reveal style={`--d:${i * 110}ms`}>
+            <svg viewBox="0 0 300 180" aria-hidden="true" focusable="false">
+              <path d={f.path} pathLength="1" />
+            </svg>
+            <h3>{f.label}</h3>
+            <p>{f.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="note s2__note" data-reveal="fade">Line drawings are illustrative. They are not measurements.</p>
+
+    <p class="s2__turn" data-reveal>
+      <span class="s2__turn-rule" aria-hidden="true"></span>
+      But there’s <em>another side</em> to your health.
+    </p>
+  </div>
+</section>
+
+<style>
+  .s2 {
+    padding-bottom: clamp(72px, 9vw, 128px);
+  }
+  .s2__head h2 {
+    margin: 22px 0 0;
+  }
+  .s2__frames {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(16px, 2.4vw, 36px);
+    margin-top: clamp(48px, 6vw, 88px);
+  }
+  .s2__frame {
+    border-top: 1px solid var(--text);
+    padding-top: 18px;
+  }
+  .s2__frame:nth-child(2) {
+    margin-top: clamp(0px, 4vw, 56px);
+  }
+  .s2__frame:nth-child(3) {
+    margin-top: clamp(0px, 8vw, 112px);
+  }
+  .s2__frame svg {
+    width: 100%;
+    height: auto;
+    background: var(--paper);
+    margin-bottom: 22px;
+  }
+  .s2__frame path {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  /* S2 strokeDraw: line draws once as the frame enters */
+  :global(.js-motion) .s2__frame path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1300ms var(--ease-inout) calc(var(--d, 0ms) + 200ms);
+  }
+  :global(.js-motion) .s2__frame.is-in path {
+    stroke-dashoffset: 0;
+  }
+  .s2__frame h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .s2__frame p {
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    line-height: 1.4;
+    max-width: 18em;
+  }
+  .s2__note {
+    margin-top: 28px;
+  }
+  .s2__turn {
+    margin-top: clamp(72px, 10vw, 150px);
+    font-size: clamp(1.9rem, 4.6vw, 4.2rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    max-width: 15em;
+    margin-left: auto;
+    text-wrap: balance;
+  }
+  .s2__turn em {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.08em;
+  }
+  .s2__turn-rule {
+    display: block;
+    width: 64px;
+    height: 1px;
+    background: var(--accent);
+    margin-bottom: 26px;
+  }
+  @media (max-width: 767px) {
+    .s2__frames {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .s2__frame:nth-child(n) {
+      margin-top: 0;
+    }
+    .s2__frame svg {
+      max-height: 150px;
+    }
+  }
+</style>

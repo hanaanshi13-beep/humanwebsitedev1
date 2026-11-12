@@ -1,0 +1,112 @@
+---
+// Scene 01 — YOU TAKE CARE OF YOURSELF. Paper chapter. The four everyday acts of care are typeset as the visual.
+// People photography for this scene is pending (docs/HUMAN-ASSET-MANIFEST.md) — no stock or invented faces are used.
+const rituals = [
+  { word: 'eat well', note: 'You try to.' },
+  { word: 'work out', note: 'When you can.' },
+  { word: 'go for a run', note: 'Some mornings.' },
+  { word: 'get enough sleep', note: 'Or try to.' },
+];
+---
+
+<section class="section on-light s1" id="scene-01" aria-labelledby="s1-title">
+  <div class="wrap s1__grid">
+    <div class="s1__copy">
+      <p class="eyebrow" data-reveal><span class="num">01</span><span>Where it starts</span></p>
+      <h2 class="display" id="s1-title" data-reveal="mask">
+        <span class="mask"><span>You take care</span></span>
+        <span class="mask" style="--i:1"><span><em>of yourself.</em></span></span>
+      </h2>
+      <div class="prose" data-reveal style="--d:120ms">
+        <p>
+          You try to eat well. You work out. You go for a run. You try to get enough sleep. Maybe you’re working
+          towards a fitness goal. Maybe you just want to feel better, stay active and take care of yourself.
+        </p>
+        <p><strong>You put effort into becoming a healthier version of yourself.</strong></p>
+      </div>
+    </div>
+
+    <ol class="s1__rituals" aria-label="Everyday care">
+      {
+        rituals.map((r, i) => (
+          <li data-reveal style={`--d:${i * 90}ms`}>
+            <span class="s1__idx" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <span class="s1__word">{r.word}</span>
+            <span class="s1__note">{r.note}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .s1__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    row-gap: 56px;
+    align-items: end;
+  }
+  .s1__copy {
+    grid-column: 1 / span 5;
+  }
+  .s1__copy h2 {
+    margin: 22px 0 30px;
+  }
+  .s1__rituals {
+    grid-column: 7 / span 6;
+    border-top: 1px solid var(--rule);
+  }
+  .s1__rituals li {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: baseline;
+    gap: 12px;
+    padding: clamp(14px, 1.8vw, 26px) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .s1__idx {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .s1__word {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(2rem, 4.4vw, 4.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+  }
+  .s1__note {
+    font-size: 0.8125rem;
+    color: var(--muted);
+    text-align: right;
+    white-space: nowrap;
+  }
+  /* staggered indent gives the list an editorial rhythm on wide screens */
+  @media (min-width: 900px) {
+    .s1__rituals li:nth-child(2) .s1__word {
+      padding-left: 8%;
+    }
+    .s1__rituals li:nth-child(3) .s1__word {
+      padding-left: 16%;
+    }
+    .s1__rituals li:nth-child(4) .s1__word {
+      padding-left: 4%;
+    }
+  }
+  @media (max-width: 899px) {
+    .s1__copy,
+    .s1__rituals {
+      grid-column: 1 / -1;
+    }
+    .s1__rituals li {
+      grid-template-columns: 34px 1fr;
+    }
+    .s1__note {
+      display: none;
+    }
+  }
+</style>

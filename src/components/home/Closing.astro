@@ -1,0 +1,437 @@
+---
+// Scene 07, Scene 08, Her/Him portals, app prototype slot, "how we think", final invitation.
+import Material from '../Material.astro';
+const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your priorities', 'Your life stage'];
+---
+
+<!-- Scene 07 -->
+<section class="section on-light s7" id="scene-07" aria-labelledby="s7-title">
+  <div class="wrap s7__grid">
+    <div class="s7__copy">
+      <p class="eyebrow" data-reveal><span class="num">07</span><span>No two people</span></p>
+      <h2 class="display" id="s7-title" data-reveal="mask">
+        <span class="mask"><span>Your health. Your body.</span></span>
+        <span class="mask" style="--i:1"><span><em>Your journey.</em></span></span>
+      </h2>
+      <div class="prose" data-reveal style="--d:120ms">
+        <p>What deserves attention for one person may differ for another.</p>
+        <p><strong>HUMAN is being built around that idea.</strong></p>
+      </div>
+    </div>
+    <ul class="s7__list" aria-label="What makes your health yours">
+      {
+        differs.map((d, i) => (
+          <li data-reveal style={`--d:${i * 80}ms;--i:${i}`}>
+            <span>{d}</span>
+          </li>
+        ))
+      }
+      <li class="s7__matters" data-reveal style="--d:420ms">all matter.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Scene 08 -->
+<section class="section on-dark s8" id="scene-08" aria-labelledby="s8-title">
+  <Material tone="amber" shape="d" opacity={0.55} />
+  <div class="wrap s8__inner">
+    <span class="s8__rule" data-reveal="rule" aria-hidden="true"></span>
+    <p class="eyebrow no-rule" data-reveal><span class="num">08</span></p>
+    <h2 class="s8__title" id="s8-title" data-reveal>The story continues.</h2>
+    <div class="s8__lines" data-reveal style="--d:140ms">
+      <p>You don’t have to wait until something feels wrong to start understanding your health.</p>
+      <p>And you don’t have to figure everything out alone.</p>
+      <p>There’s more to your health than what you can see.</p>
+    </div>
+    <p class="s8__mark" data-reveal="mask" style="--d:260ms">
+      <span class="mask"><span>There’s <span class="s8__human">HUMAN</span>.</span></span>
+    </p>
+  </div>
+</section>
+
+<!-- Portals -->
+<section class="portals on-dark" id="paths" aria-labelledby="portals-title">
+  <div class="wrap portals__head">
+    <h2 class="lede" id="portals-title" data-reveal>
+      Different bodies. Different life stages. <em class="serif">A more thoughtful starting point.</em>
+    </h2>
+    <p class="note" data-reveal="fade">
+      Two editorial paths into the same idea. They show what we intend to build — not live, personalised services.
+    </p>
+  </div>
+  <div class="portals__pair">
+    <a class="portal portal--her" href="/women" data-reveal="clip">
+      <Material tone="garnet" shape="c" />
+      <span class="portal__body">
+        <span class="portal__eyebrow">Human for her</span>
+        <span class="portal__title">For <em>Her</em></span>
+        <span class="portal__sub">A more thoughtful way to understand your health, across life stages.</span>
+        <span class="portal__go">Explore <span class="arr" aria-hidden="true">→</span></span>
+      </span>
+    </a>
+    <a class="portal portal--him" href="/men" data-reveal="clip" style="--d:120ms">
+      <Material tone="teal" shape="a" />
+      <span class="portal__body">
+        <span class="portal__eyebrow">Human for him</span>
+        <span class="portal__title">For <em>Him</em></span>
+        <span class="portal__sub">Go beyond what you can see — without waiting for something to feel wrong.</span>
+        <span class="portal__go">Explore <span class="arr" aria-hidden="true">→</span></span>
+      </span>
+    </a>
+  </div>
+</section>
+
+<!-- App prototype slot: honest placeholder until the real folder is audited (Part H). No invented screens. -->
+<section class="section on-light app" id="app" aria-labelledby="app-title">
+  <div class="wrap split">
+    <div class="a">
+      <p class="eyebrow" data-reveal><span>The HUMAN experience</span></p>
+      <h2 class="display" id="app-title" data-reveal="mask">
+        <span class="mask"><span>A look at what</span></span>
+        <span class="mask" style="--i:1"><span><em>we’re building.</em></span></span>
+      </h2>
+      <div class="prose" data-reveal style="--d:120ms">
+        <p>
+          We’re prototyping an app to carry the connected journey. We’ll show real screens from that prototype here
+          once they’re ready to share — not mock-ups made for a website.
+        </p>
+      </div>
+      <div class="actions" data-reveal="fade">
+        <a class="btn btn--dark" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="b">
+      <div class="app__slot" data-reveal role="img" aria-label="Empty frame. The app prototype preview has not been published yet.">
+        <span class="status-pill">Prototype preview — coming soon</span>
+        <p>No screens are shown yet. Nothing here can be used or purchased today.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How we think + final invitation -->
+<section class="section on-dark cta-band final" id="join" aria-labelledby="join-title">
+  <Material tone="amber" shape="b" opacity={0.6} />
+  <div class="wrap">
+    <div class="final__think" data-reveal>
+      <p class="eyebrow"><span>How we think about health</span></p>
+      <p class="final__statement">
+        Health isn’t a single test or a single visit. It’s something you come to understand <em>over time</em> — with
+        context, with qualified people, and at your own pace.
+      </p>
+    </div>
+    <hr class="rule" />
+    <div class="final__join">
+      <h2 class="display" id="join-title" data-reveal="mask">
+        <span class="mask"><span>Be part of what</span></span>
+        <span class="mask" style="--i:1"><span><em>we’re building.</em></span></span>
+      </h2>
+      <div data-reveal style="--d:120ms">
+        <p class="lede">Register your interest and, if you opt in, hear about HUMAN as it develops.</p>
+        <p class="note final__note">
+          Open to people across India. First pilot planned for Delhi NCR. Joining registers interest only — it does not
+          reserve a place or start any service.
+        </p>
+        <div class="actions">
+          <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ---- Scene 07 ---- */
+  .s7__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    row-gap: 56px;
+    align-items: start;
+  }
+  .s7__copy {
+    grid-column: 1 / span 6;
+  }
+  .s7__copy h2 {
+    margin: 22px 0 30px;
+  }
+  .s7__list {
+    grid-column: 8 / span 5;
+    padding-top: clamp(0px, 4vw, 60px);
+  }
+  .s7__list li {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.9rem, 3.6vw, 3.4rem);
+    line-height: 1.16;
+    color: var(--text);
+  }
+  .s7__list li:nth-child(2) {
+    padding-left: 12%;
+  }
+  .s7__list li:nth-child(3) {
+    padding-left: 4%;
+  }
+  .s7__list li:nth-child(4) {
+    padding-left: 20%;
+  }
+  .s7__list li:nth-child(5) {
+    padding-left: 8%;
+  }
+  .s7__list .s7__matters {
+    font-family: var(--sans);
+    font-style: normal;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    font-size: clamp(1.6rem, 3vw, 2.8rem);
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--accent);
+  }
+  @media (max-width: 899px) {
+    .s7__copy,
+    .s7__list {
+      grid-column: 1 / -1;
+    }
+    .s7__list li:nth-child(n) {
+      padding-left: 0;
+    }
+  }
+
+  /* ---- Scene 08 ---- */
+  .s8 {
+    overflow: hidden;
+    isolation: isolate;
+    padding-bottom: clamp(64px, 8vw, 112px);
+  }
+  .s8__inner {
+    position: relative;
+    z-index: 2;
+    max-width: 980px;
+    margin-inline: auto;
+  }
+  .s8__rule {
+    display: block;
+    height: 1px;
+    background: var(--rule);
+    margin-bottom: 28px;
+  }
+  .s8__title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(3rem, 8.4vw, 8rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin: 18px 0 clamp(32px, 4vw, 56px);
+  }
+  .s8__lines {
+    font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+    line-height: 1.45;
+    max-width: 30em;
+    margin-left: auto;
+  }
+  .s8__lines p + p {
+    margin-top: 0.9em;
+  }
+  .s8__mark {
+    margin-top: clamp(40px, 6vw, 88px);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(2rem, 4.6vw, 4.2rem);
+    line-height: 1.1;
+    text-align: right;
+  }
+  .s8__human {
+    font-family: var(--sans);
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    font-size: 0.8em;
+    margin-right: -0.3em;
+  }
+
+  /* ---- Portals ---- */
+  .portals {
+    padding-bottom: clamp(88px, 12vw, 160px);
+  }
+  .portals__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px 48px;
+    padding-bottom: clamp(32px, 4vw, 56px);
+  }
+  .portals__head .note {
+    max-width: 26em;
+  }
+  .portals__head em {
+    font-size: 1.15em;
+  }
+  .portals__pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(10px, 1.2vw, 20px);
+    padding-inline: clamp(10px, 1.2vw, 20px);
+  }
+  .portal {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: clamp(440px, 62vw, 760px);
+    overflow: hidden;
+    isolation: isolate;
+    text-decoration: none;
+    color: var(--text-on-dark);
+    transition: opacity 260ms var(--ease-out);
+  }
+  .portal--her {
+    background: radial-gradient(ellipse at 70% 20%, var(--her-glow) 0%, var(--her-garnet) 38%, var(--her-ink) 82%);
+  }
+  .portal--him {
+    background: radial-gradient(ellipse at 30% 20%, var(--him-teal) 0%, var(--him-ocean) 38%, var(--him-ink) 82%);
+    margin-top: clamp(0px, 5vw, 72px);
+  }
+  .portal :global(.material) {
+    transition: transform 900ms var(--ease-out);
+  }
+  .portal::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 55%);
+  }
+  .portal__body {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: clamp(24px, 3.4vw, 52px);
+    width: 100%;
+  }
+  .portal__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .portal__title {
+    font-size: clamp(3rem, 7.4vw, 7.2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.92;
+    text-transform: uppercase;
+  }
+  .portal__title em {
+    font-family: var(--serif);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    font-size: 1.12em;
+  }
+  .portal__sub {
+    max-width: 24em;
+    font-size: 1.0625rem;
+    line-height: 1.45;
+  }
+  .portal__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    margin-top: 8px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .portal__go .arr {
+    transition: transform 180ms var(--ease-out);
+  }
+  .portal:hover .arr,
+  .portal:focus-visible .arr {
+    transform: translateX(4px);
+  }
+  .portal:focus-visible {
+    outline-offset: -6px;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .portal:hover :global(.material),
+    .portal:focus-visible :global(.material) {
+      transform: scale(1.03);
+    }
+    .portals__pair:hover .portal:not(:hover) {
+      opacity: 0.9;
+    }
+  }
+  @media (max-width: 767px) {
+    .portals__pair {
+      grid-template-columns: 1fr;
+    }
+    .portal {
+      min-height: 380px;
+    }
+    .portal--him {
+      margin-top: 0;
+    }
+  }
+
+  /* ---- App slot ---- */
+  .app h2 {
+    margin: 22px 0 30px;
+  }
+  .app__slot {
+    aspect-ratio: 4 / 3;
+    border: 1px dashed rgba(20, 25, 28, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 14px;
+    padding: clamp(20px, 3vw, 40px);
+    background: repeating-linear-gradient(135deg, transparent 0 14px, rgba(20, 25, 28, 0.035) 14px 15px);
+  }
+  .app__slot p {
+    max-width: 24em;
+    color: var(--muted);
+    font-size: 0.9375rem;
+  }
+
+  /* ---- Final ---- */
+  .final__statement {
+    font-size: clamp(1.6rem, 3.2vw, 3rem);
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    font-weight: 500;
+    max-width: 22em;
+    margin: 22px 0 clamp(56px, 8vw, 112px);
+    text-wrap: pretty;
+  }
+  .final__statement em {
+    font-family: var(--serif);
+    font-size: 1.1em;
+  }
+  .final__join {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px clamp(24px, 5vw, 96px);
+    align-items: end;
+    padding-top: clamp(48px, 6vw, 88px);
+  }
+  .final__join h2 {
+    margin: 0;
+  }
+  .final__note {
+    margin-top: 14px;
+    max-width: 36em;
+  }
+  @media (max-width: 899px) {
+    .final__join {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

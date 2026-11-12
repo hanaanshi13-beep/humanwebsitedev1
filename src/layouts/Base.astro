@@ -1,0 +1,47 @@
+---
+import '@fontsource-variable/hanken-grotesk';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  chrome?: boolean; // false = page supplies its own header/footer (waitlist)
+  bodyClass?: string;
+}
+const { title, description, chrome = true, bodyClass = '' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <!-- Staging build: not for indexing until launch gates pass (docs/HUMAN-RELEASE-GATES.md) -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0b0d0f" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // Opt in to entrance motion only when JS runs and the visitor has not asked for reduced motion.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('js-motion');
+      }
+      document.documentElement.classList.add('js');
+    </script>
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <a class="skip" href="#main">Skip to content</a>
+    {chrome && <Header />}
+    <main id="main" tabindex="-1"><slot /></main>
+    {chrome && <Footer />}
+    <script>
+      import '../scripts/motion.ts';
+    </script>
+  </body>
+</html>

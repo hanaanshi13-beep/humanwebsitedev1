@@ -1,0 +1,48 @@
+---
+import { NAV, LEGAL, CONTACT_EMAIL } from '../data/site';
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <a class="wordmark" href="/" aria-label="HUMAN — home">HUMAN</a>
+        <p class="brandline">There’s more to your health than what you can see.</p>
+        <p class="note">
+          HUMAN is being developed. It is not yet a medical service, and nothing on this site is medical advice.
+        </p>
+      </div>
+      <nav aria-label="Footer">
+        <h2>Explore</h2>
+        <ul>
+          {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+          <li><a href="/waitlist">Waitlist</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Policies">
+        <h2>Policies</h2>
+        <ul>
+          {
+            LEGAL.map((n) => (
+              <li>
+                <a href={n.href}>{n.label}</a>
+                <span class="tag-pending">Draft</span>
+              </li>
+            ))
+          }
+        </ul>
+        {
+          CONTACT_EMAIL && (
+            <p class="note" style="margin-top:16px">
+              <a class="text-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+            </p>
+          )
+        }
+      </nav>
+    </div>
+    <div class="base">
+      <p class="note">© HUMAN. Prelaunch preview — first pilot planned for Delhi NCR.</p>
+      <p class="note"><a class="text-link" href="#main">Back to top</a></p>
+    </div>
+  </div>
+</footer>

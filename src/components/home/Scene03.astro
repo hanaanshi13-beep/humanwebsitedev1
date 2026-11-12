@@ -1,0 +1,171 @@
+---
+// Scene 03 — THE SIDE YOU CAN'T SEE. Signature 1: THE REVEAL LENS (V3-SIG-01..08).
+// Two code-drawn layers: an opaque matte "surface" and a warm refractive "underlayer".
+// A single elliptical clip-path on the surface opens with scroll (--p). No WebGL, no blur animation, no video.
+// Default (no JS / reduced motion / mobile): a fixed half-open aperture — a still before/after comparison.
+import Material from '../Material.astro';
+---
+
+<section class="s3 on-dark" id="scene-03" aria-labelledby="s3-title" data-progress="through">
+  <div class="s3__sticky">
+    <div class="wrap s3__grid">
+      <div class="s3__copy">
+        <p class="eyebrow" data-reveal><span class="num">03</span><span>The invisible side of your health</span></p>
+        <h2 class="display" id="s3-title" data-reveal="mask">
+          <span class="mask"><span>The side</span></span>
+          <span class="mask" style="--i:1"><span><em>you can’t see.</em></span></span>
+        </h2>
+        <div class="prose" data-reveal style="--d:120ms">
+          <p>One you can’t see in the mirror or track on a fitness watch.</p>
+          <p>
+            <strong>What’s happening inside your body?</strong> How are your blood sugar and cholesterol levels? What
+            about iron, thyroid and other relevant health markers?
+          </p>
+          <p>
+            You might not know. Most of us were never taught to look beyond how we feel or what we see.
+          </p>
+        </div>
+      </div>
+
+      <figure class="s3__lens" data-reveal="fade">
+        <div class="s3__stage" aria-hidden="true">
+          <div class="s3__under">
+            <Material tone="amber" shape="a" />
+            <Material tone="amber" shape="c" opacity={0.7} />
+            <span class="s3__contour"></span>
+          </div>
+          <div class="s3__surface"></div>
+          <span class="s3__ring"></span>
+        </div>
+        <figcaption class="s3__labels">
+          <span class="s3__label s3__label--a">What we can notice</span>
+          <span class="s3__label s3__label--b">What we may need to understand</span>
+        </figcaption>
+        <p class="note s3__cap">An abstract illustration — not a scan, and not anyone’s results.</p>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<style>
+  .s3 {
+    position: relative;
+    --p: 0.5; /* static default: half-open aperture */
+  }
+  .s3__sticky {
+    padding-block: clamp(88px, 12vw, 160px);
+  }
+  .s3__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    row-gap: 48px;
+    align-items: center;
+  }
+  .s3__copy {
+    grid-column: 1 / span 5;
+  }
+  .s3__copy h2 {
+    margin: 22px 0 30px;
+  }
+  .s3__lens {
+    grid-column: 7 / span 6;
+  }
+  .s3__stage {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    max-height: 68svh;
+    width: 100%;
+    margin-inline: auto;
+    overflow: hidden;
+    background: #060708;
+    isolation: isolate;
+  }
+  .s3__under {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 60% 40%, rgba(232, 165, 35, 0.2), transparent 62%),
+      linear-gradient(160deg, #1d1508 0%, #0b0d0f 70%);
+  }
+  .s3__contour {
+    position: absolute;
+    inset: 12% 14%;
+    border: 1px solid rgba(246, 223, 174, 0.28);
+    border-radius: 50%;
+    transform: rotate(-12deg);
+  }
+  /* The surface is an opaque matte plane with a soft sheen. The aperture is a hole cut in it:
+     an even-odd mask made from a radial gradient whose radius follows --p. */
+  .s3__surface {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 38%),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 7px),
+      #15191c;
+    --r: calc(9% + var(--p) * 78%);
+    -webkit-mask-image: radial-gradient(ellipse calc(var(--r) * 0.86) var(--r) at 56% 46%, transparent 99%, #000 100%);
+    mask-image: radial-gradient(ellipse calc(var(--r) * 0.86) var(--r) at 56% 46%, transparent 99%, #000 100%);
+  }
+  .s3__ring {
+    position: absolute;
+    left: 56%;
+    top: 46%;
+    /* same ellipse as the mask: x-radius is a share of width, y-radius a share of height */
+    width: calc((9% + var(--p) * 78%) * 1.72);
+    height: calc((9% + var(--p) * 78%) * 2);
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(232, 165, 35, 0.75);
+    border-radius: 50%;
+    opacity: calc(1.15 - var(--p));
+  }
+  .s3__labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .s3__label--a {
+    color: var(--muted);
+  }
+  .s3__label--b {
+    color: var(--amber);
+    text-align: right;
+  }
+  .s3__cap {
+    margin-top: 10px;
+  }
+
+  /* Desktop with motion: one sticky stage, one extra viewport of travel (the first of two allowed pins). */
+  @media (min-width: 1024px) and (min-height: 640px) {
+    :global(.js-motion) .s3 {
+      height: 190vh;
+      --p: 0;
+    }
+    :global(.js-motion) .s3__sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-block: var(--header-h) 24px;
+    }
+    :global(.js-motion) .s3__label--b {
+      opacity: calc(0.35 + var(--p) * 1.3);
+    }
+  }
+  @media (max-width: 1023px) {
+    .s3__copy,
+    .s3__lens {
+      grid-column: 1 / -1;
+    }
+    .s3__stage {
+      aspect-ratio: 4 / 4.2;
+    }
+  }
+</style>

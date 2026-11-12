@@ -1,0 +1,127 @@
+---
+// Scene 04 — FEELING FINE DOESN'T TELL YOU EVERYTHING. WORKING copy: needs medical review before public marketing.
+// Four marker *categories* on one neutral line. No values, no status colours.
+const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
+---
+
+<section class="section on-light s4" id="scene-04" aria-labelledby="s4-title">
+  <div class="wrap">
+    <div class="split">
+      <div class="a">
+        <p class="eyebrow" data-reveal><span class="num">04</span><span>Why it matters</span></p>
+        <h2 class="display" id="s4-title" data-reveal="mask">
+          <span class="mask"><span>Feeling fine</span></span>
+          <span class="mask" style="--i:1"><span><em>doesn’t tell you everything.</em></span></span>
+        </h2>
+      </div>
+      <div class="b prose s4__prose" data-reveal style="--d:120ms">
+        <p>
+          You can feel fine and still have health markers that deserve attention. Some changes happen gradually,
+          without obvious signs.
+        </p>
+        <p>Understanding your health shouldn’t begin only when something feels wrong.</p>
+        <p><strong>It’s not about assuming the worst. It’s about making more informed decisions.</strong></p>
+      </div>
+    </div>
+
+    <figure class="s4__fig" data-reveal="fade">
+      <ul class="s4__line">
+        {
+          markers.map((m, i) => (
+            <li style={`--i:${i}`}>
+              <span class="s4__dot" aria-hidden="true" />
+              {m}
+            </li>
+          ))
+        }
+      </ul>
+      <figcaption class="note">
+        Examples of health-marker categories only — testing needs vary by person and clinical context.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .s4 h2 {
+    margin: 22px 0 0;
+  }
+  .s4__prose {
+    padding-top: clamp(0px, 3.4vw, 46px);
+  }
+  .s4__fig {
+    margin-top: clamp(64px, 9vw, 128px);
+  }
+  .s4__line {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-top: 34px;
+    margin-bottom: 22px;
+  }
+  .s4__line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6px;
+    height: 1px;
+    background: var(--text);
+    transform-origin: left;
+  }
+  .s4__line li {
+    position: relative;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.4rem, 3vw, 2.6rem);
+    line-height: 1.1;
+  }
+  .s4__dot {
+    position: absolute;
+    left: 0;
+    top: -34px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1px solid var(--text);
+  }
+  :global(.js-motion) .s4__line::before {
+    transform: scaleX(0);
+    transition: transform 1000ms var(--ease-inout) 150ms;
+  }
+  :global(.js-motion) .s4__fig.is-in .s4__line::before {
+    transform: none;
+  }
+  :global(.js-motion) .s4__line li {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-out) calc(250ms + var(--i) * 220ms);
+  }
+  :global(.js-motion) .s4__fig.is-in .s4__line li {
+    opacity: 1;
+  }
+  @media (max-width: 767px) {
+    .s4__line {
+      grid-template-columns: 1fr;
+      padding-top: 0;
+      padding-left: 30px;
+      row-gap: 18px;
+    }
+    .s4__line::before {
+      left: 6px;
+      right: auto;
+      top: 8px;
+      bottom: 12px;
+      width: 1px;
+      height: auto;
+      transform-origin: top;
+    }
+    :global(.js-motion) .s4__line::before {
+      transform: scaleY(0);
+    }
+    .s4__dot {
+      left: -30px;
+      top: 0.3em;
+    }
+  }
+</style>
