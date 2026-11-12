@@ -2,7 +2,10 @@
 // Scene 05 — GETTING TESTED IS ONLY THE BEGINNING. Signature 2: FROM NUMBERS TO CLARITY (V3-SIG-09..14).
 // An illustrative report sheet (blank bars only — no values, names or ranges) quietens as you scroll (--p),
 // leaving one question, which branches into three non-clinical questions. All copy is always in the DOM and visible.
-const rows = [62, 38, 80, 46, 70, 30, 56, 74, 42, 64];
+const rows = [
+  { w: 62, ox: -26 }, { w: 38, ox: 34, key: true }, { w: 80, ox: -14 }, { w: 46, ox: 22 }, { w: 70, ox: -38, key: true },
+  { w: 30, ox: 18 }, { w: 56, ox: -22 }, { w: 74, ox: 40, key: true }, { w: 42, ox: -16 }, { w: 64, ox: 28 },
+];
 const questions = [
   { q: 'What matters?', a: 'Which parts of a report deserve attention first — and which are simply context.' },
   { q: 'What should I ask?', a: 'The questions worth taking to a qualified professional.' },
@@ -10,7 +13,7 @@ const questions = [
 ];
 ---
 
-<section class="section on-light on-ivory s5" id="scene-05" aria-labelledby="s5-title" data-progress>
+<section class="section on-light on-ivory s5" id="scene-05" aria-labelledby="s5-title">
   <div class="wrap">
     <div class="s5__head">
       <p class="eyebrow" data-reveal><span class="num">05</span><span>After the report</span></p>
@@ -18,88 +21,112 @@ const questions = [
         <span class="mask"><span>Getting tested</span></span>
         <span class="mask" style="--i:1"><span><em>is only the beginning.</em></span></span>
       </h2>
+      <div class="prose s5__intro" data-reveal style="--d:120ms">
+        <p>
+          You got your report. Looked through the numbers. Maybe searched a few things.
+          <strong>But what happened next?</strong>
+        </p>
+        <p>
+          Did you know which results mattered, where to start, how to follow through, or whether anything had
+          changed when you checked again?
+        </p>
+      </div>
     </div>
 
-    <div class="s5__grid">
-      <figure class="s5__report" data-reveal>
+    <!-- The transformation: a dense, value-free sheet settles, most of it recedes, and three lines of it
+         resolve into three plain questions. Driven by --p; the final state is the default. -->
+    <div class="s5__stage" data-progress>
+      <figure class="s5__report">
         <div class="s5__sheet" aria-hidden="true">
           <div class="s5__sheet-head"><span></span><span></span></div>
           {
-            rows.map((w, i) => (
-              <div class="s5__row" style={`--w:${w}%;--k:${(i % 5) / 5}`}>
+            rows.map((r, i) => (
+              <div class={`s5__row ${r.key ? 'is-key' : ''}`} style={`--w:${r.w}%;--ox:${r.ox}px;--k:${(i % 5) / 5}`}>
                 <span />
                 <span />
                 <span />
               </div>
             ))
           }
+          <span class="s5__lens"><span>What does this mean <em>for me?</em></span></span>
         </div>
         <figcaption class="note">Concept illustration. It contains no values and is not a real report.</figcaption>
       </figure>
 
-      <div class="s5__body">
-        <div class="prose" data-reveal>
-          <p>
-            You got your report. Looked through the numbers. Maybe searched a few things.
-            <strong>But what happened next?</strong>
-          </p>
-          <p>
-            Did you know which results mattered, where to start, how to follow through, or whether anything had
-            changed when you checked again?
-          </p>
-        </div>
+      <ol class="s5__qs">
+        {
+          questions.map((x, i) => (
+            <li style={`--i:${i}`}>
+              <span class="s5__thread" aria-hidden="true" />
+              <span class="s5__qn" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{x.q}</h3>
+              <p>{x.a}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
 
-        <p class="s5__one" data-reveal>What does this mean <em>for me?</em></p>
-
-        <ol class="s5__qs">
-          {
-            questions.map((x, i) => (
-              <li data-reveal style={`--d:${i * 120}ms`}>
-                <h3>{x.q}</h3>
-                <p>{x.a}</p>
-              </li>
-            ))
-          }
-        </ol>
-
-        <p class="prose s5__close" data-reveal>
-          <strong>Getting information is a start. Understanding it and knowing what to do makes it useful.</strong>
-        </p>
-      </div>
+    <div class="s5__close" data-reveal>
+      <p class="s5__close-line">
+        Getting information is a start. <em>Understanding it and knowing what to do</em> makes it useful.
+      </p>
+      <a class="link" href="#scene-06">See how HUMAN is designed to help <span class="arr arr--down" aria-hidden="true">↓</span></a>
     </div>
   </div>
 </section>
 
 <style>
   .s5 {
-    --p: 0.55;
+    --p: 1; /* static default: the resolved state */
+  }
+  .s5__head {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    align-items: end;
+  }
+  .s5__head > .eyebrow,
+  .s5__head > h2 {
+    grid-column: 1 / span 7;
   }
   .s5__head h2 {
     margin: 22px 0 0;
   }
-  .s5__grid {
+  .s5__intro {
+    grid-column: 8 / span 5;
+    grid-row: 2;
+  }
+  .s5__stage {
+    --t: clamp(0, var(--p) * 2.2, 1); /* rows settle into alignment */
+    --u: clamp(0, (var(--p) - 0.42) * 2.6, 1); /* noise recedes, questions resolve */
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: clamp(20px, 3vw, 48px);
-    row-gap: 48px;
+    row-gap: 40px;
+    align-items: center;
     margin-top: clamp(48px, 6vw, 88px);
-    align-items: start;
   }
   .s5__report {
-    grid-column: 1 / span 4;
-    position: sticky;
-    top: calc(var(--header-h) + 32px);
+    grid-column: 1 / span 5;
   }
+  /* paper, not glass: the document is information, the lens on it is interface */
   .s5__sheet {
-    background: var(--paper);
+    position: relative;
+    background: linear-gradient(180deg, #fdfcf8, #f6f3ec);
     border: 1px solid var(--rule);
-    padding: clamp(18px, 2.2vw, 30px);
-    aspect-ratio: 3 / 4;
+    border-radius: 4px;
+    padding: clamp(20px, 2.4vw, 34px);
+    aspect-ratio: 4 / 4.6;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     margin-bottom: 14px;
-    box-shadow: 0 30px 60px -40px rgba(20, 25, 28, 0.35);
+    box-shadow:
+      0 1px 0 #fff inset,
+      0 40px 70px -44px rgba(20, 25, 28, 0.45),
+      0 2px 6px rgba(20, 25, 28, 0.06);
+    transform: rotate(calc((1 - var(--t)) * -1.6deg)) translateY(calc((1 - var(--t)) * 18px));
   }
   .s5__sheet-head {
     display: flex;
@@ -122,22 +149,12 @@ const questions = [
     grid-template-columns: var(--w) 1fr 12%;
     gap: 10px;
     align-items: center;
-    /* rows quieten at different rates as --p rises; three stay to carry the eye */
-    opacity: calc(1 - var(--p) * (0.55 + var(--k)));
-  }
-  .s5__row:nth-child(4),
-  .s5__row:nth-child(7),
-  .s5__row:nth-child(10) {
-    opacity: 1;
-  }
-  .s5__row:nth-child(4) span:first-child,
-  .s5__row:nth-child(7) span:first-child,
-  .s5__row:nth-child(10) span:first-child {
-    background: var(--accent);
-    opacity: 1;
+    transform: translateX(calc(var(--ox) * (1 - var(--t))));
+    opacity: calc(1 - var(--u) * (0.62 + var(--k) * 0.3));
   }
   .s5__row span {
     height: 6px;
+    border-radius: 1px;
     background: var(--text);
     opacity: 0.55;
   }
@@ -147,65 +164,134 @@ const questions = [
   .s5__row span:nth-child(3) {
     opacity: 0.22;
   }
-  .s5__body {
-    grid-column: 6 / span 7;
+  .s5__row.is-key {
+    opacity: 1;
   }
-  .s5__one {
-    margin: clamp(40px, 5vw, 72px) 0 clamp(28px, 3vw, 44px);
-    font-size: clamp(2rem, 4.4vw, 4rem);
+  .s5__row.is-key span:first-child {
+    opacity: 1;
+    background: color-mix(in srgb, var(--accent) calc(var(--u) * 100%), var(--text));
+    height: calc(6px + var(--u) * 2px);
+  }
+  /* the one glass element: a small lens that settles on the sheet as the noise recedes */
+  .s5__lens {
+    position: absolute;
+    left: 50%;
+    bottom: 13%;
+    transform: translate(-50%, calc((1 - var(--u)) * 14px));
+    opacity: var(--u);
+    padding: 12px 20px;
+    border-radius: 999px;
+    white-space: nowrap;
+    color: var(--text-on-dark);
+    font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
     font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.02;
-    text-wrap: balance;
+    background: linear-gradient(180deg, rgba(52, 46, 34, 0.9), rgba(20, 20, 19, 0.94));
+    border: 1px solid rgba(255, 228, 176, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 242, 214, 0.45),
+      inset 0 -10px 14px -10px rgba(232, 165, 35, 0.4),
+      0 16px 34px rgba(20, 20, 16, 0.3);
   }
-  .s5__one em {
+  .s5__lens em {
     font-family: var(--serif);
     font-weight: 400;
-    font-size: 1.08em;
+    font-size: 1.12em;
+    color: #ffd98a;
   }
   .s5__qs {
+    grid-column: 7 / span 6;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(16px, 2vw, 32px);
-    position: relative;
+    gap: clamp(18px, 2.2vw, 30px);
   }
   .s5__qs li {
-    border-top: 1px solid var(--accent);
-    padding-top: 16px;
+    --q: clamp(0, (var(--p) - 0.5 - var(--i) * 0.1) * 5, 1);
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 20px;
+    padding-top: 18px;
+    opacity: calc(0.12 + var(--q) * 0.88);
+    transform: translateX(calc((1 - var(--q)) * 22px));
+  }
+  .s5__thread {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: var(--accent);
+    transform-origin: left;
+    transform: scaleX(var(--q));
+  }
+  .s5__qn {
+    grid-row: 1 / span 2;
+    padding-top: 0.5em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--accent);
   }
   .s5__qs h3 {
     font-family: var(--serif);
     font-style: italic;
     font-weight: 400;
-    font-size: clamp(1.4rem, 2vw, 1.9rem);
-    line-height: 1.1;
-    margin-bottom: 10px;
+    font-size: clamp(1.9rem, 3.2vw, 3rem);
+    line-height: 1.05;
   }
   .s5__qs p {
-    font-size: 0.9375rem;
-    line-height: 1.5;
+    margin-top: 8px;
+    max-width: 30em;
     color: var(--muted);
   }
   .s5__close {
-    margin-top: clamp(36px, 4vw, 60px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px 40px;
+    margin-top: clamp(48px, 6vw, 88px);
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+  }
+  .s5__close-line {
+    max-width: 26em;
+    font-size: clamp(1.25rem, 1.9vw, 1.7rem);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .s5__close-line em {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.1em;
   }
   @media (max-width: 899px) {
+    .s5__head > .eyebrow,
+    .s5__head > h2,
+    .s5__intro,
     .s5__report,
-    .s5__body {
+    .s5__qs {
       grid-column: 1 / -1;
     }
+    .s5__intro {
+      grid-row: auto;
+      margin-top: 26px;
+    }
     .s5__report {
-      position: static;
-      max-width: 300px;
+      max-width: 360px;
     }
     .s5__sheet {
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 4 / 3.4;
     }
-    .s5__row:nth-child(n + 8) {
+    .s5__row:nth-child(n + 9) {
       display: none;
     }
-    .s5__qs {
-      grid-template-columns: 1fr;
+    .s5__lens {
+      white-space: normal;
+      text-align: center;
+      width: max-content;
+      max-width: 86%;
     }
   }
 </style>

@@ -1,6 +1,7 @@
 ---
 // Scene 04 — FEELING FINE DOESN'T TELL YOU EVERYTHING. WORKING copy: needs medical review before public marketing.
 // Four marker *categories* on one neutral line. No values, no status colours.
+import Slot from '../Slot.astro';
 const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
 ---
 
@@ -24,20 +25,26 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
       </div>
     </div>
 
-    <figure class="s4__fig" data-reveal="fade">
-      <ul class="s4__line">
-        {
-          markers.map((m, i) => (
-            <li style={`--i:${i}`}>
-              <span class="s4__dot" aria-hidden="true" />
-              {m}
-            </li>
-          ))
-        }
-      </ul>
-      <figcaption class="note">
-        Examples of health-marker categories only — testing needs vary by person and clinical context.
-      </figcaption>
+    <figure class="s4__fig" data-reveal="fade" data-progress>
+      <div class="s4__photo">
+        <Slot name="feeling-fine" ratio="3 / 2" tone="ivory" shape="a" position="30% 40%" sizes="(max-width: 899px) 100vw, 58vw" />
+        <span class="s4__veil" aria-hidden="true"></span>
+      </div>
+      <div class="s4__side">
+        <ul class="s4__line">
+          {
+            markers.map((m, i) => (
+              <li style={`--i:${i}`}>
+                <span class="s4__dot" aria-hidden="true" />
+                {m}
+              </li>
+            ))
+          }
+        </ul>
+        <figcaption class="note">
+          Examples of health-marker categories only — testing needs vary by person and clinical context.
+        </figcaption>
+      </div>
     </figure>
   </div>
 </section>
@@ -50,36 +57,58 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
     padding-top: clamp(0px, 3.4vw, 46px);
   }
   .s4__fig {
-    margin-top: clamp(64px, 9vw, 128px);
+    --p: 1;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    row-gap: 36px;
+    align-items: center;
+    margin-top: clamp(48px, 6vw, 96px);
+  }
+  .s4__photo {
+    grid-column: 1 / span 7;
+    position: relative;
+  }
+  /* a single exposure: the frame arrives pale and settles to full tone as it is read */
+  .s4__veil {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: var(--paper);
+    opacity: calc((1 - clamp(0, var(--p) * 2.4, 1)) * 0.7);
+    pointer-events: none;
+  }
+  .s4__side {
+    grid-column: 9 / span 4;
   }
   .s4__line {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    padding-top: 34px;
-    margin-bottom: 22px;
+    row-gap: clamp(16px, 2vw, 26px);
+    padding-left: 34px;
+    margin-bottom: 26px;
   }
   .s4__line::before {
     content: '';
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 6px;
-    height: 1px;
+    left: 6px;
+    top: 10px;
+    bottom: 14px;
+    width: 1px;
     background: var(--text);
-    transform-origin: left;
+    transform-origin: top;
   }
   .s4__line li {
     position: relative;
     font-family: var(--serif);
     font-style: italic;
-    font-size: clamp(1.4rem, 3vw, 2.6rem);
+    font-size: clamp(1.6rem, 2.8vw, 2.6rem);
     line-height: 1.1;
   }
   .s4__dot {
     position: absolute;
-    left: 0;
-    top: -34px;
+    left: -34px;
+    top: 0.32em;
     width: 13px;
     height: 13px;
     border-radius: 50%;
@@ -87,7 +116,7 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
     border: 1px solid var(--text);
   }
   :global(.js-motion) .s4__line::before {
-    transform: scaleX(0);
+    transform: scaleY(0);
     transition: transform 1000ms var(--ease-inout) 150ms;
   }
   :global(.js-motion) .s4__fig.is-in .s4__line::before {
@@ -100,28 +129,10 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
   :global(.js-motion) .s4__fig.is-in .s4__line li {
     opacity: 1;
   }
-  @media (max-width: 767px) {
-    .s4__line {
-      grid-template-columns: 1fr;
-      padding-top: 0;
-      padding-left: 30px;
-      row-gap: 18px;
-    }
-    .s4__line::before {
-      left: 6px;
-      right: auto;
-      top: 8px;
-      bottom: 12px;
-      width: 1px;
-      height: auto;
-      transform-origin: top;
-    }
-    :global(.js-motion) .s4__line::before {
-      transform: scaleY(0);
-    }
-    .s4__dot {
-      left: -30px;
-      top: 0.3em;
+  @media (max-width: 899px) {
+    .s4__photo,
+    .s4__side {
+      grid-column: 1 / -1;
     }
   }
 </style>

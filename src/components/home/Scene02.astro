@@ -1,5 +1,6 @@
 ---
 // Scene 02 — YOU KNOW THE PROGRESS YOU CAN SEE. Three concepts drawn as line art. No numbers, no dashboard.
+import Slot from '../Slot.astro';
 const frames = [
   {
     key: 'movement',
@@ -25,7 +26,7 @@ const frames = [
 ];
 ---
 
-<section class="section on-light on-ivory s2" id="scene-02" aria-labelledby="s2-title">
+<section class="on-light on-ivory s2" id="scene-02" aria-labelledby="s2-title">
   <div class="wrap">
     <div class="s2__head">
       <p class="eyebrow" data-reveal><span class="num">02</span><span>What you can see</span></p>
@@ -35,56 +36,105 @@ const frames = [
       </h2>
     </div>
 
-    <ul class="s2__frames">
-      {
-        frames.map((f, i) => (
-          <li class="s2__frame" data-reveal style={`--d:${i * 110}ms`}>
-            <svg viewBox="0 0 300 180" aria-hidden="true" focusable="false">
-              <path d={f.path} pathLength="1" />
-            </svg>
-            <h3>{f.label}</h3>
-            <p>{f.text}</p>
-          </li>
-        ))
-      }
-    </ul>
-    <p class="note s2__note" data-reveal="fade">Line drawings are illustrative. They are not measurements.</p>
+    <div class="s2__grid">
+      <div class="s2__photo" data-reveal="clip">
+        <Slot name="progress-stride" ratio="4 / 5" tone="amber" shape="a" position="50% 40%" sizes="(max-width: 899px) 100vw, 36vw" />
+      </div>
+
+      <div class="s2__measures" data-progress>
+        <span class="s2__trace" aria-hidden="true"><span></span></span>
+        <ul class="s2__frames">
+          {
+            frames.map((f, i) => (
+              <li class="s2__frame" data-reveal style={`--d:${i * 110}ms;--i:${i}`}>
+                <span class="s2__mark" aria-hidden="true" />
+                <div>
+                  <h3>{f.label}</h3>
+                  <p>{f.text}</p>
+                </div>
+                <svg viewBox="0 0 300 180" aria-hidden="true" focusable="false">
+                  <path d={f.path} pathLength="1" />
+                </svg>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="note s2__note" data-reveal="fade">Line drawings are illustrative. They are not measurements.</p>
+      </div>
+    </div>
 
     <p class="s2__turn" data-reveal>
       <span class="s2__turn-rule" aria-hidden="true"></span>
       But there’s <em>another side</em> to your health.
     </p>
   </div>
+  <!-- visible information thins out and the page darkens into the side you can't see -->
+  <div class="s2__dusk" aria-hidden="true"></div>
 </section>
 
 <style>
   .s2 {
-    padding-bottom: clamp(72px, 9vw, 128px);
+    position: relative;
+    padding-top: clamp(72px, 9.5vw, 144px);
   }
   .s2__head h2 {
     margin: 22px 0 0;
   }
-  .s2__frames {
+  .s2__grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(16px, 2.4vw, 36px);
-    margin-top: clamp(48px, 6vw, 88px);
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: clamp(20px, 3vw, 48px);
+    row-gap: 40px;
+    align-items: center;
+    margin-top: clamp(40px, 5vw, 72px);
+  }
+  .s2__photo {
+    grid-column: 1 / span 5;
+  }
+  .s2__measures {
+    grid-column: 7 / span 6;
+    position: relative;
+    padding-left: 34px;
+    --p: 1;
+  }
+  /* one line traces down the three measures as the reader advances */
+  .s2__trace {
+    position: absolute;
+    left: 6px;
+    top: 10px;
+    bottom: 56px;
+    width: 1px;
+    background: var(--rule);
+  }
+  .s2__trace span {
+    position: absolute;
+    inset: 0;
+    background: var(--text);
+    transform-origin: top;
+    transform: scaleY(var(--p));
   }
   .s2__frame {
-    border-top: 1px solid var(--text);
-    padding-top: 18px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr clamp(110px, 14vw, 190px);
+    gap: 20px;
+    align-items: center;
+    padding: clamp(18px, 2.2vw, 30px) 0;
+    border-bottom: 1px solid var(--rule);
   }
-  .s2__frame:nth-child(2) {
-    margin-top: clamp(0px, 4vw, 56px);
-  }
-  .s2__frame:nth-child(3) {
-    margin-top: clamp(0px, 8vw, 112px);
+  .s2__mark {
+    position: absolute;
+    left: -34px;
+    top: calc(clamp(18px, 2.2vw, 30px) + 2px);
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1px solid var(--text);
+    background: color-mix(in srgb, var(--text) calc(clamp(0, (var(--p) - var(--i) * 0.3) * 6, 1) * 100%), var(--ivory));
   }
   .s2__frame svg {
     width: 100%;
     height: auto;
-    background: var(--paper);
-    margin-bottom: 22px;
   }
   .s2__frame path {
     fill: none;
@@ -94,7 +144,6 @@ const frames = [
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
-  /* S2 strokeDraw: line draws once as the frame enters */
   :global(.js-motion) .s2__frame path {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
@@ -104,22 +153,23 @@ const frames = [
     stroke-dashoffset: 0;
   }
   .s2__frame h3 {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.9rem, 3.2vw, 3rem);
+    line-height: 1;
     margin-bottom: 8px;
   }
   .s2__frame p {
-    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
-    line-height: 1.4;
-    max-width: 18em;
+    line-height: 1.45;
+    max-width: 20em;
+    color: var(--muted);
   }
   .s2__note {
-    margin-top: 28px;
+    margin-top: 18px;
   }
   .s2__turn {
-    margin-top: clamp(72px, 10vw, 150px);
+    margin-top: clamp(64px, 8vw, 120px);
     font-size: clamp(1.9rem, 4.6vw, 4.2rem);
     font-weight: 600;
     line-height: 1.05;
@@ -140,16 +190,24 @@ const frames = [
     background: var(--accent);
     margin-bottom: 26px;
   }
-  @media (max-width: 767px) {
-    .s2__frames {
-      grid-template-columns: 1fr;
-      gap: 36px;
+  .s2__dusk {
+    height: clamp(120px, 16vw, 220px);
+    margin-top: clamp(40px, 5vw, 72px);
+    background: linear-gradient(180deg, var(--ivory) 0%, #8d897f 45%, #2a2b2b 78%, var(--carbon) 100%);
+  }
+  @media (max-width: 899px) {
+    .s2__photo,
+    .s2__measures {
+      grid-column: 1 / -1;
     }
-    .s2__frame:nth-child(n) {
-      margin-top: 0;
+    .s2__photo {
+      max-width: 460px;
     }
-    .s2__frame svg {
-      max-height: 150px;
+    .s2__frame {
+      grid-template-columns: minmax(0, 1fr) min(96px, 22vw);
+    }
+    .s2__frame h3 {
+      font-size: min(9vw, 2.2rem);
     }
   }
 </style>

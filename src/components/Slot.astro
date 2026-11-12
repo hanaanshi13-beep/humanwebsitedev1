@@ -1,0 +1,102 @@
+---
+// A photo-ready frame. If src/assets/human/<name>.(png|jpg|jpeg|webp|avif) exists it is rendered as a responsive
+// image; otherwise the frame shows code-drawn abstract artwork so the layout is complete without the photograph.
+// Nothing here is a stock or invented person: an empty slot stays abstract.
+import { Image } from 'astro:assets';
+import Material from './Material.astro';
+interface Props {
+  name: string;
+  ratio?: string; // CSS aspect-ratio, e.g. "4 / 5"
+  tone?: 'amber' | 'garnet' | 'teal' | 'ivory';
+  shape?: 'a' | 'b' | 'c' | 'd';
+  position?: string; // object-position once a photograph is present
+  alt?: string;
+  sizes?: string;
+  eager?: boolean;
+  class?: string;
+}
+const { name, ratio = '4 / 5', tone = 'amber', shape = 'a', position = '50% 50%', alt = '', sizes = '(max-width: 899px) 100vw, 50vw', eager = false, class: cls = '' } = Astro.props;
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/human/*.{png,jpg,jpeg,webp,avif}', { eager: true });
+const hit = Object.entries(files).find(([p]) => p.split('/').pop()!.replace(/\.[^.]+$/, '') === name);
+const img = hit?.[1].default;
+---
+
+<div class={`slot slot--${tone} ${img ? 'has-img' : 'is-empty'} ${cls}`} style={`--ratio:${ratio}`} data-slot={name}>
+  {
+    img ? (
+      <Image
+        src={img}
+        alt={alt}
+        widths={[480, 800, 1200, 1600].filter((w) => w <= img.width).concat(img.width < 1600 ? [img.width] : [])}
+        sizes={sizes}
+        format="webp"
+        quality={80}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+        style={`object-position:${position}`}
+      />
+    ) : (
+      <span class="slot__art" aria-hidden="true">
+        <Material tone={tone} shape={shape} />
+      </span>
+    )
+  }
+  <slot />
+</div>
+
+<style>
+  .slot {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    border-radius: 6px;
+    isolation: isolate;
+    background: #101315;
+  }
+  .slot :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .slot__art {
+    position: absolute;
+    inset: 0;
+  }
+  /* empty-state worlds: layered light, never a flat fill */
+  .slot--amber.is-empty {
+    background:
+      radial-gradient(90% 70% at 72% 24%, rgba(232, 165, 35, 0.2), transparent 62%),
+      radial-gradient(70% 60% at 18% 88%, rgba(246, 223, 174, 0.08), transparent 70%),
+      linear-gradient(165deg, #1c1810 0%, #0d0f11 62%);
+  }
+  .slot--ivory.is-empty {
+    background:
+      radial-gradient(90% 70% at 70% 22%, rgba(255, 255, 255, 0.9), transparent 60%),
+      linear-gradient(165deg, #e9e4d8 0%, #d6d1c4 100%);
+  }
+  .slot--garnet.is-empty {
+    background:
+      radial-gradient(80% 60% at 74% 22%, rgba(192, 106, 138, 0.34), transparent 62%),
+      radial-gradient(70% 60% at 12% 92%, rgba(84, 38, 59, 0.6), transparent 70%),
+      linear-gradient(165deg, #3a1a29 0%, #1a0c12 70%);
+  }
+  .slot--teal.is-empty {
+    background:
+      radial-gradient(80% 60% at 26% 22%, rgba(79, 163, 156, 0.3), transparent 62%),
+      radial-gradient(70% 60% at 88% 92%, rgba(22, 72, 70, 0.6), transparent 70%),
+      linear-gradient(195deg, #123a39 0%, #07191a 70%);
+  }
+  .slot.is-empty::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  .slot--ivory.is-empty::after {
+    box-shadow: inset 0 0 0 1px rgba(20, 25, 28, 0.1);
+  }
+</style>

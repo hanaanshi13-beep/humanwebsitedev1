@@ -1,15 +1,10 @@
 ---
-// Scene 01 — YOU TAKE CARE OF YOURSELF. Paper chapter. The four everyday acts of care are typeset as the visual.
-// People photography for this scene is pending (docs/HUMAN-ASSET-MANIFEST.md) — no stock or invented faces are used.
-const rituals = [
-  { word: 'eat well', note: 'You try to.' },
-  { word: 'work out', note: 'When you can.' },
-  { word: 'go for a run', note: 'Some mornings.' },
-  { word: 'get enough sleep', note: 'Or try to.' },
-];
+// Scene 01 — YOU TAKE CARE OF YOURSELF. Paper chapter: three everyday moments of care as an editorial triptych.
+// Photographs load by filename (see docs/HUMAN-VISUAL-ASSET-BIBLE.md); until then the frames show abstract artwork.
+import Slot from '../Slot.astro';
 ---
 
-<section class="section on-light s1" id="scene-01" aria-labelledby="s1-title">
+<section class="section on-light s1" id="scene-01" aria-labelledby="s1-title" data-progress>
   <div class="wrap s1__grid">
     <div class="s1__copy">
       <p class="eyebrow" data-reveal><span class="num">01</span><span>Where it starts</span></p>
@@ -26,27 +21,33 @@ const rituals = [
       </div>
     </div>
 
-    <ol class="s1__rituals" aria-label="Everyday care">
-      {
-        rituals.map((r, i) => (
-          <li data-reveal style={`--d:${i * 90}ms`}>
-            <span class="s1__idx" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-            <span class="s1__word">{r.word}</span>
-            <span class="s1__note">{r.note}</span>
-          </li>
-        ))
-      }
-    </ol>
+    <ul class="s1__trip" aria-label="Everyday care">
+      <li class="s1__f s1__f--a" data-reveal="clip">
+        <Slot name="care-walk" ratio="3 / 2" tone="ivory" shape="d" position="62% 50%" sizes="(max-width: 899px) 100vw, 46vw" />
+        <span class="s1__tag"><span aria-hidden="true">01</span> Move, when you can</span>
+      </li>
+      <li class="s1__f s1__f--b" data-reveal="clip" style="--d:140ms">
+        <Slot name="care-meal" ratio="4 / 5" tone="amber" shape="b" position="60% 60%" sizes="(max-width: 899px) 50vw, 22vw" />
+        <span class="s1__tag"><span aria-hidden="true">02</span> Eat well</span>
+      </li>
+      <li class="s1__f s1__f--c" data-reveal="clip" style="--d:260ms">
+        <Slot name="care-rest" ratio="4 / 5" tone="amber" shape="c" position="40% 45%" sizes="(max-width: 899px) 50vw, 22vw" />
+        <span class="s1__tag"><span aria-hidden="true">03</span> Rest</span>
+      </li>
+    </ul>
   </div>
 </section>
 
 <style>
+  .s1 {
+    --p: 0.5;
+  }
   .s1__grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: clamp(20px, 3vw, 48px);
-    row-gap: 56px;
-    align-items: end;
+    row-gap: 48px;
+    align-items: center;
   }
   .s1__copy {
     grid-column: 1 / span 5;
@@ -54,59 +55,67 @@ const rituals = [
   .s1__copy h2 {
     margin: 22px 0 30px;
   }
-  .s1__rituals {
+  .s1__trip {
     grid-column: 7 / span 6;
-    border-top: 1px solid var(--rule);
-  }
-  .s1__rituals li {
     display: grid;
-    grid-template-columns: 44px 1fr auto;
+    grid-template-columns: repeat(6, 1fr);
+    gap: clamp(12px, 1.6vw, 24px);
+    align-items: start;
+  }
+  .s1__f {
+    position: relative;
+  }
+  .s1__f--a {
+    grid-column: 1 / -1;
+  }
+  .s1__f--b {
+    grid-column: 1 / span 3;
+  }
+  .s1__f--c {
+    grid-column: 4 / span 3;
+    margin-top: clamp(24px, 3.4vw, 56px);
+  }
+  /* 10–24px of depth between the three planes as the scene passes */
+  :global(.js-motion) .s1__f--b {
+    translate: 0 calc((0.5 - var(--p)) * 20px);
+  }
+  :global(.js-motion) .s1__f--c {
+    translate: 0 calc((var(--p) - 0.5) * 24px);
+  }
+  .s1__tag {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    display: inline-flex;
+    gap: 10px;
     align-items: baseline;
-    gap: 12px;
-    padding: clamp(14px, 1.8vw, 26px) 0;
-    border-bottom: 1px solid var(--rule);
-  }
-  .s1__idx {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-  }
-  .s1__word {
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: clamp(2rem, 4.4vw, 4.25rem);
-    line-height: 1.02;
-    letter-spacing: -0.01em;
-  }
-  .s1__note {
+    padding: 7px 14px;
+    border-radius: 999px;
+    color: var(--text-on-dark);
     font-size: 0.8125rem;
-    color: var(--muted);
-    text-align: right;
-    white-space: nowrap;
+    font-weight: 600;
+    background: var(--glass-dark-fill-strong);
+    border: 1px solid var(--glass-dark-edge);
+    box-shadow: var(--glass-inner-line), 0 8px 20px rgba(0, 0, 0, 0.25);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
   }
-  /* staggered indent gives the list an editorial rhythm on wide screens */
-  @media (min-width: 900px) {
-    .s1__rituals li:nth-child(2) .s1__word {
-      padding-left: 8%;
-    }
-    .s1__rituals li:nth-child(3) .s1__word {
-      padding-left: 16%;
-    }
-    .s1__rituals li:nth-child(4) .s1__word {
-      padding-left: 4%;
-    }
+  .s1__tag span {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    color: var(--amber);
   }
   @media (max-width: 899px) {
     .s1__copy,
-    .s1__rituals {
+    .s1__trip {
       grid-column: 1 / -1;
     }
-    .s1__rituals li {
-      grid-template-columns: 34px 1fr;
+    .s1__f--c {
+      margin-top: 28px;
     }
-    .s1__note {
-      display: none;
+    :global(.js-motion) .s1__f--b,
+    :global(.js-motion) .s1__f--c {
+      translate: none;
     }
   }
 </style>

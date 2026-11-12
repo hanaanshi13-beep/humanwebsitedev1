@@ -73,3 +73,27 @@ Directive: `HUMAN-FIRST-BUILD-IMPROVEMENT-MASTER-V4` plus the founder's "ultra-p
 - Not measured: Lighthouse / Core Web Vitals, Safari, Firefox, real devices, screen readers.
 
 **Evidence**: before = `docs/reviews-v3-baseline/`; after = `docs/reviews/` and close-ups in `docs/reviews/v4-controls/`. e2e: 43/43 (Chromium).
+
+## V5 pass (2026-11-12, later the same day)
+
+Directive: `HUMAN-Claude-Consolidated-Improvement-and-Asset-Bible-V5`.
+
+**Implemented**
+- `src/components/Slot.astro`: a photo-ready frame. A file named in the Asset Bible and placed in `src/assets/human/` is picked up at build time and served as responsive WebP; with no file the frame shows abstract artwork. Verified with a temporary test image (then removed).
+- Scene 01: copy plus a three-frame triptych (walk, meal, rest) with small glass captions and 20–24px of scroll depth. Copy edit: the four-line "rituals" list was removed because it repeated the paragraph beside it.
+- Scene 02: one photo slot, three measures (Movement, Rest, Routine) with a single line that traces down as you scroll, then a dusk gradient into Scene 03.
+- Scene 04: wide photo slot with a one-time pale-to-full exposure, marker categories set beside it.
+- Scene 05: the value-free sheet settles, most rows recede, three rows turn amber and three questions resolve in sequence; one small glass lens asks "What does this mean for me?". Ends with a link to Scene 06. Final state is the default for reduced motion and no-JS.
+- Scene 07: copy plus a three-frame mosaic; a line states that images show models, not members. Heading now breaks into three lines.
+- Scene 08: centred resolution; an aperture ring closes, a thin amber line draws, then the wordmark. Garnet and teal glows rise at the bottom to hand over to the portals.
+- Portals: two large rounded panels with photo slots, shade for readability (no blur over the image), glass Explore control, hover/focus image lift.
+- /women and /men heroes use the portal photograph on the side opposite the copy once the file exists.
+- Final CTA: centred end act with a horizon of light and one glass tray holding status, promise and the single action.
+
+**Awaiting files**: all ten P1 photographs and the optional macro (see `docs/HUMAN-VISUAL-ASSET-BIBLE.md`); the original hero file; the app prototype folder; founder story; legal and backend approvals.
+
+**Blocked**: Gemini / Flow from this session (no Chrome control). GitHub push (403).
+
+**Not measured**: Lighthouse / Core Web Vitals, Safari, Firefox, real devices, screen readers.
+
+**Evidence**: `docs/reviews/` (full set) and `docs/reviews/v5-scenes/` (each rebuilt scene at 1440 and 390). e2e 43/43 in Chromium.
