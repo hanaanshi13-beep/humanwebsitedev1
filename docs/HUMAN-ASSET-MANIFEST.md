@@ -30,8 +30,8 @@ All ten are AI-generated images of fictional models, supplied by the founders. G
 | `care-walk.jpg` | 1264×848 | Scene 01, top frame | Matches brief |
 | `care-meal.jpg` | 928×1152 | Scene 01, lower-left | Departs from brief (woman at a table, not a top-down still life) |
 | `care-rest.jpg` | 928×1152 | Scene 01, lower-right | Matches brief |
-| `progress-stride.jpg` | 928×1152 | Scene 02 | Departs from brief: sports bra and leggings seen from behind; flagged to founders |
+| `progress-stride.jpg` | 928×1152 | Scene 02 | Replaced 13 Nov: seated on stairs in a matching activewear set; departs from brief (fitness-fashion pose), flagged to founders |
 | `feeling-fine.jpg` | 1264×848 | Scene 04 | Matches brief |
 | `journey-professional.jpg` | 928×1152 | Scene 07, small frame | Matches brief |
-| `journey-parent.jpg` | 1264×848 | Scene 07, upper-right | Matches brief |
-| `journey-elder.jpg` | 928×1152 | Scene 07, tall frame | Subject reads about 50–55, not 66–70; moved to the largest Scene 07 frame |
+| `journey-parent.jpg` | 1264×848 | Scene 07, upper-right | Replaced 13 Nov: father carrying daughter on shoulders; matches brief |
+| `journey-elder.jpg` | 928×1152 | Scene 07, tall frame | Replaced 13 Nov: woman in ivory shirt; reads about 50–58, still younger than the 66–70 brief |
