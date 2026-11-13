@@ -458,8 +458,9 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
   }
   .app__facts > div {
     display: grid;
-    grid-template-columns: 7rem 1fr;
+    grid-template-columns: minmax(0, 7rem) minmax(0, 1fr);
     gap: 16px;
+    overflow-wrap: anywhere;
     padding: 14px 0;
     border-bottom: 1px solid var(--rule);
     font-size: var(--fs-small);
@@ -525,13 +526,13 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     gap: 8px;
     align-items: baseline;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: min(0.75rem, 3vw); /* vw-capped so the labels stay inside the plate at 200% text size */
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
   .app__pt b {
-    font-size: 0.625rem;
+    font-size: 0.85em;
     font-weight: 600;
     color: var(--amber);
     font-variant-numeric: tabular-nums;
@@ -586,9 +587,12 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
       margin-block: 52px;
     }
     .app__pt > span {
-      font-size: 0.625rem;
+      font-size: min(0.625rem, 2.8vw);
       letter-spacing: 0.1em;
       gap: 5px;
+    }
+    .app__core-mark {
+      font-size: min(1.125rem, 4.4vw);
     }
     .app__pt--r > span {
       left: 10px;
@@ -600,7 +604,7 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
       display: none;
     }
     .app__facts > div {
-      grid-template-columns: 5.5rem 1fr;
+      grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr);
     }
   }
 

@@ -97,3 +97,42 @@ Directive: `HUMAN-Claude-Consolidated-Improvement-and-Asset-Bible-V5`.
 **Not measured**: Lighthouse / Core Web Vitals, Safari, Firefox, real devices, screen readers.
 
 **Evidence**: `docs/reviews/` (full set) and `docs/reviews/v5-scenes/` (each rebuilt scene at 1440 and 390). e2e 43/43 in Chromium.
+
+## V6 / V6.1 premium refinement (2026-11-13)
+
+Directives: `HUMAN — V6 Premium Website Refinement` and `V6.1 Creative Director's Final Quality Directive`. Rollback point: git tag `v5-photos-baseline`.
+
+**Design system**
+- `src/styles/global.css` now holds named tokens for the type scale, reading measure, column gap, section rhythm, label / heading / action spacing and a radius hierarchy (image 4px, control 14px, panel 20px, pill). Scenes use the tokens instead of one-off values.
+- Buttons: the layered metallic glass is gone. Primary is a flat muted-amber fill with ink text (8.4:1); secondary is a hairline outline in the surrounding text colour. One primary style on every page, including For Her / For Him and the waitlist. Pointer-tracking light removed.
+- Header: lighter shell (thinner border, smaller shadow, less blur); nav links are plain text with a 1px amber underline on the current page; "Home" replaced by "How it works" (the wordmark is the home link; Home remains in the footer). Mobile menu is a solid sheet with ruled rows.
+- Status pill, Scene 03 controls and labels flattened. Motion: shorter distances and durations; pointer steering, parallax offsets, Scene 04 exposure veil and Scene 08 scroll-driven ring removed.
+
+**Communication**
+- New `Brief.astro` band directly under the hero: "A preventive-health membership, being built in India", the six stage names, the development status and a link to how it works. Hero note now states what HUMAN is.
+
+**Chapters**
+- Scene 01: captions moved under the photographs (no glass chips over images).
+- Scene 02: photograph left, heading and the three measures right, in one composition; the grey dusk gradient into Scene 03 was removed for a clean cut.
+- Scene 05 (mandatory fix): the three questions and their answers are always at full contrast. Scroll only draws an amber accent line. Covered by new test `S5-READ` (desktop, mobile, no-JS, reduced motion).
+- Scene 06: the tab rail and its script are gone. All six stages show at once as a static 3 × 2 plate on one hairline (2 columns on tablet, one vertical thread on phones). No controls, no scroll state. Test `SIG-3` rewritten.
+- Scene 07: mosaic kept, parallax removed, mobile arrangement recomposed.
+- Scene 08: three lines, a short amber rule, the name. Ring, artwork and coloured glows removed.
+- Portals: square-edged editorial plates on plain carbon, outline "Explore" control, both left-aligned.
+- App section: the empty dashed frame is replaced by a schematic of the six planned stages on one circle with "Prototype in development", plus a three-row status list. No screens, values or records are shown or implied. The extra waitlist button here was removed.
+- Final invitation: statement and heading on the left, status, offer, one button and the waitlist caveat on the right. Glass tray and horizon glow removed.
+- Waitlist page: background artwork toned down.
+
+**Unchanged**: every photograph and the hero image (no file in `src/assets` or `public` differs from the rollback tag), the hero headline, the eight-chapter order, all body copy in Scenes 01–08, routes, waitlist behaviour (still preview mode, no network request), disclaimers.
+
+**Copy added or edited (needs founder sign-off)**: the Brief band; the hero note; app status rows and caption; nav label "How it works".
+
+**Measured**
+- Build: 0 errors. e2e: 44/44 in Chromium (two tests rewritten, one added).
+- No horizontal overflow at 320, 375, 390, 430, 768, 1024, 1440; none at 200% text size on /, /women, /men, /about, /faq, /waitlist.
+- Contrast (computed from tokens): lowest text pair is the amber-deep accent on ivory at 4.6:1; body and muted text are 5.9:1 or higher.
+- Homepage: HTML 57 KB, CSS 35 KB, no homepage scene script beyond the shared motion module and the Scene 03 slider.
+
+**Not measured**: Lighthouse / Core Web Vitals, Safari, Firefox, real devices, screen readers.
+
+**Evidence**: `docs/reviews/v6/` — before / after pairs for all twelve homepage sections at 1440 and 390.

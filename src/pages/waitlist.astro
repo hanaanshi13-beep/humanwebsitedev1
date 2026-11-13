@@ -16,7 +16,7 @@ const live = WAITLIST_ENDPOINT !== '';
   <div class="wl" data-wl data-endpoint={WAITLIST_ENDPOINT} data-chapter="welcome">
     <!-- chapter atmospheres: one shared set of layers, cross-faded -->
     <div class="wl__art" aria-hidden="true">
-      <div data-art="welcome"><Material tone="amber" shape="a" /><Material tone="amber" shape="d" opacity={0.5} /></div>
+      <div data-art="welcome"><Material tone="amber" shape="a" opacity={0.42} /><Material tone="amber" shape="d" opacity={0.28} /></div>
       <div data-art="you"><Material tone="ivory" shape="b" opacity={0.9} /></div>
       <div data-art="location">
         <svg class="material wl__contours" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
@@ -29,7 +29,7 @@ const live = WAITLIST_ENDPOINT !== '';
         </svg>
       </div>
       <div data-art="consent"></div>
-      <div data-art="success"><Material tone="amber" shape="c" opacity={0.7} /></div>
+      <div data-art="success"><Material tone="amber" shape="c" opacity={0.4} /></div>
     </div>
 
     <header class="wl__top">
@@ -552,19 +552,10 @@ const live = WAITLIST_ENDPOINT !== '';
   .wl[data-chapter='you'] .btn--ghost,
   .wl[data-chapter='consent'] .btn--ghost {
     --btn-fg: var(--ink);
-    --btn-body: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(236, 232, 223, 0.74) 100%);
-    --btn-pool: rgba(255, 255, 255, 0.6);
-    --btn-edge: rgba(20, 25, 28, 0.3);
-    --btn-top: #fff;
-    --btn-caustic: rgba(20, 25, 28, 0.08);
-    --btn-drop: 0 8px 20px rgba(25, 26, 28, 0.12);
-    text-shadow: none;
   }
   .wl[data-chapter='you'] .wl__bar .btn:not(.btn--ghost),
   .wl[data-chapter='consent'] .wl__bar .btn:not(.btn--ghost) {
-    --btn-body: linear-gradient(180deg, #4a3a1d 0%, #25201a 46%, #131414 100%);
-    --btn-edge: rgba(20, 25, 28, 0.85);
-    --btn-drop: 0 12px 26px rgba(40, 32, 16, 0.26), 0 1px 2px rgba(20, 25, 28, 0.4);
+    --btn-border: #a9781f;
   }
   @media (max-width: 899px) {
     .wl__stage {

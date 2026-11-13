@@ -98,9 +98,9 @@ import { STAGES } from '../../data/site';
     max-width: 44em;
   }
   .brief__status .text-link {
-    display: inline-block;
     padding-block: 10px;
     margin-left: 4px;
+    white-space: nowrap;
     color: var(--text);
     font-weight: 600;
   }
@@ -112,7 +112,7 @@ import { STAGES } from '../../data/site';
   }
   @media (max-width: 599px) {
     .brief__stages {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.4em), 1fr));
       justify-content: stretch;
       font-size: 0.8125rem;
     }

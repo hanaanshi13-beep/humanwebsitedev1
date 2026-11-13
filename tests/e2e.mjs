@@ -122,8 +122,8 @@ await test('E2E-05/06', 'Reveal Lens opens with scroll and reverses cleanly (V3-
     return read();
   };
   const a = await at(top + 20);
-  const b = await at(top + 500);
-  const c = await at(top + 800);
+  const b = await at(top + 240);
+  const c = await at(top + 490);
   const back = await at(top + 20);
   assert(a < 0.1 && b > a && c > b && c > 0.9, `progress ${a} → ${b} → ${c}`);
   assert(Math.abs(back - a) < 0.02, `did not reverse: ${back}`);
@@ -142,19 +142,41 @@ await test('E2E-07', 'Resize from desktop to mobile inside Scene 03: pin release
   await p.context().close();
 });
 
-await test('SIG-3', 'Connected Thread: all six stages readable; selecting a stage activates it (interaction wins)', async () => {
-  const p = await ctx();
-  await go(p, '/#scene-06');
-  assert((await p.locator('.s6__stage').count()) === 6, 'six stages');
-  // V4: on desktop the stages are a rail with one description pane; every stage name stays visible.
-  for (const d of await p.locator('.s6__name').all()) assert(await d.isVisible(), 'a stage name is hidden');
-  assert((await p.locator('.s6__detail:visible').count()) === 1, 'exactly one description pane should show');
-  await p.locator('.s6__stage').nth(4).locator('button').click();
-  assert((await p.locator('.s6__stage.is-active .s6__name').innerText()).trim() === 'Retest', 'Retest not active');
-  await p.mouse.wheel(0, 120);
-  await p.waitForTimeout(200);
-  assert((await p.locator('.s6__stage.is-active .s6__name').innerText()).trim() === 'Retest', 'scroll overrode selection');
-  await p.context().close();
+await test('SIG-3', 'Connected journey: all six stages, lines and planned details are visible at once, in order, with no script state', async () => {
+  // V6: the journey is a static plate. Nothing is tabbed, dimmed or gated behind scroll or JavaScript.
+  for (const opts of [{}, { viewport: { width: 390, height: 844 } }, { javaScriptEnabled: false }]) {
+    const p = await ctx(opts);
+    await go(p, '/#scene-06');
+    const names = (await p.locator('.s6__name').allInnerTexts()).map((t) => t.trim().toUpperCase());
+    assert(names.join(' ') === 'TEST UNDERSTAND ACT TRACK RETEST IMPROVE', `stage order: ${names.join(' ')}`);
+    const stages = await p.locator('.s6__stage').all();
+    assert(stages.length === 6, `stages: ${stages.length}`);
+    for (const st of stages) {
+      await st.evaluate((e) => e.scrollIntoView({ block: 'center' }));
+      await p.waitForFunction((e) => Number(getComputedStyle(e).opacity) === 1, await st.elementHandle(), { timeout: 3000 });
+      for (const sel of ['.s6__name', '.s6__line', '.s6__detail']) assert(await st.locator(sel).isVisible(), `${sel} hidden`);
+    }
+    assert((await p.locator('#scene-06 .s6__stages button').count()) === 0, 'journey should have no controls');
+    assert(/None of it is available today/i.test(await p.locator('#scene-06').innerText()), 'planned qualifier missing');
+    await p.context().close();
+  }
+});
+
+await test('S5-READ', 'Scene 05: all three questions and answers stay at full opacity at every scroll position (and without JS)', async () => {
+  for (const opts of [{}, { viewport: { width: 390, height: 844 } }, { javaScriptEnabled: false }, { reducedMotion: 'reduce' }]) {
+    const p = await ctx(opts);
+    await go(p, '/');
+    const box = await p.locator('#scene-05').evaluate((e) => ({ top: e.getBoundingClientRect().top + scrollY, h: e.offsetHeight }));
+    for (let y = box.top - 700; y < box.top + box.h; y += 180) {
+      await p.evaluate((v) => scrollTo({ top: v, behavior: 'instant' }), y);
+      await p.waitForTimeout(60);
+      const lows = await p.locator('.s5__qs li, .s5__qs h3, .s5__qs p').evaluateAll((els) =>
+        els.filter((e) => { let o = 1; for (let n = e; n && n.nodeType === 1; n = n.parentElement) o *= Number(getComputedStyle(n).opacity); return o < 0.99; }).length);
+      assert(lows === 0, `${lows} dimmed question elements at y=${y}`);
+    }
+    assert((await p.locator('.s5__qs li').count()) === 3, 'three questions');
+    await p.context().close();
+  }
 });
 
 await test('E2E-08', 'Keyboard: every homepage link/button is reachable and shows a focus indicator', async () => {
@@ -249,7 +271,7 @@ await test('E2E-13', 'App folder absent: honest placeholder, no screenshots, no 
   const p = await ctx();
   await go(p, '/');
   const t = await p.locator('#app').innerText();
-  assert(/coming soon/i.test(t) && /No screens are shown yet/i.test(t), 'placeholder copy missing');
+  assert(/prototype is in development/i.test(t) && /No screens are shown yet/i.test(t) && /not a screen from the app/i.test(t), 'honest status copy missing');
   assert((await p.locator('#app img, #app iframe, #app video').count()) === 0, 'media present in app slot');
   assert((await p.locator('a[href*="edgeone"], a[href^="/app"]').count()) === 0, 'unverified app link present');
   await p.context().close();
