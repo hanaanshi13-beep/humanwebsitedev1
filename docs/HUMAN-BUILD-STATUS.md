@@ -136,3 +136,29 @@ Directives: `HUMAN — V6 Premium Website Refinement` and `V6.1 Creative Directo
 **Not measured**: Lighthouse / Core Web Vitals, Safari, Firefox, real devices, screen readers.
 
 **Evidence**: `docs/reviews/v6/` — before / after pairs for all twelve homepage sections at 1440 and 390.
+
+## Scene 03 rebuild: light-to-dark anatomical passage (2026-11-13)
+
+Directive: `HUMAN — Scene 03 Complete Website Implementation Master Prompt`. Rollback point: git tag `v6-baseline`. Reference: founders' `HUMAN_Scene03_Light_to_Dark_Prototype.html` (timing and atmosphere only; not copied in).
+
+**What replaced what**: the abstract Reveal Lens (code-drawn artwork, aperture, range slider) is gone. Scene 03 is now one pinned stage built on the two founder-supplied anatomical illustrations.
+
+**Assets**: `src/assets/scene03/HUMAN_S03_LIGHT.webp` (1199 × 1312) and `HUMAN_S03_DARK.webp` (1122 × 1402), stored exactly as received (the uploads arrived as WebP, not PNG). Astro generates 480 / 800 / full-width derivatives at quality 86; both load lazily, so the homepage's first paint does not wait for them.
+
+**How the transition works**: one value, `--p` (0–1), is written while the stage is pinned (desktop travel 200vh, phone 160svh). The room darkens and the luminous still fades over 0.10–0.34; the stage is empty and dark from 0.37 to 0.42; the dark still fades in over 0.42–0.62; from 0.64 the scene is "immersive" and the controls appear. The two stills are never visible together (test `S3-GHOST` samples 120 scroll positions on desktop and phone). Nothing inside either image moves, warps or is recoloured.
+
+**Exploration**: three labelled buttons (the accessible controls) — Heart and circulation, Lungs and breathing, Beyond the visible — plus two markers on the artwork for heart and lungs as pointer conveniences. One panel at a time; close button, Escape (focus returns), toggling, and scrolling back out all put it away. The third topic has no marker; selecting it dims the figure. Controls are inert until the dark state.
+
+**Organ highlighting**: none. There are no masks; selection is shown by the marker and the panel only. Marker positions were read off the dark illustration by eye.
+
+**Fallbacks**: reduced motion steps between light and dark (no scrubbing); without JavaScript the scene is a still with the luminous figure, the copy and all three topics written out.
+
+**Copy added (founder draft; needs clinical and editorial review before launch)**: the three panels, "Explore what lies beneath", the caption "An illustration, not a scan. It does not show anyone's results.", and the closing lines after the stage. Existing Scene 03 heading and paragraphs are unchanged.
+
+**Scope**: only `Scene03.astro`, the two image files and `tests/e2e.mjs` changed. Scene 02 and Scene 04 are untouched.
+
+**Measured**: build 0 errors; e2e 47/47 in Chromium (three Scene 03 tests rewritten, three added). No overflow and panel inside the viewport at 1920×1080, 1440×900, 1280×800, 1024×768, 768×1024, 430×932, 390×844, 375×812, 360×800, 320×568. No console errors.
+
+**Known limits**: text contrast dips to roughly 4:1 for a short stretch of scroll while the room passes mid-grey; on phones the open panel covers the lower half of the figure; at 1024×768 it covers the lower lungs. Not measured: Lighthouse, Safari, Firefox, real devices, screen readers.
+
+**Evidence**: `docs/reviews/v7-scene03/`.
