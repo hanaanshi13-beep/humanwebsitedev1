@@ -25,10 +25,9 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
       </div>
     </div>
 
-    <figure class="s4__fig" data-reveal="fade" data-progress>
+    <figure class="s4__fig" data-reveal="fade">
       <div class="s4__photo">
         <Slot name="feeling-fine" ratio="3 / 2" tone="ivory" shape="a" position="30% 40%" sizes="(max-width: 899px) 100vw, 58vw" />
-        <span class="s4__veil" aria-hidden="true"></span>
       </div>
       <div class="s4__side">
         <ul class="s4__line">
@@ -51,32 +50,22 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
 
 <style>
   .s4 h2 {
-    margin: 22px 0 0;
+    margin: var(--stack-label) 0 0;
   }
   .s4__prose {
     padding-top: clamp(0px, 3.4vw, 46px);
   }
   .s4__fig {
-    --p: 1;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    column-gap: clamp(20px, 3vw, 48px);
+    column-gap: var(--col-gap);
     row-gap: 36px;
-    align-items: center;
-    margin-top: clamp(48px, 6vw, 96px);
+    align-items: end;
+    margin-top: clamp(48px, 6vw, 88px);
   }
   .s4__photo {
     grid-column: 1 / span 7;
     position: relative;
-  }
-  /* a single exposure: the frame arrives pale and settles to full tone as it is read */
-  .s4__veil {
-    position: absolute;
-    inset: 0;
-    border-radius: 6px;
-    background: var(--paper);
-    opacity: calc((1 - clamp(0, var(--p) * 2.4, 1)) * 0.7);
-    pointer-events: none;
   }
   .s4__side {
     grid-column: 9 / span 4;
@@ -95,15 +84,15 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
     top: 10px;
     bottom: 14px;
     width: 1px;
-    background: var(--text);
+    background: var(--rule);
     transform-origin: top;
   }
   .s4__line li {
     position: relative;
     font-family: var(--serif);
     font-style: italic;
-    font-size: clamp(1.6rem, 2.8vw, 2.6rem);
-    line-height: 1.1;
+    font-size: var(--fs-h3);
+    line-height: 1.15;
   }
   .s4__dot {
     position: absolute;
@@ -113,7 +102,7 @@ const markers = ['Blood sugar', 'Cholesterol', 'Iron', 'Thyroid'];
     height: 13px;
     border-radius: 50%;
     background: var(--paper);
-    border: 1px solid var(--text);
+    border: 1px solid var(--accent);
   }
   :global(.js-motion) .s4__line::before {
     transform: scaleY(0);

@@ -1,13 +1,18 @@
 ---
 // Scene 07, Scene 08, Her/Him portals, app prototype slot, final invitation.
 // Photographs load by filename through <Slot>; until they exist each frame shows abstract artwork.
-import Material from '../Material.astro';
 import Slot from '../Slot.astro';
+import { STAGES } from '../../data/site';
+// Six points on a circle, starting at the top and running clockwise, for the planned-journey schematic.
+const ring = STAGES.map((st, i) => {
+  const a = (i / STAGES.length) * Math.PI * 2 - Math.PI / 2;
+  return { name: st.name, n: String(i + 1).padStart(2, '0'), x: 50 + Math.cos(a) * 50, y: 50 + Math.sin(a) * 50, side: Math.cos(a) > 0.2 ? 'r' : Math.cos(a) < -0.2 ? 'l' : Math.sin(a) < 0 ? 't' : 'b' };
+});
 const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your priorities', 'Your life stage'];
 ---
 
 <!-- Scene 07 -->
-<section class="section on-light s7" id="scene-07" aria-labelledby="s7-title" data-progress>
+<section class="section on-light s7" id="scene-07" aria-labelledby="s7-title">
   <div class="wrap s7__grid">
     <div class="s7__copy">
       <p class="eyebrow" data-reveal><span class="num">07</span><span>No two people</span></p>
@@ -42,18 +47,16 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
 </section>
 
 <!-- Scene 08 -->
-<section class="on-dark s8" id="scene-08" aria-labelledby="s8-title" data-progress>
-  <Material tone="amber" shape="d" opacity={0.4} class="s8__mat" />
-  <span class="s8__aperture" aria-hidden="true"></span>
+<section class="on-dark s8" id="scene-08" aria-labelledby="s8-title">
   <div class="wrap s8__inner">
     <p class="eyebrow no-rule s8__eyebrow" data-reveal><span class="num">08</span><span id="s8-title" role="heading" aria-level="2">The story continues</span></p>
     <div class="s8__lines">
       <p data-reveal>You don’t have to wait until something feels wrong <em>to start understanding your health.</em></p>
-      <p data-reveal style="--d:140ms">And you don’t have to figure everything out <em>alone.</em></p>
+      <p data-reveal style="--d:120ms">And you don’t have to figure everything out <em>alone.</em></p>
     </div>
-    <p class="s8__bridge" data-reveal style="--d:240ms">There’s more to your health than what you can see.</p>
-    <span class="s8__rule" aria-hidden="true"></span>
-    <p class="s8__mark" data-reveal="fade" style="--d:320ms">There’s <span class="s8__human">HUMAN</span><span class="vh">.</span></p>
+    <p class="s8__bridge" data-reveal style="--d:200ms">There’s more to your health than what you can see.</p>
+    <span class="s8__rule" aria-hidden="true" data-reveal="rule" style="--d:260ms"></span>
+    <p class="s8__mark" data-reveal="fade" style="--d:420ms">There’s <span class="s8__human">HUMAN</span><span class="vh">.</span></p>
   </div>
 </section>
 
@@ -91,7 +94,8 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
   </div>
 </section>
 
-<!-- App prototype slot: honest placeholder until the real folder is audited (Part H). No invented screens. -->
+<!-- The planned experience. An honest schematic of the journey the app is being prototyped to carry:
+     stage names only. No screens, values, dashboards or records are shown or implied (Part H). -->
 <section class="section on-light app" id="app" aria-labelledby="app-title">
   <div class="wrap split">
     <div class="a">
@@ -106,55 +110,70 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
           once they’re ready to share — not mock-ups made for a website.
         </p>
       </div>
-      <div class="actions" data-reveal="fade">
-        <a class="btn btn--dark" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
-      </div>
+      <dl class="app__facts" data-reveal style="--d:180ms">
+        <div><dt>Status</dt><dd>A prototype is in development.</dd></div>
+        <div><dt>Screens</dt><dd>None are shown yet.</dd></div>
+        <div><dt>Today</dt><dd>Nothing here can be used or purchased.</dd></div>
+      </dl>
     </div>
     <div class="b">
-      <div class="app__slot" data-reveal role="img" aria-label="Empty frame. The app prototype preview has not been published yet.">
-        <span class="status-pill">Prototype preview — coming soon</span>
-        <p>No screens are shown yet. Nothing here can be used or purchased today.</p>
-      </div>
+      <figure class="app__plate" data-reveal="fade">
+        <div class="app__ring" role="img" aria-label="Schematic of the planned journey: Test, Understand, Act, Track, Retest, Improve, arranged as one connected circle. It is a diagram, not a screen from the app.">
+          <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <circle cx="50" cy="50" r="50" />
+          </svg>
+          {
+            ring.map((r) => (
+              <span class={`app__pt app__pt--${r.side}`} style={`left:${r.x.toFixed(2)}%;top:${r.y.toFixed(2)}%`} aria-hidden="true">
+                <i />
+                <span><b>{r.n}</b>{r.name}</span>
+              </span>
+            ))
+          }
+          <div class="app__core" aria-hidden="true">
+            <span class="app__core-mark">HUMAN</span>
+            <span class="status-pill">Prototype in development</span>
+          </div>
+        </div>
+        <figcaption class="note">
+          A schematic of the planned journey — not a screen from the app. No screens are shown yet.
+        </figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
 <!-- Final invitation -->
-<section class="on-dark cta-band final" id="join" aria-labelledby="join-title">
-  <Material tone="amber" shape="b" opacity={0.5} />
-  <span class="final__horizon" aria-hidden="true"></span>
-  <div class="wrap final__inner">
-    <p class="final__statement" data-reveal>
-      Health isn’t a single test or a single visit. It’s something you come to understand <em>over time</em> — with
-      context, with qualified people, and at your own pace.
-    </p>
-    <h2 class="display final__title" id="join-title" data-reveal="mask">
-      <span class="mask"><span>Be part of what</span></span>
-      <span class="mask" style="--i:1"><span><em>we’re building.</em></span></span>
-    </h2>
-    <div class="final__tray" data-reveal style="--d:160ms">
-      <div class="final__tray-copy">
-        <span class="status-pill">In development</span>
-        <p>Register your interest and, if you opt in, hear about HUMAN as it develops.</p>
-      </div>
-      <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
+<section class="on-dark final" id="join" aria-labelledby="join-title">
+  <div class="wrap final__grid">
+    <div class="final__lead">
+      <p class="final__statement" data-reveal>
+        Health isn’t a single test or a single visit. It’s something you come to understand <em>over time</em> — with
+        context, with qualified people, and at your own pace.
+      </p>
+      <h2 class="display final__title" id="join-title" data-reveal="mask">
+        <span class="mask"><span>Be part of what</span></span>
+        <span class="mask" style="--i:1"><span><em>we’re building.</em></span></span>
+      </h2>
     </div>
-    <p class="note final__note" data-reveal="fade" style="--d:240ms">
-      Open to people across India. First pilot planned for Delhi NCR. Joining registers interest only — it does not
-      reserve a place or start any service.
-    </p>
+    <div class="final__act" data-reveal style="--d:140ms">
+      <span class="status-pill">In development</span>
+      <p class="final__offer">Register your interest and, if you opt in, hear about HUMAN as it develops.</p>
+      <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
+      <p class="note final__note">
+        Open to people across India. First pilot planned for Delhi NCR. Joining registers interest only — it does not
+        reserve a place or start any service.
+      </p>
+    </div>
   </div>
 </section>
 
 <style>
   /* ---- Scene 07 ---- */
-  .s7 {
-    --p: 0.5;
-  }
   .s7__grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    column-gap: clamp(20px, 3vw, 48px);
+    column-gap: var(--col-gap);
     row-gap: 48px;
     align-items: center;
   }
@@ -162,20 +181,20 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     grid-column: 1 / span 5;
   }
   .s7__copy h2 {
-    margin: 22px 0 28px;
+    margin: var(--stack-label) 0 var(--stack-head);
   }
   .s7__list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 10px;
-    margin-top: 30px;
+    gap: 4px 10px;
+    margin-top: 28px;
     max-width: 30em;
   }
   .s7__list li {
     font-family: var(--serif);
     font-style: italic;
-    font-size: clamp(1.35rem, 2vw, 1.8rem);
-    line-height: 1.2;
+    font-size: clamp(1.375rem, 1.9vw, 1.75rem);
+    line-height: 1.25;
   }
   .s7__list li:not(.s7__matters)::after {
     content: '·';
@@ -183,26 +202,27 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     color: var(--accent);
     font-style: normal;
   }
-  .s7__matters {
+  .s7__list li:nth-last-child(2)::after {
+    display: none;
+  }
+  .s7__list .s7__matters {
     flex-basis: 100%;
-    margin-top: 6px;
-    font-family: var(--sans) !important;
-    font-style: normal !important;
+    margin-top: 8px;
+    font-family: var(--sans);
+    font-style: normal;
     font-weight: 700;
-    font-size: clamp(1.35rem, 2vw, 1.8rem) !important;
     letter-spacing: -0.02em;
     text-transform: uppercase;
   }
   .s7__built {
-    margin-top: 26px;
+    margin-top: 24px;
   }
-  /* asymmetric editorial mosaic: three frames at three depths */
+  /* asymmetric editorial mosaic: one tall portrait, one landscape, one small portrait */
   .s7__mosaic {
     grid-column: 7 / span 6;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    column-gap: clamp(12px, 1.6vw, 24px);
-    row-gap: clamp(12px, 1.6vw, 24px);
+    gap: clamp(12px, 1.6vw, 24px);
     align-items: start;
   }
   .s7__f--a {
@@ -218,14 +238,9 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     grid-column: 4 / span 2;
     grid-row: 2;
   }
-  :global(.js-motion) .s7__f--a {
-    translate: 0 calc((0.5 - var(--p)) * 28px);
-  }
-  :global(.js-motion) .s7__f--c {
-    translate: 0 calc((var(--p) - 0.5) * 24px);
-  }
   .s7__note {
     grid-column: 1 / -1;
+    margin-top: 4px;
   }
   @media (max-width: 899px) {
     .s7__copy,
@@ -233,58 +248,27 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
       grid-column: 1 / -1;
     }
     .s7__f--a {
-      grid-column: 1 / -1;
-      grid-row: auto;
+      grid-column: 1 / span 4;
+      grid-row: 1;
       margin-top: 0;
     }
     .s7__f--b {
       grid-column: 1 / -1;
-      grid-row: auto;
+      grid-row: 2;
     }
     .s7__f--c {
-      grid-column: 3 / span 4;
-      grid-row: auto;
-    }
-    :global(.js-motion) .s7__f--a,
-    :global(.js-motion) .s7__f--c {
-      translate: none;
+      grid-column: 5 / span 2;
+      grid-row: 1;
+      align-self: end;
     }
   }
 
-  /* ---- Scene 08: the aperture closes to a line, and the line becomes the name ---- */
+  /* ---- Scene 08: three quiet lines, one amber rule, the name ---- */
   .s8 {
-    --p: 1;
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    padding-block: clamp(96px, 13vw, 190px) clamp(80px, 10vw, 150px);
+    padding-block: clamp(88px, 11vw, 168px) clamp(72px, 9vw, 128px);
     text-align: center;
-    background:
-      radial-gradient(60% 50% at 50% 46%, rgba(232, 165, 35, 0.07), transparent 70%),
-      var(--carbon);
-  }
-  .s8 :global(.s8__mat) {
-    opacity: calc(0.55 - var(--p) * 0.4) !important;
-  }
-  .s8__aperture {
-    position: absolute;
-    left: 50%;
-    top: 46%;
-    width: min(92vw, 900px);
-    aspect-ratio: 1.5;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-bottom-color: rgba(232, 165, 35, 0.55);
-    box-shadow:
-      inset 0 14px 40px -22px rgba(255, 255, 255, 0.22),
-      inset 0 -18px 44px -24px rgba(232, 165, 35, 0.35);
-    transform: translate(-50%, -50%) scale(calc(1.3 - var(--p) * 0.45), calc(1.3 - var(--p) * 0.62));
-    opacity: calc(0.25 + var(--p) * 0.5);
-    pointer-events: none;
   }
   .s8__inner {
-    position: relative;
-    z-index: var(--z-content);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -294,12 +278,12 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
   }
   .s8__lines {
     display: grid;
-    gap: 0.5em;
-    max-width: 22em;
-    margin-top: 34px;
-    font-size: clamp(1.5rem, 3vw, 2.7rem);
+    gap: 0.55em;
+    max-width: 21em;
+    margin-top: 32px;
+    font-size: clamp(1.5rem, 2.9vw, 2.625rem);
     font-weight: 600;
-    line-height: 1.16;
+    line-height: 1.18;
     letter-spacing: -0.02em;
     text-wrap: balance;
   }
@@ -310,59 +294,46 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     letter-spacing: -0.01em;
   }
   .s8__bridge {
-    margin-top: 34px;
+    margin-top: 32px;
     color: var(--muted);
-    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    font-size: var(--fs-lede);
   }
   .s8__rule {
-    width: min(60vw, 420px);
+    width: 48px;
     height: 1px;
-    margin: clamp(40px, 5vw, 72px) 0 clamp(28px, 3vw, 44px);
-    background: linear-gradient(90deg, transparent, var(--amber) 30%, var(--amber) 70%, transparent);
-    transform: scaleX(clamp(0, (var(--p) - 0.35) * 2.2, 1));
+    margin: clamp(40px, 5vw, 64px) 0 clamp(28px, 3vw, 40px);
+    background: var(--amber);
+  }
+  :global(.js-motion) .s8__rule[data-reveal='rule'] {
+    transform-origin: center;
   }
   .s8__mark {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-family: var(--serif);
     font-style: italic;
-    font-size: min(8vw, clamp(1.5rem, 2.4vw, 2.1rem));
+    font-size: min(8vw, clamp(1.5rem, 2.2vw, 2rem));
     line-height: 1;
   }
   .s8__human {
     font-family: var(--sans);
     font-style: normal;
     font-weight: 600;
-    font-size: min(13vw, clamp(2.6rem, 8vw, 6.6rem));
+    font-size: min(13vw, clamp(2.6rem, 7vw, 6rem));
     letter-spacing: 0.3em;
     margin-right: -0.3em;
     line-height: 1.05;
   }
-  /* the dark resolves into two colours: the portals' worlds, before they arrive */
-  .s8::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 46%;
-    z-index: 0;
-    background:
-      radial-gradient(60% 100% at 22% 100%, rgba(84, 38, 59, 0.55), transparent 70%),
-      radial-gradient(60% 100% at 78% 100%, rgba(22, 72, 70, 0.55), transparent 70%);
-    opacity: var(--p);
-    pointer-events: none;
-  }
 
-  /* ---- Portals ---- */
+  /* ---- Portals: two editorial plates ---- */
   .portals {
-    position: relative;
-    padding-block: clamp(40px, 5vw, 72px) clamp(72px, 9vw, 128px);
-    background: linear-gradient(90deg, #170b10 0%, var(--carbon) 50%, #07191a 100%);
+    padding-block: clamp(32px, 4vw, 56px) var(--section-y);
   }
   .portals__head {
     display: grid;
-    gap: 14px;
+    gap: 12px;
     justify-items: center;
     text-align: center;
     margin-bottom: clamp(32px, 4vw, 56px);
@@ -376,15 +347,13 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     position: relative;
     display: flex;
     align-items: flex-end;
-    min-height: min(82svh, 780px);
+    min-height: min(80svh, 760px);
     overflow: hidden;
     isolation: isolate;
-    border-radius: var(--radius-panel);
+    border-radius: var(--radius-image);
     color: var(--text-on-dark);
+    --text: var(--text-on-dark);
     text-decoration: none;
-    box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-      0 30px 70px -30px rgba(0, 0, 0, 0.7);
   }
   .portal :global(.portal__media) {
     position: absolute;
@@ -399,43 +368,22 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     position: absolute;
     inset: 0;
     z-index: -1;
-    transition: opacity 420ms var(--ease-human);
   }
   .portal--her .portal__shade {
-    background:
-      linear-gradient(0deg, rgba(26, 10, 17, 0.94) 0%, rgba(26, 10, 17, 0.5) 34%, rgba(26, 10, 17, 0) 62%),
-      linear-gradient(90deg, rgba(26, 10, 17, 0.5) 0%, rgba(26, 10, 17, 0) 46%);
+    background: linear-gradient(0deg, rgba(20, 9, 14, 0.94) 0%, rgba(20, 9, 14, 0.62) 28%, rgba(20, 9, 14, 0) 58%);
   }
   .portal--him .portal__shade {
-    background:
-      linear-gradient(0deg, rgba(6, 22, 23, 0.94) 0%, rgba(6, 22, 23, 0.5) 34%, rgba(6, 22, 23, 0) 62%),
-      linear-gradient(270deg, rgba(6, 22, 23, 0.5) 0%, rgba(6, 22, 23, 0) 46%);
-  }
-  /* a thin light edge that shifts on hover / focus */
-  .portal::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.1), transparent 22%);
-    opacity: 0.5;
-    transition: opacity 420ms var(--ease-human);
+    background: linear-gradient(0deg, rgba(6, 18, 19, 0.94) 0%, rgba(6, 18, 19, 0.62) 28%, rgba(6, 18, 19, 0) 58%);
   }
   .portal__body {
     display: grid;
     justify-items: start;
     gap: 12px;
     width: 100%;
-    padding: clamp(24px, 3.2vw, 52px);
-  }
-  .portal--him .portal__body {
-    justify-items: end;
-    text-align: right;
+    padding: clamp(24px, 3vw, 48px);
   }
   .portal__eyebrow {
-    font-size: 0.75rem;
+    font-size: var(--fs-eyebrow);
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -447,7 +395,7 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     color: #c9ebe6;
   }
   .portal__title {
-    font-size: clamp(3.2rem, 7.4vw, 7.4rem);
+    font-size: clamp(3rem, 6.2vw, 6rem);
     font-weight: 700;
     line-height: 0.9;
     letter-spacing: -0.035em;
@@ -461,179 +409,266 @@ const differs = ['Your age', 'Your lifestyle', 'Your health history', 'Your prio
     font-size: 1.12em;
   }
   .portal__sub {
-    max-width: 22em;
-    font-size: clamp(1rem, 1.3vw, 1.1875rem);
-    line-height: 1.45;
+    max-width: 24em;
+    font-size: var(--fs-body);
+    line-height: 1.5;
   }
   .portal__go {
     margin-top: 12px;
   }
-  .portal--her .portal__go {
-    --btn-edge: rgba(255, 206, 224, 0.4);
-    --btn-caustic: rgba(214, 110, 150, 0.4);
-  }
-  .portal--him .portal__go {
-    --btn-edge: rgba(196, 244, 238, 0.38);
-    --btn-caustic: rgba(86, 190, 182, 0.4);
-  }
   .portal:focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 4px;
-    border-radius: var(--radius-panel);
+    border-radius: var(--radius-image);
   }
   @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .portal:hover :global(.portal__media),
-    .portal:focus-visible :global(.portal__media) {
-      transform: scale(1.018);
+    .portal:hover :global(.portal__media) {
+      transform: scale(1.015);
     }
-  }
-  .portal:hover::after,
-  .portal:focus-visible::after {
-    opacity: 1;
   }
   .portal:hover .portal__go,
   .portal:focus-visible .portal__go {
-    --btn-edge: rgba(255, 255, 255, 0.5);
+    --btn-border: var(--text-on-dark);
+    background: rgba(243, 239, 230, 0.08);
   }
   .portal:hover .portal__go .arr::before,
   .portal:focus-visible .portal__go .arr::before {
     transform: translateX(3px);
   }
   @media (max-width: 767px) {
-    .portals {
-      background: var(--carbon);
-    }
     .portals__pair {
       grid-template-columns: 1fr;
     }
     .portal {
-      min-height: min(74svh, 560px);
-    }
-    .portal--him .portal__body {
-      justify-items: start;
-      text-align: left;
-    }
-    .portal--him .portal__shade {
-      background:
-        linear-gradient(0deg, rgba(6, 22, 23, 0.94) 0%, rgba(6, 22, 23, 0.5) 40%, rgba(6, 22, 23, 0) 70%);
+      min-height: min(70svh, 540px);
     }
   }
 
-  /* ---- App slot ---- */
+  /* ---- The planned experience ---- */
   .app h2 {
-    margin: 22px 0 30px;
+    margin: var(--stack-label) 0 var(--stack-head);
   }
-  .app__slot {
-    aspect-ratio: 4 / 3;
-    border: 1px dashed rgba(20, 25, 28, 0.4);
-    border-radius: var(--radius-panel);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-end;
-    gap: 14px;
-    padding: clamp(20px, 3vw, 40px);
-    background: repeating-linear-gradient(135deg, transparent 0 14px, rgba(20, 25, 28, 0.035) 14px 15px);
+  .app :global(.split) {
+    align-items: center;
   }
-  .app__slot p {
-    max-width: 24em;
+  .app__facts {
+    margin-top: var(--stack-action);
+    max-width: var(--measure);
+    border-top: 1px solid var(--rule);
+  }
+  .app__facts > div {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--fs-small);
+  }
+  .app__facts dt {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     color: var(--muted);
-    font-size: 0.9375rem;
+    padding-top: 0.3em;
   }
-
-  /* ---- Final: the end act. A horizon of light, one statement, one action. ---- */
-  .final {
-    padding-block: clamp(96px, 12vw, 180px) clamp(88px, 10vw, 150px);
-    text-align: center;
-    background: #08090b;
+  .app__facts dd {
+    margin: 0;
   }
-  .final__horizon {
+  .app__plate {
+    background: var(--ink);
+    color: var(--text-on-dark);
+    --text: var(--text-on-dark);
+    --muted: var(--muted-on-dark);
+    --rule: var(--rule-on-dark);
+    --accent: var(--amber);
+    border-radius: var(--radius-control);
+    padding: clamp(20px, 2.6vw, 36px);
+  }
+  .app__ring {
+    position: relative;
+    width: min(62%, 400px);
+    aspect-ratio: 1;
+    margin: clamp(56px, 7vw, 88px) auto;
+  }
+  .app__ring svg {
     position: absolute;
-    left: 50%;
-    bottom: -62%;
-    width: 160vw;
-    max-width: 2400px;
-    aspect-ratio: 2 / 1;
-    transform: translateX(-50%);
-    border-radius: 50%;
-    border-top: 1px solid rgba(255, 228, 176, 0.4);
-    background: radial-gradient(60% 60% at 50% 0%, rgba(232, 165, 35, 0.2), rgba(232, 165, 35, 0.03) 46%, transparent 70%);
-    box-shadow: 0 -30px 120px -30px rgba(232, 165, 35, 0.22);
-    pointer-events: none;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
-  .final__inner {
+  .app__ring circle {
+    fill: none;
+    stroke: rgba(243, 239, 230, 0.28);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .app__pt {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  .app__pt i {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 5px var(--ink);
+  }
+  .app__pt > span {
+    position: absolute;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .app__pt b {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--amber);
+    font-variant-numeric: tabular-nums;
+  }
+  .app__pt--t > span {
+    left: 0;
+    bottom: 16px;
+    transform: translateX(-50%);
+  }
+  .app__pt--b > span {
+    left: 0;
+    top: 16px;
+    transform: translateX(-50%);
+  }
+  .app__pt--r > span {
+    left: 16px;
+    top: 0;
+    transform: translateY(-50%);
+  }
+  .app__pt--l > span {
+    right: 16px;
+    top: 0;
+    transform: translateY(-50%);
+  }
+  .app__core {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+  }
+  .app__core-mark {
+    font-size: clamp(1.125rem, 1.8vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    margin-right: -0.32em;
+  }
+  .app__core .status-pill {
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+  .app__plate figcaption {
+    text-align: center;
+  }
+  @media (max-width: 599px) {
+    .app__ring {
+      width: min(46%, 220px);
+      margin-block: 52px;
+    }
+    .app__pt > span {
+      font-size: 0.625rem;
+      letter-spacing: 0.1em;
+      gap: 5px;
+    }
+    .app__pt--r > span {
+      left: 10px;
+    }
+    .app__pt--l > span {
+      right: 10px;
+    }
+    .app__core .status-pill {
+      display: none;
+    }
+    .app__facts > div {
+      grid-template-columns: 5.5rem 1fr;
+    }
+  }
+
+  /* ---- Final invitation: the statement on the left, the single action on the right ---- */
+  .final {
+    padding-block: var(--section-y);
+    border-top: 1px solid var(--rule);
+  }
+  .final__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--col-gap);
+    row-gap: 48px;
+    align-items: end;
+  }
+  .final__lead {
+    grid-column: 1 / span 7;
   }
   .final__statement {
     max-width: 30em;
-    font-size: clamp(1.125rem, 1.6vw, 1.4rem);
+    font-size: var(--fs-lede);
     line-height: 1.5;
     color: var(--muted);
-    text-wrap: balance;
+    text-wrap: pretty;
   }
   .final__statement em {
     font-family: var(--serif);
     font-size: 1.12em;
     color: var(--text-on-dark);
   }
-  .final .final__title {
-    max-width: none;
-    margin: clamp(36px, 4.6vw, 64px) 0 clamp(32px, 4vw, 52px);
-    font-size: clamp(2.5rem, 7vw, 6.4rem);
+  .final__title {
+    margin-top: clamp(32px, 4vw, 56px);
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
   }
-  /* one glass tray groups the status, the promise and the single action */
-  .final__tray {
-    display: flex;
-    align-items: center;
-    gap: 18px 28px;
-    max-width: 100%;
-    padding: 12px 12px 12px 26px;
-    border-radius: 999px;
-    border: 1px solid var(--glass-dark-edge);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.24),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-      0 24px 60px rgba(0, 0, 0, 0.45);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-    text-align: left;
+  .final__act {
+    grid-column: 9 / span 4;
+    display: grid;
+    justify-items: start;
+    gap: 18px;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
   }
-  .final__tray-copy {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-  .final__tray-copy p {
-    max-width: 24em;
-    font-size: 0.9375rem;
+  .final__offer {
+    font-size: var(--fs-lede);
     line-height: 1.4;
+    max-width: 22em;
   }
-  .final__tray .btn {
-    flex: none;
+  .final__act .btn {
     min-height: 56px;
-    padding-inline: 30px;
+    padding-inline: 32px;
+    margin-top: 6px;
   }
   .final__note {
-    max-width: 44em;
-    margin-top: 26px;
+    margin-top: 6px;
+    max-width: 34em;
   }
-  @media (max-width: 899px) {
-    .final__tray {
-      flex-direction: column;
-      align-items: stretch;
-      padding: 22px;
-      border-radius: var(--radius-panel);
+  @media (max-width: 1023px) {
+    .final__lead,
+    .final__act {
+      grid-column: 1 / -1;
     }
-    .final__tray-copy {
-      flex-direction: column;
-      align-items: flex-start;
+    .final__act {
+      max-width: 34em;
     }
-    .final__horizon {
-      width: 260vw;
-      bottom: -40%;
+  }
+  @media (max-width: 599px) {
+    .final__act .btn {
+      width: 100%;
     }
   }
 </style>

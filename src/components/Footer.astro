@@ -15,6 +15,7 @@ import { NAV, LEGAL, CONTACT_EMAIL } from '../data/site';
       <nav aria-label="Footer">
         <h2>Explore</h2>
         <ul>
+          <li><a href="/">Home</a></li>
           {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
           <li><a href="/waitlist">Waitlist</a></li>
         </ul>

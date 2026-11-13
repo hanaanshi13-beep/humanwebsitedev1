@@ -4,7 +4,7 @@
 import Slot from '../Slot.astro';
 ---
 
-<section class="section on-light s1" id="scene-01" aria-labelledby="s1-title" data-progress>
+<section class="section on-light s1" id="scene-01" aria-labelledby="s1-title">
   <div class="wrap s1__grid">
     <div class="s1__copy">
       <p class="eyebrow" data-reveal><span class="num">01</span><span>Where it starts</span></p>
@@ -24,28 +24,25 @@ import Slot from '../Slot.astro';
     <ul class="s1__trip" aria-label="Everyday care">
       <li class="s1__f s1__f--a" data-reveal="clip">
         <Slot name="care-walk" ratio="3 / 2" tone="ivory" shape="d" position="62% 50%" sizes="(max-width: 899px) 100vw, 46vw" />
-        <span class="s1__tag"><span aria-hidden="true">01</span> Move, when you can</span>
+        <p class="s1__tag"><span aria-hidden="true">01</span> Move, when you can</p>
       </li>
       <li class="s1__f s1__f--b" data-reveal="clip" style="--d:140ms">
         <Slot name="care-meal" ratio="4 / 5" tone="amber" shape="b" position="60% 60%" sizes="(max-width: 899px) 50vw, 22vw" />
-        <span class="s1__tag"><span aria-hidden="true">02</span> Eat well</span>
+        <p class="s1__tag"><span aria-hidden="true">02</span> Eat well</p>
       </li>
       <li class="s1__f s1__f--c" data-reveal="clip" style="--d:260ms">
         <Slot name="care-rest" ratio="4 / 5" tone="amber" shape="c" position="40% 45%" sizes="(max-width: 899px) 50vw, 22vw" />
-        <span class="s1__tag"><span aria-hidden="true">03</span> Rest</span>
+        <p class="s1__tag"><span aria-hidden="true">03</span> Rest</p>
       </li>
     </ul>
   </div>
 </section>
 
 <style>
-  .s1 {
-    --p: 0.5;
-  }
   .s1__grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    column-gap: clamp(20px, 3vw, 48px);
+    column-gap: var(--col-gap);
     row-gap: 48px;
     align-items: center;
   }
@@ -53,17 +50,14 @@ import Slot from '../Slot.astro';
     grid-column: 1 / span 5;
   }
   .s1__copy h2 {
-    margin: 22px 0 30px;
+    margin: var(--stack-label) 0 var(--stack-head);
   }
   .s1__trip {
     grid-column: 7 / span 6;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: clamp(12px, 1.6vw, 24px);
+    gap: clamp(20px, 2.2vw, 32px) clamp(12px, 1.6vw, 24px);
     align-items: start;
-  }
-  .s1__f {
-    position: relative;
   }
   .s1__f--a {
     grid-column: 1 / -1;
@@ -75,35 +69,21 @@ import Slot from '../Slot.astro';
     grid-column: 4 / span 3;
     margin-top: clamp(24px, 3.4vw, 56px);
   }
-  /* 10–24px of depth between the three planes as the scene passes */
-  :global(.js-motion) .s1__f--b {
-    translate: 0 calc((0.5 - var(--p)) * 20px);
-  }
-  :global(.js-motion) .s1__f--c {
-    translate: 0 calc((var(--p) - 0.5) * 24px);
-  }
+  /* captions sit under the photographs, like a printed plate: nothing is laid over the image */
   .s1__tag {
-    position: absolute;
-    left: 12px;
-    bottom: 12px;
-    display: inline-flex;
-    gap: 10px;
+    display: flex;
+    gap: 12px;
     align-items: baseline;
-    padding: 7px 14px;
-    border-radius: 999px;
-    color: var(--text-on-dark);
-    font-size: 0.8125rem;
+    margin-top: 12px;
+    font-size: var(--fs-small);
     font-weight: 600;
-    background: var(--glass-dark-fill-strong);
-    border: 1px solid var(--glass-dark-edge);
-    box-shadow: var(--glass-inner-line), 0 8px 20px rgba(0, 0, 0, 0.25);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
-    backdrop-filter: blur(12px) saturate(140%);
+    letter-spacing: 0.005em;
   }
   .s1__tag span {
     font-size: 0.6875rem;
     letter-spacing: 0.14em;
-    color: var(--amber);
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
   }
   @media (max-width: 899px) {
     .s1__copy,
@@ -112,10 +92,6 @@ import Slot from '../Slot.astro';
     }
     .s1__f--c {
       margin-top: 28px;
-    }
-    :global(.js-motion) .s1__f--b,
-    :global(.js-motion) .s1__f--c {
-      translate: none;
     }
   }
 </style>

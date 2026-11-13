@@ -38,8 +38,8 @@ const mob = await getImage({ src: m800, format: 'webp', quality: 82 });
       <div class="hero__meta" data-reveal="fade" style="--d:760ms">
         <span class="status-pill">In development</span>
         <p class="note">
-          Not available yet. First pilot planned for Delhi NCR.
-          <a class="text-link" href="#scene-06">What is HUMAN? Skip to how it works</a>
+          A preventive-health membership being built in India. Not available yet.
+          <a class="text-link" href="#scene-06">How it works</a>
         </p>
       </div>
     </div>
@@ -89,7 +89,7 @@ const mob = await getImage({ src: m800, format: 'webp', quality: 82 });
     max-width: min(46%, 660px);
   }
   .hero__title {
-    margin: 22px 0 26px;
+    margin: var(--stack-label) 0 28px;
     line-height: 0.95;
     width: max-content;
     max-width: none;
@@ -121,15 +121,15 @@ const mob = await getImage({ src: m800, format: 'webp', quality: 82 });
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px 30px;
-    margin-top: 34px;
+    gap: 12px 32px;
+    margin-top: var(--stack-action);
   }
   .hero__thread {
     display: block;
-    width: 64px;
+    width: 48px;
     height: 1px;
     background: var(--amber);
-    margin-top: 36px;
+    margin-top: clamp(36px, 5vh, 56px);
   }
   .hero__meta {
     display: flex;
@@ -139,12 +139,16 @@ const mob = await getImage({ src: m800, format: 'webp', quality: 82 });
     margin-top: 18px;
   }
   .hero__meta .note {
-    max-width: 30em;
+    max-width: 34em;
+    font-size: var(--fs-small);
+    color: #cbc6ba;
   }
   .hero__meta .text-link {
     display: inline-block;
-    padding-block: 4px;
+    margin-left: 6px;
+    padding-block: 10px;
     color: var(--text-on-dark);
+    font-weight: 600;
   }
 
   /* Compact desktop: push the subjects right so the copy keeps a clean dark zone. */
@@ -178,7 +182,7 @@ const mob = await getImage({ src: m800, format: 'webp', quality: 82 });
       position: relative;
       inset: auto;
       display: block;
-      height: min(40svh, 100vw);
+      height: min(44svh, 104vw);
     }
     .hero__media img {
       object-position: 50% 10%;
@@ -192,14 +196,14 @@ const mob = await getImage({ src: m800, format: 'webp', quality: 82 });
     }
     .hero__scrim {
       inset: 0 0 auto 0;
-      height: min(40svh, 100vw);
+      height: min(44svh, 104vw);
       background:
         linear-gradient(0deg, rgba(11, 13, 15, 1) 0%, rgba(11, 13, 15, 0) 42%),
         linear-gradient(180deg, rgba(11, 13, 15, 0.7) 0%, rgba(11, 13, 15, 0) 26%);
     }
     .hero__inner {
-      margin-top: -64px;
-      padding-block: 0 44px;
+      margin-top: -56px;
+      padding-block: 0 40px;
     }
     .hero__copy {
       max-width: none;

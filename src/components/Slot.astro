@@ -49,9 +49,13 @@ const img = hit?.[1].default;
     position: relative;
     aspect-ratio: var(--ratio);
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: var(--radius-image);
     isolation: isolate;
     background: #101315;
+  }
+  /* while a photograph loads, the frame takes a quiet tone from its surface rather than a black box */
+  :global(.on-light) .slot.has-img {
+    background: var(--stone);
   }
   .slot :global(img) {
     position: absolute;

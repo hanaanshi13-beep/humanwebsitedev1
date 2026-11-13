@@ -1,6 +1,6 @@
 // Shared navigation + verified-status facts. Nothing here is a live-service claim.
 export const NAV = [
-  { href: '/', label: 'Home' },
+  { href: '/#scene-06', label: 'How it works' },
   { href: '/women', label: 'For Her' },
   { href: '/men', label: 'For Him' },
   { href: '/about', label: 'About' },

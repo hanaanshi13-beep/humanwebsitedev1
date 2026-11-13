@@ -26,28 +26,27 @@ const frames = [
 ];
 ---
 
-<section class="on-light on-ivory s2" id="scene-02" aria-labelledby="s2-title">
+<section class="section on-light on-ivory s2" id="scene-02" aria-labelledby="s2-title">
   <div class="wrap">
-    <div class="s2__head">
-      <p class="eyebrow" data-reveal><span class="num">02</span><span>What you can see</span></p>
-      <h2 class="display" id="s2-title" data-reveal="mask">
-        <span class="mask"><span>You know the progress</span></span>
-        <span class="mask" style="--i:1"><span><em>you can see.</em></span></span>
-      </h2>
-    </div>
-
     <div class="s2__grid">
+      <div class="s2__head">
+        <p class="eyebrow" data-reveal><span class="num">02</span><span>What you can see</span></p>
+        <h2 class="display" id="s2-title" data-reveal="mask">
+          <span class="mask"><span>You know the progress</span></span>
+          <span class="mask" style="--i:1"><span><em>you can see.</em></span></span>
+        </h2>
+      </div>
+
       <div class="s2__photo" data-reveal="clip">
         <Slot name="progress-stride" ratio="4 / 5" tone="amber" shape="a" position="50% 30%" sizes="(max-width: 899px) 100vw, 36vw" />
       </div>
 
-      <div class="s2__measures" data-progress>
-        <span class="s2__trace" aria-hidden="true"><span></span></span>
+      <div class="s2__measures">
         <ul class="s2__frames">
           {
             frames.map((f, i) => (
-              <li class="s2__frame" data-reveal style={`--d:${i * 110}ms;--i:${i}`}>
-                <span class="s2__mark" aria-hidden="true" />
+              <li class="s2__frame" data-reveal style={`--d:${i * 90}ms`}>
+                <span class="s2__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
                 <div>
                   <h3>{f.label}</h3>
                   <p>{f.text}</p>
@@ -68,113 +67,96 @@ const frames = [
       But there’s <em>another side</em> to your health.
     </p>
   </div>
-  <!-- visible information thins out and the page darkens into the side you can't see -->
-  <div class="s2__dusk" aria-hidden="true"></div>
 </section>
 
 <style>
-  .s2 {
-    position: relative;
-    padding-top: clamp(72px, 9.5vw, 144px);
-  }
-  .s2__head h2 {
-    margin: 22px 0 0;
-  }
+  /* Desktop: the photograph holds the left; heading and the three measures stack on the right. */
   .s2__grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    column-gap: clamp(20px, 3vw, 48px);
-    row-gap: 40px;
-    align-items: center;
-    margin-top: clamp(40px, 5vw, 72px);
+    grid-template-areas:
+      'photo photo photo photo photo . head head head head head head'
+      'photo photo photo photo photo . list list list list list list';
+    grid-template-rows: auto 1fr;
+    column-gap: var(--col-gap);
+    row-gap: clamp(32px, 4vw, 56px);
+    align-items: start;
+  }
+  .s2__head {
+    grid-area: head;
+  }
+  .s2__head h2 {
+    margin: var(--stack-label) 0 0;
+    font-size: clamp(2.25rem, 4.1vw, 4rem);
   }
   .s2__photo {
-    grid-column: 1 / span 5;
+    grid-area: photo;
+    align-self: stretch;
+  }
+  .s2__photo :global(.slot) {
+    height: 100%;
+    min-height: 100%;
   }
   .s2__measures {
-    grid-column: 7 / span 6;
-    position: relative;
-    padding-left: 34px;
-    --p: 1;
+    grid-area: list;
+    align-self: end;
   }
-  /* one line traces down the three measures as the reader advances */
-  .s2__trace {
-    position: absolute;
-    left: 6px;
-    top: 10px;
-    bottom: 56px;
-    width: 1px;
-    background: var(--rule);
-  }
-  .s2__trace span {
-    position: absolute;
-    inset: 0;
-    background: var(--text);
-    transform-origin: top;
-    transform: scaleY(var(--p));
+  .s2__frames {
+    border-top: 1px solid var(--rule);
   }
   .s2__frame {
-    position: relative;
     display: grid;
-    grid-template-columns: 1fr clamp(110px, 14vw, 190px);
-    gap: 20px;
+    grid-template-columns: 2.25rem minmax(0, 1fr) clamp(96px, 11vw, 150px);
+    gap: 16px;
     align-items: center;
-    padding: clamp(18px, 2.2vw, 30px) 0;
+    padding: clamp(18px, 2vw, 26px) 0;
     border-bottom: 1px solid var(--rule);
   }
-  .s2__mark {
-    position: absolute;
-    left: -34px;
-    top: calc(clamp(18px, 2.2vw, 30px) + 2px);
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    border: 1px solid var(--text);
-    background: color-mix(in srgb, var(--text) calc(clamp(0, (var(--p) - var(--i) * 0.3) * 6, 1) * 100%), var(--ivory));
+  .s2__n {
+    align-self: start;
+    padding-top: 0.7em;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
   }
   .s2__frame svg {
     width: 100%;
     height: auto;
+    opacity: 0.7;
   }
   .s2__frame path {
     fill: none;
     stroke: var(--text);
-    stroke-width: 1.4;
+    stroke-width: 1.2;
     stroke-linecap: round;
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
-  }
-  :global(.js-motion) .s2__frame path {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    transition: stroke-dashoffset 1300ms var(--ease-inout) calc(var(--d, 0ms) + 200ms);
-  }
-  :global(.js-motion) .s2__frame.is-in path {
-    stroke-dashoffset: 0;
   }
   .s2__frame h3 {
     font-family: var(--serif);
     font-style: italic;
     font-weight: 400;
-    font-size: clamp(1.9rem, 3.2vw, 3rem);
-    line-height: 1;
-    margin-bottom: 8px;
+    font-size: var(--fs-h3);
+    line-height: 1.05;
+    margin-bottom: 6px;
   }
   .s2__frame p {
-    line-height: 1.45;
-    max-width: 20em;
+    line-height: 1.5;
+    max-width: 24em;
     color: var(--muted);
   }
   .s2__note {
-    margin-top: 18px;
+    margin-top: 16px;
   }
   .s2__turn {
-    margin-top: clamp(64px, 8vw, 120px);
-    font-size: clamp(1.9rem, 4.6vw, 4.2rem);
+    margin-top: clamp(72px, 9vw, 136px);
+    font-size: clamp(1.75rem, 3.8vw, 3.5rem);
     font-weight: 600;
-    line-height: 1.05;
+    line-height: 1.08;
     letter-spacing: -0.02em;
-    max-width: 15em;
+    max-width: 14em;
     margin-left: auto;
     text-wrap: balance;
   }
@@ -185,29 +167,29 @@ const frames = [
   }
   .s2__turn-rule {
     display: block;
-    width: 64px;
+    width: 48px;
     height: 1px;
     background: var(--accent);
-    margin-bottom: 26px;
-  }
-  .s2__dusk {
-    height: clamp(120px, 16vw, 220px);
-    margin-top: clamp(40px, 5vw, 72px);
-    background: linear-gradient(180deg, var(--ivory) 0%, #8d897f 45%, #2a2b2b 78%, var(--carbon) 100%);
+    margin-bottom: 24px;
   }
   @media (max-width: 899px) {
-    .s2__photo,
-    .s2__measures {
-      grid-column: 1 / -1;
+    .s2__grid {
+      grid-template-columns: 1fr;
+      grid-template-areas: 'head' 'photo' 'list';
+      grid-template-rows: auto;
     }
     .s2__photo {
       max-width: 460px;
     }
-    .s2__frame {
-      grid-template-columns: minmax(0, 1fr) min(96px, 22vw);
+    .s2__photo :global(.slot) {
+      height: auto;
     }
-    .s2__frame h3 {
-      font-size: min(9vw, 2.2rem);
+    .s2__frame {
+      grid-template-columns: 1.75rem minmax(0, 1fr) min(84px, 20vw);
+      gap: 12px;
+    }
+    .s2__turn {
+      margin-left: 0;
     }
   }
 </style>

@@ -8,6 +8,10 @@
   --stone: #dcd8ce;
   --amber: #e8a523;
   --amber-deep: #8a5f0a; /* darkened from #B5831A so it passes AA as text on paper */
+  /* interface amber: muted, flat. Used for the primary button only. */
+  --amber-ui: #d9a648;
+  --amber-ui-hover: #e4b660;
+  --amber-ui-active: #c8953a;
   --her-ink: #241018;
   --her-garnet: #54263b;
   --her-glow: #82445c;
@@ -26,23 +30,46 @@
   --sans: 'Hanken Grotesk Variable', 'General Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --serif: 'Instrument Serif', 'Iowan Old Style', 'Times New Roman', serif;
 
+  /* layout: one gutter, one content width, one column gap, one section rhythm */
   --gutter: clamp(20px, 5vw, 80px);
-  --max: 1480px;
+  --max: 1440px;
   --header-h: 80px;
+  --col-gap: clamp(20px, 3vw, 48px);
+  --section-y: clamp(72px, 9vw, 136px);
+  --measure: 34em; /* ≈ 60–66 characters of body copy */
+  --measure-narrow: 27em;
+
+  /* type scale (rem-based so browser text size and zoom are respected) */
+  --fs-eyebrow: 0.75rem;
+  --fs-note: 0.8125rem;
+  --fs-small: 0.9375rem;
+  --fs-body: 1.0625rem;
+  --fs-lede: clamp(1.1875rem, 1.5vw, 1.4375rem);
+  --fs-h3: clamp(1.5rem, 2.3vw, 2.25rem);
+  --fs-display: clamp(2.25rem, 5vw, 4.75rem);
+
+  /* vertical rhythm inside a section: label → heading → copy → action */
+  --stack-label: 22px;
+  --stack-head: clamp(24px, 2.4vw, 36px);
+  --stack-action: clamp(28px, 2.6vw, 36px);
+
+  /* radius hierarchy: images are nearly square, panels soft, controls round */
+  --radius-image: 4px;
+  --radius-pill: 999px;
 
   /* optical glass (V4 §2.2): one token set for every floating control */
   --glass-dark-fill: rgba(24, 28, 31, 0.66);
-  --glass-dark-fill-strong: rgba(20, 24, 27, 0.84);
-  --glass-dark-edge: rgba(255, 255, 255, 0.16);
+  --glass-dark-fill-strong: rgba(14, 17, 19, 0.86);
+  --glass-dark-edge: rgba(255, 255, 255, 0.11);
   --glass-light-fill: rgba(255, 255, 255, 0.72);
   --glass-light-edge: rgba(20, 25, 28, 0.12);
-  --glass-dark-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
+  --glass-dark-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   --glass-light-shadow: 0 10px 30px rgba(25, 26, 28, 0.1);
-  --glass-inner-line: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  --glass-blur: 16px;
-  --glass-saturation: 135%;
-  --radius-control: 18px;
-  --radius-panel: 26px;
+  --glass-inner-line: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-blur: 14px;
+  --glass-saturation: 120%;
+  --radius-control: 14px;
+  --radius-panel: 20px;
   --motion-micro: 160ms;
   --motion-control: 260ms;
   --ease-human: cubic-bezier(0.22, 1, 0.36, 1);
@@ -80,7 +107,7 @@ body {
   background: var(--carbon);
   color: var(--text-on-dark);
   font-family: var(--sans);
-  font-size: 1.0625rem;
+  font-size: var(--fs-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -158,7 +185,7 @@ button {
 }
 .section {
   position: relative;
-  padding-block: clamp(72px, 9.5vw, 144px);
+  padding-block: var(--section-y);
 }
 .on-dark {
   background: var(--carbon);
@@ -185,9 +212,10 @@ button {
   display: flex;
   align-items: center;
   gap: 14px;
-  font-size: 0.75rem;
+  font-size: var(--fs-eyebrow);
   font-weight: 600;
-  letter-spacing: 0.22em;
+  line-height: 1.4;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -206,7 +234,7 @@ button {
 }
 .display {
   font-weight: 700;
-  font-size: clamp(2.1rem, 5.2vw, 5rem);
+  font-size: var(--fs-display);
   line-height: 0.98;
   letter-spacing: -0.025em;
   text-transform: uppercase;
@@ -226,13 +254,13 @@ button {
   line-height: 0.95;
 }
 .lede {
-  font-size: clamp(1.15rem, 1.6vw, 1.45rem);
-  line-height: 1.5;
-  max-width: 34em;
+  font-size: var(--fs-lede);
+  line-height: 1.45;
+  max-width: 30em;
   text-wrap: pretty;
 }
 .prose {
-  max-width: 34em;
+  max-width: var(--measure);
   color: var(--muted);
   text-wrap: pretty;
 }
@@ -244,7 +272,7 @@ button {
   font-weight: 600;
 }
 .note {
-  font-size: 0.8125rem;
+  font-size: var(--fs-note);
   line-height: 1.5;
   color: var(--muted);
 }
@@ -271,87 +299,40 @@ button {
 }
 
 /* ---------- buttons & links ----------
-   One optical-glass button system (three styles). Each button is built from layers:
-     body      smoked tint + a top-to-bottom luminance fall-off + an amber light pool that follows the pointer (--mx)
-     edges     1px outer edge, bright upper refractive line, dark lower line, faint inner border (inset shadows)
-     ::before  a soft specular band under the top edge (suggests thickness)
-     ::after   a narrow reflection that crosses once on hover
-   This is a CSS approximation of glass, not physical refraction. */
+   One quiet button system. Primary: a flat, muted-amber fill with ink text. Secondary (.btn--ghost): a hairline
+   outline in the text colour. No gradients, gloss or glow; state is shown by fill, border and a 3px arrow nudge. */
 .btn {
-  --tint: 232, 165, 35; /* light colour inside the glass: amber by default, garnet / teal on Her / Him */
-  --mx: 28%;
-  --btn-fg: #f8f3e6;
-  --btn-body: linear-gradient(180deg, rgba(84, 62, 26, 0.8) 0%, rgba(38, 31, 20, 0.84) 46%, rgba(17, 17, 16, 0.9) 100%);
-  --btn-pool: rgba(var(--tint), 0.34);
-  --btn-edge: rgba(255, 228, 176, 0.36);
-  --btn-top: rgba(255, 242, 214, 0.62);
-  --btn-caustic: rgba(var(--tint), 0.42);
-  --btn-drop: 0 10px 24px rgba(0, 0, 0, 0.36), 0 1px 2px rgba(0, 0, 0, 0.45);
-  --chip-bg: rgba(255, 255, 255, 0.1);
-  --chip-fg: #ffd98a;
+  --btn-bg: var(--amber-ui);
+  --btn-bg-hover: var(--amber-ui-hover);
+  --btn-bg-active: var(--amber-ui-active);
+  --btn-fg: #17130a;
+  --btn-border: transparent;
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   min-height: 52px;
-  padding: 8px 26px;
-  border-radius: 999px;
-  border: 1px solid var(--btn-edge);
-  background:
-    radial-gradient(90% 150% at var(--mx) -20%, var(--btn-pool), transparent 62%),
-    var(--btn-body);
+  padding: 8px 28px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
   color: var(--btn-fg);
-  box-shadow:
-    inset 0 1px 0 var(--btn-top),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.045),
-    inset 0 -12px 16px -12px var(--btn-caustic),
-    inset 0 6px 10px -8px rgba(0, 0, 0, 0.5),
-    var(--btn-drop);
-  -webkit-backdrop-filter: blur(14px) saturate(165%);
-  backdrop-filter: blur(14px) saturate(165%);
-  font-size: 0.9375rem;
+  font-size: var(--fs-small);
   font-weight: 600;
-  letter-spacing: 0.012em;
+  letter-spacing: 0.01em;
   line-height: 1.15;
   text-align: center;
   text-decoration: none;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    transform 240ms var(--ease-human),
-    box-shadow 280ms var(--ease-human),
-    border-color 240ms var(--ease-human),
-    filter 240ms var(--ease-human);
+    background-color var(--motion-micro) var(--ease-human),
+    border-color var(--motion-micro) var(--ease-human),
+    color var(--motion-micro) var(--ease-human),
+    transform var(--motion-micro) var(--ease-human);
 }
-.btn::before,
-.btn::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-}
-.btn::before {
-  inset: 2px 10px auto 10px;
-  height: 46%;
-  border-radius: 999px 999px 60% 60% / 999px 999px 100% 100%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.015) 80%, transparent);
-  transition: opacity 240ms var(--ease-human), transform 140ms var(--ease-human);
-}
-.btn::after {
-  top: 0;
-  bottom: 52%;
-  left: 0;
-  width: 34%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.34) 50%, transparent);
-  transform: translateX(-130%) skewX(-18deg);
-  opacity: 0;
-}
-/* arrow: one SVG glyph, drawn as a mask so it takes the chip colour; sits in a small glass lens */
+/* arrow: one SVG glyph, drawn as a mask so it takes the text colour */
 .btn .arr,
 .link .arr {
   display: inline-block;
@@ -366,121 +347,57 @@ button {
   width: 16px;
   height: 16px;
   background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8h11M9 3.5 13.5 8 9 12.5'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8h11M9 3.5 13.5 8 9 12.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8h11M9 3.5 13.5 8 9 12.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 8h11M9 3.5 13.5 8 9 12.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform var(--motion-control) var(--ease-human);
 }
 .arr--down::before {
   transform: rotate(90deg);
 }
 .btn .arr {
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  margin-right: -14px;
-  border-radius: 50%;
-  background: var(--chip-bg);
-  color: var(--chip-fg);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.26),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-}
-.btn .arr::before {
-  width: 14px;
-  height: 14px;
-  transition: transform 280ms var(--ease-human);
+  margin-right: -4px;
 }
 @media (hover: hover) {
   .btn:hover {
-    transform: translateY(-2px);
-    --btn-edge: rgba(255, 236, 196, 0.6);
-    --btn-pool: rgba(var(--tint), 0.46);
-    --btn-drop: 0 18px 34px rgba(0, 0, 0, 0.42), 0 3px 6px rgba(0, 0, 0, 0.4);
-    filter: brightness(1.08);
+    background: var(--btn-bg-hover);
   }
-  .btn:hover::after {
-    opacity: 1;
-    transform: translateX(330%) skewX(-18deg);
-    transition: transform 620ms var(--ease-human), opacity 200ms linear;
-  }
-  .btn:hover .arr::before {
+  .btn:hover .arr:not(.arr--down)::before {
     transform: translateX(3px);
   }
 }
-.btn:focus-visible .arr::before {
+.btn:focus-visible .arr:not(.arr--down)::before {
   transform: translateX(3px);
 }
 .btn:active {
+  background: var(--btn-bg-active);
   transform: translateY(1px);
-  --btn-drop: 0 4px 10px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.5);
-  filter: brightness(0.97);
-  transition-duration: 120ms;
-}
-.btn:active::before {
-  opacity: 0.6;
-  transform: scaleX(0.96);
 }
 .btn:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 .on-light .btn:focus-visible {
   outline-color: var(--ink);
 }
-/* On ivory the same glass is denser, so it reads as a solid dark object with its amber light intact. */
+/* On paper the amber fill gets a thin deeper edge so the control's boundary stays clear. */
 .on-light .btn,
 .btn--dark {
-  --btn-body: linear-gradient(180deg, #4a3a1d 0%, #25201a 46%, #131414 100%);
-  --btn-edge: rgba(20, 25, 28, 0.85);
-  --btn-top: rgba(255, 236, 200, 0.5);
-  --btn-drop: 0 12px 26px rgba(40, 32, 16, 0.26), 0 1px 2px rgba(20, 25, 28, 0.4);
+  --btn-border: #a9781f;
 }
-/* B. secondary: clear charcoal glass, neutral reflections, no amber fill */
+/* Secondary: outline only. Inherits the surrounding text colour, so it works on dark and light surfaces. */
 .btn--ghost,
 .on-light .btn--ghost {
-  --btn-body: linear-gradient(180deg, rgba(60, 66, 70, 0.5) 0%, rgba(22, 26, 29, 0.58) 100%);
-  --btn-pool: rgba(255, 255, 255, 0.1);
-  --btn-edge: rgba(255, 255, 255, 0.24);
-  --btn-top: rgba(255, 255, 255, 0.4);
-  --btn-caustic: rgba(255, 255, 255, 0.08);
-  --btn-drop: 0 8px 20px rgba(0, 0, 0, 0.24);
-  --chip-fg: var(--btn-fg);
-}
-.on-light .btn--ghost {
-  --btn-fg: var(--ink);
-  --btn-body: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(236, 232, 223, 0.7) 100%);
-  --btn-pool: rgba(255, 255, 255, 0.6);
-  --btn-edge: rgba(20, 25, 28, 0.3);
-  --btn-top: #fff;
-  --btn-caustic: rgba(20, 25, 28, 0.08);
-  --btn-drop: 0 8px 20px rgba(25, 26, 28, 0.12);
-  --chip-bg: rgba(20, 25, 28, 0.08);
-  text-shadow: none;
+  --btn-fg: var(--text, var(--text-on-dark));
+  --btn-bg: transparent;
+  --btn-bg-hover: color-mix(in srgb, var(--btn-fg) 8%, transparent);
+  --btn-bg-active: color-mix(in srgb, var(--btn-fg) 14%, transparent);
+  --btn-border: color-mix(in srgb, var(--btn-fg) 38%, transparent);
 }
 @media (hover: hover) {
   .btn--ghost:hover {
-    --btn-edge: rgba(255, 255, 255, 0.46);
-    --btn-pool: rgba(255, 255, 255, 0.18);
+    --btn-border: color-mix(in srgb, var(--btn-fg) 70%, transparent);
   }
-  .on-light .btn--ghost:hover {
-    --btn-edge: rgba(20, 25, 28, 0.55);
-  }
-}
-/* Her / Him: the light inside the glass turns garnet / teal; geometry and type are unchanged */
-.seg--her .btn:not(.btn--ghost) {
-  --tint: 214, 110, 150;
-  --btn-body: linear-gradient(180deg, rgba(96, 44, 66, 0.82) 0%, rgba(44, 22, 32, 0.86) 46%, rgba(18, 14, 16, 0.9) 100%);
-  --btn-edge: rgba(255, 206, 224, 0.36);
-  --btn-top: rgba(255, 226, 236, 0.58);
-  --chip-fg: #ffc9dc;
-}
-.seg--him .btn:not(.btn--ghost) {
-  --tint: 86, 190, 182;
-  --btn-body: linear-gradient(180deg, rgba(28, 86, 84, 0.82) 0%, rgba(14, 42, 44, 0.86) 46%, rgba(10, 16, 17, 0.9) 100%);
-  --btn-edge: rgba(196, 244, 238, 0.34);
-  --btn-top: rgba(220, 250, 246, 0.56);
-  --chip-fg: #b9efe8;
 }
 .btn--sm {
   min-height: 44px;
@@ -488,34 +405,26 @@ button {
   gap: 10px;
   font-size: 0.875rem;
 }
-.btn--sm .arr {
-  width: 26px;
-  height: 26px;
-  margin-right: -12px;
-}
 .btn--sm .arr::before {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 .btn[disabled],
 .btn[aria-disabled='true'] {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-  filter: saturate(0.4);
-}
-.btn[disabled]::after,
-.btn[aria-disabled='true']::after {
-  display: none;
 }
 /* loading: the label stays, a ring replaces the arrow, the width does not change */
 .btn[aria-busy='true'] {
   cursor: progress;
+  opacity: 1;
 }
 .btn[aria-busy='true'] .arr {
-  background: none;
-  box-shadow: none;
-  border: 2px solid var(--chip-fg);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
   border-top-color: transparent;
   animation: btn-spin 800ms linear infinite;
 }
@@ -574,24 +483,15 @@ button {
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 14px 7px 12px;
-  border: 1px solid var(--glass-dark-edge);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: var(--glass-inner-line);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  gap: 9px;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text);
-}
-.on-light .status-pill {
-  border-color: var(--glass-light-edge);
-  background: rgba(255, 255, 255, 0.62);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 .status-pill::before {
   content: '';
@@ -599,7 +499,6 @@ button {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 /* ---------- header: a floating smoked-glass shell ----------
@@ -655,20 +554,33 @@ button {
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  position: relative;
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: 0.01em;
   text-decoration: none;
-  color: var(--text-on-dark);
-  transition: background var(--motion-micro) var(--ease-human);
+  color: rgba(243, 239, 230, 0.76);
+  transition: color var(--motion-micro) var(--ease-human);
 }
-.nav a:not(.btn):hover {
-  background: rgba(255, 255, 255, 0.09);
+.nav a:not(.btn)::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 7px;
+  height: 1px;
+  background: var(--amber);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--motion-control) var(--ease-human);
 }
+.nav a:not(.btn):hover,
+.nav a:not(.btn):focus-visible,
 .nav a[aria-current='page'] {
-  background: rgba(255, 255, 255, 0.11);
-  box-shadow: inset 0 0 0 1px rgba(232, 165, 35, 0.55);
+  color: var(--text-on-dark);
+}
+.nav a[aria-current='page']::after {
+  transform: scaleX(1);
 }
 .nav .btn {
   margin-left: 12px;
@@ -686,20 +598,16 @@ button {
   height: 44px;
   padding: 0;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-    0 6px 16px rgba(0, 0, 0, 0.28);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  backdrop-filter: blur(12px) saturate(150%);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  transition: background var(--motion-micro) var(--ease-human);
+  transition:
+    background var(--motion-micro) var(--ease-human),
+    border-color var(--motion-micro) var(--ease-human);
 }
 .menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.4);
-  filter: brightness(1.15);
 }
 .menu-btn:active {
   transform: translateY(1px);
@@ -778,11 +686,12 @@ button {
   padding: 0 0 env(safe-area-inset-bottom);
   border: 1px solid var(--glass-dark-edge);
   border-radius: var(--radius-panel);
-  background: rgba(18, 22, 25, 0.94);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), var(--glass-inner-line);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
+  background: #111417;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   color: var(--text-on-dark);
+  --text: var(--text-on-dark);
+  --muted: var(--muted-on-dark);
+  --rule: var(--rule-on-dark);
   overflow-y: auto;
 }
 .mobile-menu::backdrop {
@@ -800,7 +709,7 @@ button {
 @keyframes menu-in {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.985);
+    transform: translateY(-6px);
   }
 }
 .mobile-menu__top {
@@ -830,14 +739,19 @@ button {
   font-weight: 600;
   letter-spacing: -0.01em;
   text-decoration: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--rule-on-dark);
 }
 .mobile-menu nav a:not(.btn):hover,
 .mobile-menu nav a:not(.btn):focus-visible {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.05);
 }
-.mobile-menu nav a[aria-current='page'] {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(232, 165, 35, 0.5);
+.mobile-menu nav a[aria-current='page']::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
 }
 .mobile-menu nav .btn {
   margin-top: 14px;
@@ -846,7 +760,7 @@ button {
   margin: 16px 12px 4px;
 }
 
-/* ---------- glass fallbacks ---------- */
+/* ---------- surface fallbacks ---------- */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass,
   .site-header.is-solid .site-header__shell {
@@ -855,38 +769,16 @@ button {
   .glass--light {
     background: rgba(248, 247, 243, 0.98);
   }
-  .btn {
-    --btn-body: linear-gradient(180deg, #4a3a1d 0%, #25201a 46%, #131414 100%);
-  }
-  .btn--ghost {
-    --btn-body: linear-gradient(180deg, #33393d, #171b1e);
-  }
-  .on-light .btn--ghost {
-    --btn-body: linear-gradient(180deg, #fff, #ece8df);
-  }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .btn {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    --btn-body: linear-gradient(180deg, #4a3a1d 0%, #25201a 46%, #131414 100%);
-  }
-  .btn--ghost {
-    --btn-body: linear-gradient(180deg, #33393d, #171b1e);
-  }
   .glass,
   .site-header.is-solid .site-header__shell,
-  .mobile-menu,
-  .status-pill {
+  .mobile-menu {
     background: #171b1e;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-  .on-light .btn--ghost {
-    --btn-body: linear-gradient(180deg, #fff, #ece8df);
-  }
-  .glass--light,
-  .on-light .status-pill {
+  .glass--light {
     background: var(--paper);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -902,18 +794,13 @@ button {
 }
 @media (prefers-reduced-motion: reduce) {
   .btn,
-  .btn::before,
   .btn .arr::before,
   .link,
   .link .arr::before {
     transition: none;
   }
-  .btn:hover,
   .btn:active {
     transform: none;
-  }
-  .btn::after {
-    display: none;
   }
   .btn[aria-busy='true'] .arr {
     animation-duration: 2.4s;
@@ -978,7 +865,12 @@ button {
   border: 1px solid var(--rule-on-dark);
   border-radius: 999px;
   padding: 2px 8px;
-  margin-left: 10px;
+}
+.site-footer li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
 }
 @media (max-width: 767px) {
   .site-footer .grid {
@@ -992,12 +884,13 @@ button {
 /* ---------- motion primitives (D01) ----------
    Content is visible by default. Only when the inline head script has added
    .js-motion (JS on, no reduced-motion preference) do reveal states apply. */
+/* One small motion vocabulary: rise (default), fade, clip (images), rule, mask (headings). Short and quiet. */
 .js-motion [data-reveal] {
   opacity: 0;
-  transform: translateY(22px);
+  transform: translateY(14px);
   transition:
-    opacity 700ms var(--ease-out),
-    transform 700ms var(--ease-out);
+    opacity 600ms var(--ease-out),
+    transform 600ms var(--ease-out);
   transition-delay: var(--d, 0ms);
 }
 .js-motion [data-reveal='fade'] {
@@ -1006,15 +899,15 @@ button {
 .js-motion [data-reveal='clip'] {
   opacity: 1;
   transform: none;
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 950ms var(--ease-inout);
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 800ms var(--ease-inout);
   transition-delay: var(--d, 0ms);
 }
 .js-motion [data-reveal='rule'] {
   opacity: 1;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 800ms var(--ease-inout);
+  transition: transform 700ms var(--ease-inout);
   transition-delay: var(--d, 0ms);
 }
 .js-motion [data-reveal].is-in {
@@ -1039,7 +932,7 @@ button {
 .js-motion [data-reveal='mask'] .mask > span {
   display: block;
   transform: translateY(105%);
-  transition: transform 850ms var(--ease-out);
+  transition: transform 750ms var(--ease-out);
   transition-delay: calc(var(--d, 0ms) + var(--i, 0) * 90ms);
 }
 .js-motion [data-reveal='mask'].is-in .mask > span {
@@ -1144,8 +1037,4 @@ button {
     font-size: min(0.875rem, 3.8vw);
     padding-inline: min(18px, 4.4vw);
   }
-}
-.btn[aria-busy='true'] {
-  opacity: 1;
-  filter: none;
 }

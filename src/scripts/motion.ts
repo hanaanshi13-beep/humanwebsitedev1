@@ -88,21 +88,5 @@ function initProgress() {
   window.addEventListener('resize', request);
 }
 
-// Glass lighting: the light pool inside a button follows a fine pointer (one custom property, no layout work).
-function initGlassLight() {
-  if (reduce.matches || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  document.addEventListener(
-    'pointermove',
-    (e) => {
-      const b = (e.target as Element | null)?.closest?.<HTMLElement>('.btn');
-      if (!b) return;
-      const r = b.getBoundingClientRect();
-      b.style.setProperty('--mx', `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
-    },
-    { passive: true },
-  );
-}
-
 initReveals();
-initGlassLight();
 initProgress();
