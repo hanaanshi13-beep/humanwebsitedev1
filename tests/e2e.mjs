@@ -111,151 +111,240 @@ await test('GATE2-ORDER', 'Eight scenes in locked order; transition line appears
   await p.context().close();
 });
 
-// ---------- Scene 03: light-to-dark passage ----------
-const s3At = async (p, f) => {
+// ---------- Scene 03: phone → overview → heart, then an explorer of eight systems ----------
+const s3At = async (p, f, wait = 200) => {
   await p.evaluate((f) => {
     const pin = document.querySelector('.s3__pin');
     const span = pin.offsetHeight - document.querySelector('.s3__stage').offsetHeight;
     scrollTo({ top: pin.getBoundingClientRect().top + scrollY + span * f, behavior: 'instant' });
   }, f);
-  await p.waitForTimeout(160);
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await p.waitForTimeout(wait);
 };
 const s3Read = (p) =>
   p.evaluate(() => {
     const sec = document.querySelector('#scene-03');
-    const op = (sel) => { let o = 1; for (let n = document.querySelector(sel); n && n !== sec; n = n.parentElement) o *= Number(getComputedStyle(n).opacity); return o; };
-    return { p: parseFloat(sec.style.getPropertyValue('--p')), state: sec.dataset.state, light: op('.s3__img--light'), dark: op('.s3__img--dark') };
+    const o = (sel) => Number(getComputedStyle(sec.querySelector(sel)).opacity);
+    const live = [...sec.querySelectorAll('[data-s3-slot]')].find((i) => Number(i.style.opacity) === 1);
+    return {
+      p: parseFloat(sec.style.getPropertyValue('--p')),
+      state: sec.dataset.state,
+      sel: sec.dataset.sel,
+      phone: o('[data-s3-phone]'),
+      overview: o('[data-s3-l="overview"]'),
+      heartlum: o('[data-s3-l="heartlum"]'),
+      heart: o('[data-s3-l="heart"]'),
+      ex: o('[data-s3-ex]'),
+      shown: live ? live.currentSrc || live.src : '',
+      title: sec.querySelector('[data-s3-info]:not([style*="display: none"]) [data-f="title"]').textContent.trim(),
+      pressed: [...sec.querySelectorAll('[data-s3-sys][aria-pressed="true"]')].map((b) => b.dataset.s3Sys),
+      tick: [...sec.querySelectorAll('[data-s3-tick][aria-pressed="true"]')].map((b) => b.dataset.s3Tick),
+    };
   });
+const S3 = {
+  heart: ['04-heart-focus', 'More than a heartbeat.'],
+  lungs: ['05-lungs', 'Every breath has a story.'],
+  metabolic: ['11-metabolic', 'Energy has an invisible story.'],
+  digestion: ['06-digestive', 'What happens after you eat?'],
+  thyroid: ['07-thyroid', 'Small gland. Far-reaching influence.'],
+  nervous: ['08-nervous', 'A remarkable network.'],
+  circulation: ['09-circulation', 'A connection within everything.'],
+  reproductive: ['10-reproductive', 'Health changes through life.'],
+};
+const VIEWS = [{}, { viewport: { width: 390, height: 844 } }];
 
-await test('E2E-05/06', 'Scene 03: progress runs 0 → 1 with scroll, passes luminous → passage → immersive, and reverses cleanly', async () => {
-  for (const opts of [{}, { viewport: { width: 390, height: 844 } }]) {
+await test('E2E-05/06', 'Scene 03 guided sequence: phone → enter → overview → heart → explore, in order, and it reverses cleanly', async () => {
+  for (const opts of VIEWS) {
     const p = await ctx(opts);
     await go(p, '/');
-    await s3At(p, 0);
-    const a = await s3Read(p);
-    await s3At(p, 0.3);
-    const b = await s3Read(p);
-    await s3At(p, 0.9);
-    await p.waitForTimeout(600); // the dark still eases in when the state is jumped to rather than scrolled to
-    const c = await s3Read(p);
-    assert(a.p < 0.03 && a.state === 'luminous' && a.light > 0.98 && a.dark === 0, `start ${JSON.stringify(a)}`);
-    assert(b.state === 'passage', `mid ${JSON.stringify(b)}`);
-    assert(c.p > 0.85 && c.state === 'immersive' && c.dark > 0.98 && c.light === 0, `end ${JSON.stringify(c)}`);
-    await s3At(p, 0);
-    const back = await s3Read(p);
-    assert(Math.abs(back.p - a.p) < 0.02 && back.state === 'luminous' && back.light > 0.98, `did not reverse: ${JSON.stringify(back)}`);
-    assert(await p.locator('#s3-title').isVisible(), 'heading hidden');
-    await s3At(p, 1.4);
-    assert(await p.locator('.s3__after-line').isVisible(), 'cannot scroll past the stage');
-    await p.context().close();
-  }
-});
-
-await test('S3-GHOST', 'Scene 03: the two anatomical stills are never visible together at any scroll position (no ghosting)', async () => {
-  for (const opts of [{}, { viewport: { width: 390, height: 844 } }]) {
-    const p = await ctx(opts);
-    await go(p, '/');
-    let quiet = 0;
-    for (let f = -0.1; f <= 1.1; f += 0.01) {
-      await p.evaluate((f) => {
-        const pin = document.querySelector('.s3__pin');
-        const span = pin.offsetHeight - document.querySelector('.s3__stage').offsetHeight;
-        scrollTo({ top: pin.getBoundingClientRect().top + scrollY + span * f, behavior: 'instant' });
-      }, f);
-      await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-      const r = await s3Read(p);
-      assert(Math.min(r.light, r.dark) === 0, `both stills visible at ${f.toFixed(2)}: ${JSON.stringify(r)}`);
-      if (r.light === 0 && r.dark === 0) quiet++;
+    const seen = [];
+    for (const f of [0.02, 0.25, 0.5, 0.74, 0.95]) {
+      await s3At(p, f, 450);
+      seen.push(await s3Read(p));
     }
-    assert(quiet >= 3, `no quiet dark midpoint (${quiet} samples)`);
+    assert(seen.map((r) => r.state).join() === 'phone,enter,overview,heart,explore', seen.map((r) => r.state).join());
+    assert(seen[0].phone > 0.95 && seen[0].overview === 0, `phone state ${JSON.stringify(seen[0])}`);
+    assert(seen[2].phone === 0 && seen[2].overview === 1 && seen[2].heartlum === 0, `overview state ${JSON.stringify(seen[2])}`);
+    assert(seen[3].overview === 0 && seen[3].heartlum === 1, `luminous heart ${JSON.stringify(seen[3])}`);
+    assert(seen[4].heart === 1 && seen[4].ex === 1 && seen[4].shown.includes('04-heart-focus') && seen[4].pressed.join() === 'heart', `explore ${JSON.stringify(seen[4])}`);
+    assert(seen[4].title === 'More than a heartbeat.', 'explorer does not start on the heart');
+    await s3At(p, 0.02, 500);
+    const back = await s3Read(p);
+    assert(back.state === 'phone' && back.phone > 0.95 && back.ex === 0 && back.pressed.length === 0, `did not reverse: ${JSON.stringify(back)}`);
+    assert(await p.locator('#s3-title').isVisible(), 'heading hidden');
+    // never trapped: the page scrolls on past the scene into Scene 04
+    await p.evaluate(() => document.querySelector('#scene-04').scrollIntoView({ behavior: 'instant' }));
+    assert(await p.locator('#s4-title').isVisible(), 'cannot reach Scene 04');
+    assert(p.consoleErrors.length === 0, `console: ${p.consoleErrors[0]}`);
     await p.context().close();
   }
 });
 
-await test('S3-TOPICS', 'Scene 03: three topics, one panel at a time, inert until immersive, Escape and scroll-back close it', async () => {
-  for (const opts of [{}, { viewport: { width: 390, height: 844 } }]) {
+await test('S3-GHOST', 'Scene 03: the phone is gone before the overview settles, and no more than two stills ever overlap, briefly', async () => {
+  for (const opts of VIEWS) {
     const p = await ctx(opts);
+    await go(p, '/');
+    let overlap = 0;
+    for (let f = 0; f <= 1.0001; f += 0.01) {
+      await s3At(p, f, 0);
+      const r = await s3Read(p);
+      const up = [r.phone, r.overview, r.heartlum].filter((v) => v > 0.02).length;
+      // heart-focus sits directly on its luminous twin (same framing), so that pair is a lighting change, not a blend of bodies
+      assert(up <= 2, `three stills at ${f.toFixed(2)}: ${JSON.stringify(r)}`);
+      if (up === 2) overlap++;
+      if (r.state === 'overview' || r.state === 'heart' || r.state === 'explore') assert(r.phone === 0, `phone visible in ${r.state} at ${f.toFixed(2)}`);
+      if (r.heart > 0.02) assert(r.overview === 0 && r.phone === 0, `dark heart over another body at ${f.toFixed(2)}`);
+    }
+    assert(overlap <= 14, `handovers too long: ${overlap}% of the scroll`);
+    await p.context().close();
+  }
+});
+
+await test('S3-SYSTEMS', 'Scene 03 explorer: all eight systems, the strip, overview and markers each show the right artwork, copy and selected state', async () => {
+  for (const opts of VIEWS) {
+    const p = await ctx(opts);
+    const mobile = !!opts.viewport;
     await go(p, '/');
     await s3At(p, 0.05);
-    assert(!(await p.locator('.s3__chip').first().isVisible()), 'topic controls visible in the luminous state');
-    assert(await p.locator('.s3__explore').evaluate((e) => e.inert), 'controls not inert before the dark state');
-    assert(!(await p.locator('.s3__spot').first().isVisible()), 'markers visible before the dark state');
-    await s3At(p, 0.85);
-    await p.waitForTimeout(1300);
-    assert((await p.locator('.s3__chip').count()) === 3, 'three topics');
-    const expect = { heart: 'More than a heartbeat.', lungs: 'Every breath has a story.', beyond: 'Some answers aren’t visible.' };
-    for (const [k, title] of Object.entries(expect)) {
-      await p.locator(`[data-s3-topic="${k}"]`).click();
-      assert((await p.locator('.s3__panel:visible').count()) === 1, `${k}: panels open != 1`);
-      assert((await p.locator('.s3__panel:visible h3').innerText()).trim() === title, `${k}: wrong panel`);
-      assert((await p.locator(`[data-s3-topic="${k}"]`).getAttribute('aria-expanded')) === 'true', `${k}: aria-expanded`);
-      assert((await p.locator('.s3__chip[aria-expanded="true"]').count()) === 1, `${k}: more than one selected`);
-      const box = await p.locator('.s3__panel:visible').boundingBox();
-      const vp = p.viewportSize();
-      assert(box.x >= 0 && box.x + box.width <= vp.width + 1 && box.y >= 0 && box.y + box.height <= vp.height + 1, `${k}: panel outside the viewport ${JSON.stringify(box)}`);
+    assert(await p.locator('[data-s3-ui]').first().evaluate((e) => e.inert), 'system controls live during the phone state');
+    assert(!(await p.locator('[data-s3-sys]').first().isVisible()), 'system list visible during the phone state');
+    await s3At(p, 0.96, 700);
+    assert((await p.locator('[data-s3-sys]').count()) === 8 && (await p.locator('[data-s3-tick]').count()) === 8, 'eight systems, eight markers');
+    // positions are measured against the stage itself, so a page scroll by the test driver does not count as movement
+    const geom = () => p.evaluate(() => { const st = document.querySelector('.s3__stage').getBoundingClientRect(); return ['.s3__nav', '.s3__strip', '.s3__frame'].map((s) => { const r = document.querySelector(s).getBoundingClientRect(); return [r.left - st.left, r.top - st.top, r.width, r.height].map(Math.round).join(); }).join('|'); });
+    const g0 = await geom();
+    for (const [k, [file, title]] of Object.entries(S3)) {
+      await p.locator(`[data-s3-sys="${k}"]`).click();
+      await p.waitForFunction((f) => [...document.querySelectorAll('[data-s3-slot]')].some((i) => i.style.opacity === '1' && (i.currentSrc || i.src).includes(f)), file, { timeout: 5000 });
+      const r = await s3Read(p);
+      assert(r.title === title && r.pressed.join() === k && r.tick.join() === k && r.sel === k, `${k}: ${JSON.stringify(r)}`);
+      assert((await p.locator('[data-s3-slot]').evaluateAll((els) => els.filter((i) => i.style.opacity === '1').length)) === 1, `${k}: not exactly one artwork shown`);
+      assert((await geom()) === g0, `${k}: the interface moved`);
     }
-    // markers on the artwork open the same panels (pointer convenience) and sit inside the frame
-    await p.locator('[data-s3-spot="heart"]').click();
-    assert((await p.locator('.s3__panel:visible h3').innerText()).trim() === expect.heart, 'heart marker');
-    await p.locator('.s3__panel:visible [data-s3-close]').click();
-    assert((await p.locator('.s3__panel:visible').count()) === 0, 'close button');
-    // keyboard: Enter opens, Escape closes and returns focus
-    await p.locator('[data-s3-topic="lungs"]').focus();
-    await p.keyboard.press('Enter');
-    assert((await p.locator('.s3__panel:visible h3').innerText()).trim() === expect.lungs, 'Enter did not open');
-    await p.keyboard.press('Escape');
-    assert((await p.locator('.s3__panel:visible').count()) === 0, 'Escape did not close');
-    assert(await p.evaluate(() => document.activeElement?.getAttribute('data-s3-topic') === 'lungs'), 'focus not returned');
-    await p.keyboard.press('Space');
-    assert((await p.locator('.s3__panel:visible').count()) === 1, 'Space did not open');
-    // scrolling back out of the dark world puts the panel away; scrolling on is never blocked
-    await s3At(p, 0.2);
-    assert((await p.locator('.s3__panel:visible').count()) === 0, 'panel left open after scrolling back');
-    await s3At(p, 0.85);
-    await p.waitForTimeout(600);
-    await p.locator('[data-s3-topic="beyond"]').click();
-    const y0 = await p.evaluate(() => scrollY);
-    await p.mouse.wheel(0, 900);
-    await p.waitForTimeout(300);
-    assert((await p.evaluate(() => scrollY)) > y0 + 500, 'scroll blocked while a panel is open');
-    assert((await p.locator('#scene-03').count()) === 1 && (await p.locator('.s3__chip').count()) === 3, 'duplicated scene or controls');
+    // previous / next wrap around the eight; the strip's markers select directly (wide screens)
+    await p.locator('[data-s3-next]').click();
+    assert((await s3Read(p)).sel === 'heart', 'next did not wrap to the heart');
+    await p.locator('[data-s3-prev]').click();
+    assert((await s3Read(p)).sel === 'reproductive', 'previous did not wrap');
+    if (!mobile) {
+      await p.locator('[data-s3-tick="thyroid"]').click();
+      assert((await s3Read(p)).sel === 'thyroid', 'marker did not select');
+    }
+    // overview, then a marker on the overview illustration opens that system
+    await p.locator('[data-s3-over]').click();
+    await p.waitForFunction(() => [...document.querySelectorAll('[data-s3-slot]')].some((i) => i.style.opacity === '1' && (i.currentSrc || i.src).includes('02-overview')));
+    let r = await s3Read(p);
+    assert(r.title === 'One body. Many connected systems.' && r.pressed.length === 0, `overview: ${JSON.stringify(r)}`);
+    assert((await p.locator('[data-s3-over]').getAttribute('aria-pressed')) === 'true', 'overview not marked');
+    assert((await p.locator('.s3__spot:visible').count()) === 5, 'overview markers missing');
+    await p.locator('[data-s3-spot="lungs"]').click();
+    await p.waitForFunction(() => [...document.querySelectorAll('[data-s3-slot]')].some((i) => i.style.opacity === '1' && (i.currentSrc || i.src).includes('05-lungs')));
+    assert(await p.locator('[data-s3-spots]').evaluate((e) => e.inert), 'overview markers still live on a system view');
+    await p.waitForTimeout(450);
+    assert((await p.locator('.s3__spot:visible').count()) === 0, 'overview markers left on a system view');
+    // rapid switching: the last choice wins and nothing is left half-shown
+    for (const k of ['heart', 'nervous', 'digestion', 'thyroid', 'circulation', 'metabolic']) await p.locator(`[data-s3-sys="${k}"]`).click({ delay: 0 });
+    await p.waitForFunction(() => [...document.querySelectorAll('[data-s3-slot]')].some((i) => i.style.opacity === '1' && (i.currentSrc || i.src).includes('11-metabolic')), null, { timeout: 5000 });
+    await p.waitForTimeout(700);
+    r = await s3Read(p);
+    assert(r.sel === 'metabolic' && r.title === S3.metabolic[1] && r.pressed.join() === 'metabolic', `rapid: ${JSON.stringify(r)}`);
+    assert((await p.locator('[data-s3-slot]').evaluateAll((els) => els.filter((i) => i.style.opacity === '1').length)) === 1, 'rapid: two artworks left visible');
+    // scrolling does not reset the choice; scrolling back and returning remembers it
+    await p.mouse.wheel(0, 60);
+    await p.waitForTimeout(250);
+    assert((await s3Read(p)).sel === 'metabolic', 'scroll reset the selection');
+    await s3At(p, 0.5, 400);
+    assert((await s3Read(p)).ex === 0, 'explorer artwork over the guided sequence');
+    await s3At(p, 0.97, 900);
+    r = await s3Read(p);
+    assert(r.state === 'explore' && r.sel === 'metabolic' && r.shown.includes('11-metabolic'), `selection not remembered: ${JSON.stringify(r)}`);
+    assert((await p.locator('#scene-03').count()) === 1 && (await p.locator('[data-s3-sys]').count()) === 8, 'duplicated scene or controls');
+    assert(p.consoleErrors.length === 0, `console: ${p.consoleErrors[0]}`);
+    assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'horizontal overflow');
     await p.context().close();
   }
 });
 
-await test('S3-FALLBACK', 'Scene 03 without JavaScript: luminous still, readable copy, all three topics written out; reduced motion steps instead of scrubbing', async () => {
+await test('S3-ENTER', 'Scene 03: the phone’s Explore control and an overview marker both carry the visitor into the explorer; keyboard works', async () => {
+  const p = await ctx({ reducedMotion: 'no-preference' });
+  await go(p, '/');
+  await s3At(p, 0.03, 400);
+  await p.locator('[data-s3-enter]').click();
+  await p.waitForFunction(() => document.querySelector('#scene-03').dataset.state === 'explore', null, { timeout: 8000 });
+  assert(await p.locator('[data-s3-screen]').evaluate((e) => e.inert), 'phone overlay still focusable in the explorer');
+  await s3At(p, 0.5, 500);
+  await p.locator('[data-s3-spot="thyroid"]').click();
+  await p.waitForFunction(() => { const s = document.querySelector('#scene-03'); return s.dataset.state === 'explore' && [...s.querySelectorAll('[data-s3-slot]')].some((i) => i.style.opacity === '1' && (i.currentSrc || i.src).includes('07-thyroid')); }, null, { timeout: 8000 });
+  // keyboard: buttons are real buttons; Enter and Space select; arrows move along the list; focus is visible
+  await p.locator('[data-s3-sys="lungs"]').focus();
+  await p.keyboard.press('Enter');
+  assert((await s3Read(p)).sel === 'lungs', 'Enter did not select');
+  await p.keyboard.press('ArrowDown');
+  assert(await p.evaluate(() => document.activeElement?.getAttribute('data-s3-sys') === 'metabolic'), 'arrow key did not move focus');
+  await p.keyboard.press('Space');
+  assert((await s3Read(p)).sel === 'metabolic', 'Space did not select');
+  const ring = await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle);
+  assert(ring !== 'none', 'no visible focus on the system buttons');
+  for (const sel of ['[data-s3-sys]', '[data-s3-tick]', '[data-s3-prev]', '[data-s3-next]', '[data-s3-over]', '[data-s3-spot]'])
+    for (const b of await p.locator(sel).all()) assert(((await b.getAttribute('aria-label')) || (await b.innerText())).trim().length > 1, `${sel} has no accessible name`);
+  await p.context().close();
+});
+
+await test('S3-FALLBACK', 'Scene 03 without JavaScript: overview still, all eight systems written out; reduced motion: no pin, explorer available directly', async () => {
   const p = await ctx({ javaScriptEnabled: false });
   await go(p, '/');
   await p.locator('#scene-03').scrollIntoViewIfNeeded();
-  assert((await p.locator('.s3__panel:visible').count()) === 3, 'topics not written out without JS');
-  assert((await p.locator('.s3__chip:visible, .s3__spot:visible').count()) === 0, 'dead controls shown without JS');
+  assert((await p.locator('.s3__plain article:visible').count()) === 8, 'systems not written out without JS');
+  assert((await p.locator('[data-s3-sys]:visible, .s3__spot:visible, .s3__strip:visible').count()) === 0, 'dead controls shown without JS');
   assert((await p.locator('.s3__stage').evaluate((e) => getComputedStyle(e).position)) !== 'sticky', 'pinned without JS');
-  assert(Number(await p.locator('.s3__img--light').evaluate((e) => getComputedStyle(e).opacity)) === 1, 'luminous still hidden without JS');
+  assert(Number(await p.locator('[data-s3-l="overview"]').evaluate((e) => getComputedStyle(e).opacity)) === 1, 'overview still hidden without JS');
+  assert(!(await p.locator('[data-s3-phone]').isVisible()), 'phone shown without JS');
+  assert(/An illustration, not a scan/.test(await p.locator('#scene-03').innerText()), 'disclaimer missing');
   await p.context().close();
-  const r = await ctx({ reducedMotion: 'reduce' });
-  await go(r, '/');
-  const seen = new Set();
-  for (let f = 0; f <= 1.001; f += 0.05) {
-    await s3At(r, f);
-    seen.add((await s3Read(r)).p);
+  for (const opts of VIEWS) {
+    const r = await ctx({ ...opts, reducedMotion: 'reduce' });
+    await go(r, '/');
+    await r.locator('.s3__frame').scrollIntoViewIfNeeded();
+    await r.waitForTimeout(500);
+    assert((await r.locator('.s3__stage').evaluate((e) => getComputedStyle(e).position)) !== 'sticky', 'pinned with reduced motion');
+    assert((await r.locator('.s3__pin').evaluate((e) => e.offsetHeight)) < 1400, 'long scroll track with reduced motion');
+    let st = await s3Read(r);
+    assert(st.state === 'explore' && st.sel === 'overview' && st.shown.includes('02-overview'), `reduced: ${JSON.stringify(st)}`);
+    for (const k of ['heart', 'reproductive']) {
+      await r.locator(`[data-s3-sys="${k}"]`).click();
+      await r.waitForFunction((f) => [...document.querySelectorAll('[data-s3-slot]')].some((i) => i.style.opacity === '1' && (i.currentSrc || i.src).includes(f)), S3[k][0]);
+      st = await s3Read(r);
+      assert(st.title === S3[k][1], `reduced ${k}: ${st.title}`);
+    }
+    assert(await r.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow with reduced motion');
+    await r.context().close();
   }
-  assert([...seen].every((v) => v === 0 || v === 1) && seen.size === 2, `reduced motion scrubbed: ${[...seen].join(',')}`);
-  await s3At(r, 0.9);
-  await r.locator('[data-s3-topic="heart"]').click();
-  assert((await r.locator('.s3__panel:visible').count()) === 1, 'topics unusable with reduced motion');
-  await r.context().close();
+});
+
+await test('S3-HONEST', 'Scene 03 shows no values, scores or diagnostic claims, keeps the disclaimer, and has no muscular system', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const t = await p.locator('#scene-03').evaluate((e) => e.textContent);
+  assert(/An illustration, not a scan\. It does not show anyone’s results\./.test(t), 'disclaimer missing');
+  assert(/Not everyone needs every test/.test(t), 'closing caveat missing');
+  assert(!/\b\d+\s?(bpm|mmHg|mg\/dL|%|SpO2)/i.test(t) && !/\b(score|risk level|diagnos(is|e|tic)|your results|muscular)\b/i.test(t.replace(/does not show anyone’s results/g, '')), 'values, scores or diagnostic wording present');
+  assert((await p.locator('#scene-03 img[alt]:not([alt=""])').count()) >= 2, 'meaningful images lack descriptions');
+  await p.context().close();
 });
 
 await test('E2E-07', 'Resize from desktop to mobile inside Scene 03: no overflow, state stays coherent, copy leaves the pin', async () => {
   const p = await ctx();
   await go(p, '/');
-  await s3At(p, 0.85);
+  await s3At(p, 0.96, 600);
+  await p.locator('[data-s3-sys="lungs"]').click();
   await p.setViewportSize({ width: 390, height: 844 });
-  await p.waitForTimeout(400);
+  await p.waitForTimeout(500);
   assert((await p.locator('.s3__copy').evaluate((e) => getComputedStyle(e).position)) !== 'sticky', 'copy still pinned on mobile');
   assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'horizontal overflow');
-  const r = await s3Read(p);
-  assert(Math.min(r.light, r.dark) === 0, 'both stills visible after resize');
+  await p.setViewportSize({ width: 844, height: 390 });
+  await p.waitForTimeout(400);
+  assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow in landscape');
+  assert((await s3Read(p)).sel === 'lungs', 'selection lost on resize');
   await p.context().close();
 });
 

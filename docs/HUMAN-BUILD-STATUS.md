@@ -162,3 +162,38 @@ Directive: `HUMAN — Scene 03 Complete Website Implementation Master Prompt`. R
 **Known limits**: text contrast dips to roughly 4:1 for a short stretch of scroll while the room passes mid-grey; on phones the open panel covers the lower half of the figure; at 1024×768 it covers the lower lungs. Not measured: Lighthouse, Safari, Firefox, real devices, screen readers.
 
 **Evidence**: `docs/reviews/v7-scene03/`.
+
+## Scene 03 rebuild 2: phone entrance and eight-system explorer (2026-11-14)
+
+Directive: `HUMAN — Scene 03 Complete Cinematic Website Implementation Directive`. Rollback point: git tag `v7-scene03-baseline`. This replaces the two-image light-to-dark version from 2026-11-13 (its two images were removed; they remain in git history).
+
+**Assets**: eleven founder-supplied illustrations in `src/assets/scene03/`, named `human-s3-01-phone.webp` … `human-s3-11-metabolic.webp`, matched to the brief by what each shows. They arrived through chat as WebP at about 1,090 px wide (phone 1122 × 1402), not as the original PNGs, and are stored as received. Astro serves a 640 px and a full-width derivative of each; the four guided stills load as the scene nears, the other seven on demand and then quietly in the background once the explorer opens.
+
+**Guided sequence** (one pinned stage; 300vh of scroll on desktop, 260svh on phones; fully reversible)
+- 0.00–0.12 the phone photograph settles. A real "Explore" button and two decorative dots sit in the phone's own screen coordinates.
+- 0.12–0.42 the photograph scales about the chest of the figure on its screen until bezel and hand leave the frame, then the luminous overview takes over under a brief blush veil.
+- 0.42–0.57 the overview rests. Five markers (thyroid, heart, lungs, liver, digestion) each open that system.
+- 0.57–0.78 the overview leans toward the heart and hands to the luminous heart close-up.
+- 0.78–0.90 the dark heart fades in over its luminous twin (same framing) while the room deepens.
+- 0.90–1.00 the explorer is live, starting on the heart.
+
+**Explorer**: eight systems in the brief's order (Heart, Lungs, Metabolic, Digestion, Thyroid, Nervous system, Circulation, Reproductive health). A glass list of icon buttons (vertical on wide screens, a labelled scrolling row on phones), a strip with previous / eight markers / next / Overview, and the explanation text. Only the artwork changes; the interface does not move (tested). Latest choice wins on rapid clicks; a failed image load keeps the previous view. The nervous-system rear view is reached through a short dip to dark, not a blend. Scroll never changes the chosen system, and the choice is remembered if the visitor scrolls back and returns.
+
+**Not built, by decision**: no targeting rings on organs, no heart pulse, no per-organ masks, no 3D, no muscular system, no values or scores.
+
+**Fallbacks**: reduced motion has no pin or zoom and opens directly on the overview with the explorer live. Without JavaScript the scene is the overview still with all eight systems written out.
+
+**Scene boundaries**: Scene 02 and Scene 04 files are untouched. Scene 03 ends on the existing closing lines over deep rose, then a gradient back to the page's paper tone.
+
+**Copy**: Scene 03 heading, paragraphs, disclaimer and closing lines unchanged. System copy is the founders' approved text from the directive, word for word; it still needs clinical review before launch.
+
+**Measured**: build 0 errors; e2e 49/49 in Chromium (Scene 03 tests rewritten: sequence order and reversal, overlap limits, all eight systems plus strip / overview / markers / rapid switching / remembered choice, entry controls and keyboard, no-JS and reduced motion, honesty checks, resize and landscape). No overflow or console errors at 1920×1080, 1440×900, 1280×720, 1024×768, 768×1024, 430×932, 390×844, 360×800, 360×640, 320×568.
+
+**Known limits**
+- The two handovers (phone → overview, overview → heart close-up) join renders that do not match exactly; for about 5% of the scroll each, two soft bodies overlap under the veil.
+- The zoomed phone image is upscaled about 1.2× at the moment of entry on large desktops and looks soft there.
+- Text contrast is low for a short stretch while the room passes mid-rose.
+- Icons are simple custom outlines drawn for this build.
+- Not measured: Lighthouse, Safari, Firefox, real devices, screen readers, frame rate on low-end phones.
+
+**Evidence**: `docs/reviews/v8-scene03/` (21 states at 1440 and 390, plus overview sheets).

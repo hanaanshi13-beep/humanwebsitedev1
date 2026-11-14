@@ -1,55 +1,156 @@
 ---
-// Scene 03 — THE SIDE YOU CAN'T SEE. A light-to-dark passage built from two approved anatomical illustrations.
+// Scene 03 — THE SIDE YOU CAN'T SEE.
+// A guided passage (phone → into the screen → luminous overview → the heart) that hands over to an explorer of
+// eight body systems. Built from eleven approved two-dimensional illustrations: nothing is 3D, morphed,
+// regenerated or redrawn. The sense of a camera comes from scale, translation, short masked blends and light.
 //
-// The two renders are similar but not pixel-identical, so they are never shown together: the luminous figure
-// fades out as the room darkens, the stage rests in a quiet dark midpoint, and only then does the dark figure
-// emerge. Nothing is warped, morphed or animated inside either image.
+// Two separate sources of truth, so they never fight:
+//   --p  / data-state   where the visitor is in the guided scroll (phone · enter · overview · heart · explore)
+//   data-sel            which system the visitor has chosen (remembered; only shown in the explore state)
 //
-// One number drives everything: --p (0..1), written by the script below while the stage is pinned. CSS derives
-// the room colour, the two image opacities and the text colour from it. Once the dark figure is established the
-// scene is "immersive" and three topics can be opened. Two of them also have a marker on the artwork; the third
-// is conceptual and deliberately has none.
-//
-// Without JavaScript the scene is a still: the luminous figure, the copy, and all three topics written out.
-// The artwork is illustrative. It is not a scan, and nothing here is anyone's result.
-import { Image } from 'astro:assets';
-import light from '../../assets/scene03/HUMAN_S03_LIGHT.webp';
-import dark from '../../assets/scene03/HUMAN_S03_DARK.webp';
+// The artwork is illustrative. It is not a scan, shows nobody's results, and carries no values or scores.
+import { getImage } from 'astro:assets';
+import aPhone from '../../assets/scene03/human-s3-01-phone.webp';
+import aOverview from '../../assets/scene03/human-s3-02-overview.webp';
+import aHeartLum from '../../assets/scene03/human-s3-03-heart-luminous.webp';
+import aHeart from '../../assets/scene03/human-s3-04-heart-focus.webp';
+import aLungs from '../../assets/scene03/human-s3-05-lungs.webp';
+import aDigestive from '../../assets/scene03/human-s3-06-digestive.webp';
+import aThyroid from '../../assets/scene03/human-s3-07-thyroid.webp';
+import aNervous from '../../assets/scene03/human-s3-08-nervous.webp';
+import aCirculation from '../../assets/scene03/human-s3-09-circulation.webp';
+import aReproductive from '../../assets/scene03/human-s3-10-reproductive.webp';
+import aMetabolic from '../../assets/scene03/human-s3-11-metabolic.webp';
 
-// Marker positions are fractions of the dark illustration's own frame (1122 × 1402), read off the artwork.
-const topics = [
+const SIZES = '(max-width: 1023px) 92vw, 44vw';
+const pic = async (src: ImageMetadata) => {
+  const small = await getImage({ src, width: 640, format: 'webp', quality: 84 });
+  const full = await getImage({ src, width: src.width, format: 'webp', quality: 88 });
+  return { src: full.src, srcset: `${small.src} 640w, ${full.src} ${src.width}w`, w: src.width, h: src.height };
+};
+
+// ---- the asset manifest: one place for every image, label, line of copy and framing value ----
+// `shift` is the direction (px) the new view settles from, a small cue for where on the body it sits.
+// `spot` values are fractions of the overview illustration, read off the artwork.
+const overview = {
+  key: 'overview',
+  label: 'Overview',
+  eyebrow: 'The invisible side',
+  title: 'One body. Many connected systems.',
+  body: 'Your health is shaped by many interconnected processes. A visual illustration can introduce those systems, but understanding your health requires context beyond what a picture can show.',
+  alt: 'Illustration of a translucent human torso in coral pink, showing the thyroid, heart, lungs, liver, stomach and intestines.',
+  img: await pic(aOverview),
+  dark: 0,
+  shift: [0, 0],
+  rear: false,
+};
+const systems = [
   {
     key: 'heart',
-    chip: 'Heart and circulation',
-    short: 'Heart',
-    label: 'Circulation',
+    label: 'Heart',
+    eyebrow: 'Cardiovascular health',
     title: 'More than a heartbeat.',
-    body: 'How you feel during the day doesn’t necessarily tell you what your cholesterol levels or blood pressure are. Understanding cardiovascular health can involve looking beyond visible fitness.',
-    spot: { x: 59.5, y: 44 },
+    body: 'How you feel during the day does not necessarily tell you what your cholesterol levels or blood pressure are. Understanding cardiovascular health can involve looking beyond visible fitness.',
+    alt: 'Illustration: the heart, lit in coral red, with the surrounding chest in subdued rose.',
+    img: await pic(aHeart),
+    shift: [0, 0],
+    spot: [56, 44],
+    icon: '<path d="M12 20s-7-4.4-7-9.6A4 4 0 0 1 12 8a4 4 0 0 1 7 2.4C19 15.6 12 20 12 20z"/>',
   },
   {
     key: 'lungs',
-    chip: 'Lungs and breathing',
-    short: 'Lungs',
-    label: 'Breathing',
+    label: 'Lungs',
+    eyebrow: 'Respiratory health',
     title: 'Every breath has a story.',
-    body: 'Your lungs exchange oxygen and carbon dioxide with every breath. It’s a remarkable process happening constantly, usually without your attention.',
-    spot: { x: 33.5, y: 43 },
+    body: 'Your lungs exchange oxygen and carbon dioxide with every breath. Breathing, physical activity and everyday wellbeing are connected, but respiratory health cannot be fully understood from appearance alone.',
+    alt: 'Illustration: both lungs, the trachea and their branching airways, lit against a dark rose chest.',
+    img: await pic(aLungs),
+    shift: [0, 0],
+    spot: [30.5, 41.5],
+    icon: '<path d="M12 3.5v7"/><path d="M11 9.5C8 9.5 5.5 12 4.6 15.5l-.5 2.6c-.2 1 .6 1.9 1.6 1.9H8c1.7 0 3-1.3 3-3V9.5z"/><path d="M13 9.5c3 0 5.5 2.5 6.4 6l.5 2.6c.2 1-.6 1.9-1.6 1.9H16c-1.7 0-3-1.3-3-3V9.5z"/>',
   },
   {
-    key: 'beyond',
-    chip: 'Beyond the visible',
-    short: 'Beyond the visible',
-    label: 'The invisible',
-    title: 'Some answers aren’t visible.',
-    body: 'Blood sugar, cholesterol, iron status and thyroid function cannot be determined by looking at someone’s appearance. Understanding these markers, when relevant, requires appropriate assessment and context.',
-    spot: null,
+    key: 'metabolic',
+    label: 'Metabolic',
+    eyebrow: 'Metabolic health',
+    title: 'Energy has an invisible story.',
+    body: 'Your liver and pancreas play important roles in how your body processes nutrients and regulates energy. Relevant markers, such as blood glucose, may provide information that appearance alone cannot reveal.',
+    alt: 'Illustration: a torso with the liver and pancreas lit in warm coral, the other organs subdued.',
+    img: await pic(aMetabolic),
+    shift: [0, -10],
+    spot: [37, 57.5],
+    icon: '<path d="M3.6 10.6C5 7.6 9 6 13 6h4.4a3.1 3.1 0 0 1 3.1 3.1c0 2-1.6 3.3-3.6 3.5-2.6.3-4.4 1.6-5.9 3.4-1.2 1.4-2.6 2.5-4.5 2.5-2.2 0-3.6-1.6-3.6-3.8 0-1.5.2-2.8.7-4.1z"/><path d="M12.6 6.2v6.6"/>',
+  },
+  {
+    key: 'digestion',
+    label: 'Digestion',
+    eyebrow: 'Digestive health',
+    title: 'What happens after you eat?',
+    body: 'From breaking down food to absorbing nutrients, your digestive system supports everyday health. Symptoms, dietary history and appropriate assessments can help provide context when digestive concerns arise.',
+    alt: 'Illustration: the stomach and intestines, lit in coral, within a darker abdomen.',
+    img: await pic(aDigestive),
+    shift: [0, -14],
+    spot: [49, 78],
+    icon: '<path d="M7 4h10a2.5 2.5 0 0 1 0 5H9a2.5 2.5 0 0 0 0 5h6a2.5 2.5 0 0 1 0 5h-3v2"/>',
+  },
+  {
+    key: 'thyroid',
+    label: 'Thyroid',
+    eyebrow: 'Hormonal health',
+    title: 'Small gland. Far-reaching influence.',
+    body: 'Thyroid hormones help regulate metabolism and influence many functions throughout the body. Understanding thyroid function may require appropriate testing and clinical interpretation.',
+    alt: 'Illustration: the neck and trachea, with the butterfly-shaped thyroid gland lit in coral.',
+    img: await pic(aThyroid),
+    shift: [0, 14],
+    spot: [51.2, 15.5],
+    icon: '<path d="M8 5C6 5 4.5 7.5 4.5 11S6 18 8.2 18c1.6 0 2.4-1.4 3.8-1.4s2.2 1.4 3.8 1.4c2.2 0 3.7-3.5 3.7-7S18 5 16 5c-1.6 0-2.2 2.6-2.6 4.6-.2 1-.7 1.4-1.4 1.4s-1.2-.4-1.4-1.4C10.2 7.6 9.6 5 8 5z"/>',
+  },
+  {
+    key: 'nervous',
+    label: 'Nervous system',
+    eyebrow: 'Brain and nervous system',
+    title: 'A remarkable network.',
+    body: 'Your nervous system helps coordinate movement, sensation and communication throughout the body. Its complexity extends far beyond what you can observe from the outside.',
+    alt: 'Illustration, seen from behind: the brain, spinal cord and branching nerves lit in warm coral.',
+    img: await pic(aNervous),
+    shift: [0, 0],
+    rear: true,
+    icon: '<path d="M12 5.5A3 3 0 0 0 6.5 6 3 3 0 0 0 4 10.5a3 3 0 0 0 .8 4.6A3 3 0 0 0 9 19a3 3 0 0 0 3-2V5.5z"/><path d="M12 5.5A3 3 0 0 1 17.5 6 3 3 0 0 1 20 10.5a3 3 0 0 1-.8 4.6A3 3 0 0 1 15 19a3 3 0 0 1-3-2"/>',
+  },
+  {
+    key: 'circulation',
+    label: 'Circulation',
+    eyebrow: 'Blood and circulation',
+    title: 'A connection within everything.',
+    body: 'Blood carries oxygen, nutrients and other substances throughout the body. Relevant blood tests may help provide information about aspects of health that cannot be determined by looking at someone.',
+    alt: 'Illustration: an upper body with the heart and a network of blood vessels lit through the neck, chest and arms.',
+    img: await pic(aCirculation),
+    shift: [0, 0],
+    icon: '<path d="M12 3.5s6 6.2 6 10.5a6 6 0 0 1-12 0c0-4.3 6-10.5 6-10.5z"/>',
+  },
+  {
+    key: 'reproductive',
+    label: 'Reproductive health',
+    eyebrow: 'Reproductive health',
+    title: 'Health changes through life.',
+    body: 'Reproductive health is connected with hormones, menstrual health and different stages of life. Understanding it depends on individual circumstances, symptoms, history and appropriate clinical guidance.',
+    alt: 'Illustration: a pelvis with the uterus, ovaries and fallopian tubes lit in coral pink.',
+    img: await pic(aReproductive),
+    shift: [0, -16],
+    icon: '<path d="M5.8 6.4C8 6.4 8.8 7.2 9.4 8h5.2c.6-.8 1.4-1.6 3.6-1.6"/><path d="M9.4 8c0 3.6 1.3 5.4 1.3 8.2V20h2.6v-3.8c0-2.8 1.3-4.6 1.3-8.2"/><circle cx="4.2" cy="8.6" r="1.7"/><circle cx="19.8" cy="8.6" r="1.7"/>',
   },
 ];
-const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
+const phone = await pic(aPhone);
+const heartLum = await pic(aHeartLum);
+const all = [overview, ...systems];
+// what the script needs: no markup, no icons
+const manifest = Object.fromEntries(
+  all.map((s) => [s.key, { label: s.label, eyebrow: s.eyebrow, title: s.title, body: s.body, alt: s.alt, src: s.img.src, srcset: s.img.srcset, dark: s.key === 'overview' ? 0 : 1, shift: s.shift, rear: !!(s as { rear?: boolean }).rear }]),
+);
+const order = systems.map((s) => s.key);
 ---
 
-<section class="s3" id="scene-03" aria-labelledby="s3-title" data-s3 data-state="luminous">
+<section class="s3" id="scene-03" aria-labelledby="s3-title" data-s3 data-state="phone" data-sel="heart">
   <div class="wrap s3__grid">
     <div class="s3__copy">
       <p class="eyebrow" data-reveal><span class="num">03</span><span>The invisible side of your health</span></p>
@@ -67,79 +168,119 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
           You might not know. Most of us were never taught to look beyond how we feel or what we see.
         </p>
       </div>
+      <!-- the selected system's explanation (wide screens). A twin sits under the artwork on small screens. -->
+      <div class="s3__info s3__info--side" data-s3-info aria-live="polite">
+        <p class="s3__info-eyebrow" data-f="eyebrow">{overview.eyebrow}</p>
+        <h3 data-f="title">{overview.title}</h3>
+        <p class="s3__info-body" data-f="body">{overview.body}</p>
+      </div>
     </div>
 
     <div class="s3__pin">
       <div class="s3__stage">
-        <figure class="s3__art" aria-describedby="s3-cap">
-          <div class="s3__frame">
-            <div class="s3__light">
-            <Image
-              class="s3__img s3__img--light"
-              src={light}
-              widths={widths(light.width)}
-              sizes="(max-width: 1023px) 92vw, 46vw"
-              format="webp"
-              quality={86}
-              loading="lazy"
-              decoding="async"
-              alt="Illustration of a translucent human upper body in soft rose tones, showing the ribcage, lungs and heart."
-            />
-            </div>
-            <Image
-              class="s3__img s3__img--dark"
-              src={dark}
-              widths={widths(dark.width)}
-              sizes="(max-width: 1023px) 92vw, 46vw"
-              format="webp"
-              quality={86}
-              loading="lazy"
-              decoding="async"
-              alt=""
-            />
-            {
-              topics
-                .filter((t) => t.spot)
-                .map((t) => (
-                  <button type="button" class="s3__spot" style={`left:${t.spot!.x}%;top:${t.spot!.y}%`} data-s3-spot={t.key} tabindex="-1" aria-hidden="true">
-                    <span class="s3__spot-dot" />
-                  </button>
+        <div class="s3__view">
+          <!-- eight real systems; on wide screens a vertical glass capsule, on phones a labelled scrolling row -->
+          <nav class="s3__nav" aria-label="Body systems" data-s3-ui>
+            <ul>
+              {
+                systems.map((s) => (
+                  <li>
+                    <button type="button" class="s3__sys" data-s3-sys={s.key} aria-label={s.label} aria-pressed="false">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={s.icon} />
+                      <span class="s3__sys-label" aria-hidden="true">{s.label}</span>
+                    </button>
+                  </li>
                 ))
-            }
-          </div>
-        </figure>
+              }
+            </ul>
+          </nav>
 
-        <div class="s3__explore">
-          <p class="s3__hint" id="s3-hint">Explore what lies beneath</p>
-          <div class="s3__topics" role="group" aria-labelledby="s3-hint">
+          <div class="s3__art">
+            <div class="s3__frame">
+              <div class="s3__layers" data-s3-layers>
+                <!-- State B/C: the photograph of the phone. Its overlays live in the phone's own coordinates. -->
+                <div class="s3__phone" data-s3-phone>
+                  <img src={phone.src} srcset={phone.srcset} sizes={SIZES} width={phone.w} height={phone.h} alt="A hand holding a phone. On its screen is an illustration of a translucent human body." loading="lazy" decoding="async" />
+                  <div class="s3__screen" data-s3-screen>
+                    <span class="s3__dot" style="left:51%;top:56%" aria-hidden="true"></span>
+                    <span class="s3__dot" style="left:28%;top:53%" aria-hidden="true"></span>
+                    <button type="button" class="s3__enter" data-s3-enter>
+                      Explore
+                      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 2.5v11M3.5 9 8 13.5 12.5 9" /></svg>
+                    </button>
+                  </div>
+                </div>
+                <!-- State D/E: three stills of the guided approach. Only the first is announced. -->
+                <img class="s3__l s3__l--overview" data-s3-l="overview" src={overview.img.src} srcset={overview.img.srcset} sizes={SIZES} width={overview.img.w} height={overview.img.h} alt={overview.alt} loading="lazy" decoding="async" />
+                <img class="s3__l" data-s3-l="heartlum" src={heartLum.src} srcset={heartLum.srcset} sizes={SIZES} width={heartLum.w} height={heartLum.h} alt="" loading="lazy" decoding="async" />
+                <img class="s3__l" data-s3-l="heart" src={systems[0].img.src} srcset={systems[0].img.srcset} sizes={SIZES} width={systems[0].img.w} height={systems[0].img.h} alt="" loading="lazy" decoding="async" />
+                <span class="s3__veil" data-s3-veil aria-hidden="true"></span>
+                <!-- State F: the explorer's own pair of image slots (current and incoming) -->
+                <div class="s3__ex" data-s3-ex>
+                  <img data-s3-slot alt="" decoding="async" />
+                  <img data-s3-slot alt="" decoding="async" />
+                </div>
+              </div>
+              <!-- markers on the overview illustration: each one opens that system -->
+              <div class="s3__spots" data-s3-spots>
+                {
+                  systems
+                    .filter((s) => s.spot)
+                    .map((s) => (
+                      <button type="button" class="s3__spot" style={`left:${s.spot![0]}%;top:${s.spot![1]}%`} data-s3-spot={s.key} aria-label={`${s.label}: open this system`}>
+                        <span aria-hidden="true" />
+                      </button>
+                    ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- previous · eight markers · next · overview. Every control changes the view; none is a gauge. -->
+        <div class="s3__strip" role="group" aria-label="Move between systems" data-s3-ui>
+          <button type="button" class="s3__step" data-s3-prev aria-label="Previous system">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3 5 8l5 5" /></svg>
+          </button>
+          <div class="s3__ticks">
             {
-              topics.map((t, i) => (
-                <button type="button" class="s3__chip" data-s3-topic={t.key} aria-label={t.chip} aria-expanded="false" aria-controls={`s3-panel-${t.key}`}>
-                  <span class="s3__chip-n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                  <span class="s3__chip-full">{t.chip}</span>
-                  <span class="s3__chip-short">{t.short}</span>
+              systems.map((s) => (
+                <button type="button" class="s3__tick" data-s3-tick={s.key} aria-label={s.label} aria-pressed="false">
+                  <span aria-hidden="true" />
                 </button>
               ))
             }
           </div>
-          <div class="s3__panels">
-            {
-              topics.map((t) => (
-                <article class="s3__panel" id={`s3-panel-${t.key}`} data-s3-panel={t.key} aria-labelledby={`s3-pt-${t.key}`}>
-                  <p class="s3__panel-label">{t.label}</p>
-                  <h3 id={`s3-pt-${t.key}`}>{t.title}</h3>
-                  <p class="s3__panel-body">{t.body}</p>
-                  <button type="button" class="s3__close" data-s3-close>
-                    <span aria-hidden="true"></span><span class="vh">Close {t.label.toLowerCase()}</span>
-                  </button>
-                </article>
-              ))
-            }
-          </div>
+          <p class="s3__count" aria-hidden="true"><span data-s3-count>Heart</span></p>
+          <button type="button" class="s3__step" data-s3-next aria-label="Next system">
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m6 3 5 5-5 5" /></svg>
+          </button>
+          <button type="button" class="s3__over" data-s3-over aria-pressed="false">Overview</button>
         </div>
-        <p class="note s3__cap" id="s3-cap">An illustration, not a scan. It does not show anyone’s results.</p>
+
+        <div class="s3__info s3__info--stage" data-s3-info>
+          <p class="s3__info-eyebrow" data-f="eyebrow">{overview.eyebrow}</p>
+          <h3 data-f="title">{overview.title}</h3>
+          <p class="s3__info-body" data-f="body">{overview.body}</p>
+        </div>
+
+        <p class="note s3__cap">An illustration, not a scan. It does not show anyone’s results.</p>
+        <p class="vh" role="status" data-s3-status></p>
       </div>
     </div>
+  </div>
+
+  <!-- Without JavaScript the scene is a still of the overview, and every system is written out here. -->
+  <div class="wrap s3__plain">
+    {
+      systems.map((s) => (
+        <article>
+          <p class="s3__info-eyebrow">{s.eyebrow}</p>
+          <h3>{s.title}</h3>
+          <p>{s.body}</p>
+        </article>
+      ))
+    }
   </div>
 
   <div class="s3__after">
@@ -153,57 +294,235 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
       </p>
     </div>
   </div>
+
+  <script type="application/json" data-s3-manifest set:html={JSON.stringify({ items: manifest, order })} />
 </section>
 
 <script>
-  // Progress for the pinned stage, the three scene states, and the topic disclosure. One rAF-throttled scroll
-  // listener that only runs while the scene is near the viewport; no per-frame loop, no scroll hijacking.
   const sec = document.querySelector<HTMLElement>('[data-s3]');
   const pin = sec?.querySelector<HTMLElement>('.s3__pin');
   const stage = sec?.querySelector<HTMLElement>('.s3__stage');
   if (sec && pin && stage) {
+    type Item = { label: string; eyebrow: string; title: string; body: string; alt: string; src: string; srcset: string; dark: number; shift: [number, number]; rear: boolean };
+    const data = JSON.parse(sec.querySelector('[data-s3-manifest]')!.textContent!) as { items: Record<string, Item>; order: string[] };
+    const { items, order } = data;
+    const $ = <T extends HTMLElement>(s: string) => sec.querySelector<T>(s)!;
+    const $$ = <T extends HTMLElement>(s: string) => Array.from(sec.querySelectorAll<T>(s));
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const chips = Array.from(sec.querySelectorAll<HTMLButtonElement>('[data-s3-topic]'));
-    const spots = Array.from(sec.querySelectorAll<HTMLButtonElement>('[data-s3-spot]'));
-    const panels = Array.from(sec.querySelectorAll<HTMLElement>('[data-s3-panel]'));
-    const explore = sec.querySelector<HTMLElement>('.s3__explore')!;
-    let open: string | null = null;
-    let state = '';
 
-    const select = (key: string | null, returnFocus = false) => {
-      const last = open;
-      open = key;
-      if (key) sec.dataset.topic = key;
-      else delete sec.dataset.topic;
-      chips.forEach((c) => c.setAttribute('aria-expanded', String(c.dataset.s3Topic === key)));
-      spots.forEach((s) => s.classList.toggle('is-on', s.dataset.s3Spot === key));
-      panels.forEach((p) => (p.hidden = p.dataset.s3Panel !== key));
-      if (!key && returnFocus && last) chips.find((c) => c.dataset.s3Topic === last)?.focus();
+    const phone = $('[data-s3-phone]');
+    const screenUi = $('[data-s3-screen]');
+    const lOverview = $('[data-s3-l="overview"]');
+    const lHeartLum = $('[data-s3-l="heartlum"]');
+    const lHeart = $('[data-s3-l="heart"]');
+    const veil = $('[data-s3-veil]');
+    const slots = $$<HTMLImageElement>('[data-s3-slot]');
+    const spots = $('[data-s3-spots]');
+    const uis = $$('[data-s3-ui]');
+    const sysBtns = $$<HTMLButtonElement>('[data-s3-sys]');
+    const ticks = $$<HTMLButtonElement>('[data-s3-tick]');
+    const overBtn = $<HTMLButtonElement>('[data-s3-over]');
+    const infos = $$('[data-s3-info]');
+    const status = $('[data-s3-status]');
+    const count = $('[data-s3-count]');
+
+    // ---------- state ----------
+    let p = 0; // guided scroll progress, 0..1
+    let state = ''; // phone | enter | overview | heart | explore
+    let sel = 'heart'; // the visitor's chosen system (or 'overview'); only displayed in the explore state
+    let shown = ''; // what the explorer slots currently display
+    let live = 0; // index of the visible slot
+    let token = 0; // latest selection wins
+    let staticMode = false; // reduced motion: no pinned sequence, explorer shown directly
+
+    const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+    const ramp = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
+    const ease = (t: number) => t * t * (3 - 2 * t);
+
+    // ---------- guided sequence: every layer's transform and opacity is a pure function of p ----------
+    const render = (approach: number) => {
+      // B. the photograph arrives (before the pin engages), then holds
+      const arrive = ease(approach);
+      // C. approach and pass into the screen: scale about the chest of the figure on the phone
+      const zoom = ease(ramp(p, 0.12, 0.4));
+      const ps = (0.94 + 0.06 * arrive) * (1 + zoom * 1.55);
+      phone.style.transform = `translate3d(${zoom * 3.4}%, ${(1 - arrive) * 6 - zoom * 8}%, 0) scale(${ps.toFixed(4)})`;
+      phone.style.opacity = p >= 0.415 ? '0' : String(clamp(arrive * 1.4));
+      const ui = 1 - ramp(p, 0.05, 0.13);
+      screenUi.style.opacity = ui.toFixed(3);
+      screenUi.inert = ui < 0.5 || state === 'explore';
+
+      // D. the luminous overview takes over, then E. leans toward the heart
+      const oIn = ramp(p, 0.36, 0.41);
+      const lean = ease(ramp(p, 0.57, 0.7));
+      const os = (1.06 - 0.06 * ease(ramp(p, 0.36, 0.47))) * (1 + lean * 0.56);
+      lOverview.style.opacity = p >= 0.705 ? '0' : oIn.toFixed(3);
+      lOverview.style.transform = `translate3d(${-12 * lean}%, 0, 0) scale(${os.toFixed(4)})`;
+      // a brief blush veil softens the two handovers where the stills differ
+      const bump = (a: number, m: number, b: number) => (p <= a || p >= b ? 0 : p < m ? (p - a) / (m - a) : (b - p) / (b - m));
+      veil.style.opacity = (0.42 * bump(0.345, 0.385, 0.43) + 0.3 * bump(0.635, 0.67, 0.71)).toFixed(3);
+
+      const hIn = ramp(p, 0.64, 0.7);
+      lHeartLum.style.opacity = hIn.toFixed(3);
+      lHeartLum.style.transform = `scale(${(1.05 - 0.05 * ease(ramp(p, 0.64, 0.76))).toFixed(4)})`;
+      lHeart.style.opacity = ramp(p, 0.78, 0.88).toFixed(3);
+
+      sec.style.setProperty('--s3-blush', ramp(p, 0.22, 0.4).toFixed(3));
     };
-    select(null);
+
+    const setInfo = (key: string) => {
+      const it = items[key];
+      infos.forEach((box) => {
+        if (box.dataset.key === key) return;
+        box.dataset.key = key;
+        box.querySelector('[data-f="eyebrow"]')!.textContent = it.eyebrow;
+        box.querySelector('[data-f="title"]')!.textContent = it.title;
+        box.querySelector('[data-f="body"]')!.textContent = it.body;
+      });
+    };
+
+    // ---------- explorer: swap the artwork, keep the interface still ----------
+    const loadInto = (img: HTMLImageElement, it: Item) =>
+      new Promise<void>((res, rej) => {
+        const probe = new Image();
+        probe.sizes = '(max-width: 1023px) 92vw, 44vw';
+        probe.srcset = it.srcset;
+        probe.src = it.src;
+        const done = () => {
+          img.sizes = probe.sizes;
+          img.srcset = it.srcset;
+          img.src = it.src;
+          res();
+        };
+        probe.decode ? probe.decode().then(done, () => (probe.complete && probe.naturalWidth ? done() : rej())) : ((probe.onload = done), (probe.onerror = () => rej()));
+      });
+
+    const show = async (key: string, instant = false) => {
+      if (shown === key) return;
+      const mine = ++token;
+      const it = items[key];
+      const prev = shown;
+      const next = slots[1 - live];
+      try {
+        await loadInto(next, it);
+      } catch {
+        if (mine !== token) return;
+        // keep the last good view and say so; the interface returns to it
+        status.textContent = `The ${it.label.toLowerCase()} view could not be loaded.`;
+        if (prev) choose(prev, { silent: true });
+        return;
+      }
+      if (mine !== token) return; // a newer choice arrived while this one was loading
+      const cur = slots[live];
+      const quick = instant || reduce.matches;
+      // a rear view (the nervous system) is a change of viewing mode: pass through the dark instead of blending
+      const through = !quick && (it.rear || !!items[prev]?.rear);
+      next.alt = it.alt;
+      cur.alt = '';
+      next.style.transition = 'none';
+      next.style.transform = quick ? 'none' : `translate3d(${it.shift[0]}px, ${it.shift[1]}px, 0) scale(1.025)`;
+      next.style.opacity = '0';
+      next.style.zIndex = '2';
+      cur.style.zIndex = '1';
+      void next.offsetWidth;
+      const d = through ? 170 : 0;
+      next.style.transition = quick ? 'none' : `opacity 380ms cubic-bezier(.22,1,.36,1) ${d}ms, transform 560ms cubic-bezier(.22,1,.36,1) ${d}ms`;
+      next.style.opacity = '1';
+      next.style.transform = 'none';
+      cur.style.transition = quick ? 'none' : `opacity ${through ? 170 : 420}ms ease ${through ? 0 : 120}ms`;
+      cur.style.opacity = '0';
+      live = 1 - live;
+      shown = key;
+    };
+
+    const syncUi = () => {
+      const active = state === 'explore' ? sel : '';
+      sysBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s3Sys === active)));
+      ticks.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s3Tick === active)));
+      overBtn.setAttribute('aria-pressed', String(active === 'overview'));
+      count.textContent = state === 'explore' ? (sel === 'overview' ? 'Overview' : `${order.indexOf(sel) + 1} of ${order.length}`) : 'Choose a system';
+      // on small screens the list scrolls sideways: keep the chosen system in view without moving the page
+      const on = sysBtns.find((b) => b.dataset.s3Sys === active);
+      const rail = on?.closest('ul');
+      if (on && rail && rail.scrollWidth > rail.clientWidth + 4 && rail.dataset.at !== active) {
+        rail.dataset.at = active;
+        const li = on.parentElement!;
+        rail.scrollTo({ left: li.offsetLeft - (rail.clientWidth - li.offsetWidth) / 2, behavior: reduce.matches ? 'instant' : 'smooth' });
+      }
+      sec.dataset.sel = sel;
+      // the overview markers are live whenever the overview illustration is the settled view
+      const overviewUp = (state === 'overview' && p > 0.44 && p < 0.57) || (state === 'explore' && sel === 'overview');
+      spots.classList.toggle('is-on', overviewUp);
+      spots.inert = !overviewUp;
+      const dark = state === 'explore' ? items[sel].dark : ramp(p, 0.76, 0.88);
+      sec.style.setProperty('--s3-dark', dark.toFixed(3));
+      setInfo(state === 'explore' ? sel : state === 'heart' && p >= 0.62 ? 'heart' : 'overview');
+    };
+
+    // Choosing a system. From inside the guided sequence it also carries the visitor to the explorer.
+    function choose(key: string, opt: { silent?: boolean } = {}) {
+      sel = key;
+      if (state !== 'explore') {
+        const span = pin!.offsetHeight - stage!.offsetHeight;
+        const y = pin!.getBoundingClientRect().top + window.scrollY + span * 0.97;
+        window.scrollTo({ top: y, behavior: reduce.matches ? 'instant' : 'smooth' });
+        syncUi();
+        return;
+      }
+      syncUi();
+      show(key);
+      if (!opt.silent) status.textContent = '';
+    }
+    const stepBy = (n: number) => {
+      const i = order.indexOf(sel);
+      choose(order[(i < 0 ? (n > 0 ? 0 : order.length - 1) : i + n + order.length) % order.length]);
+    };
 
     const setState = (next: string) => {
       if (next === state) return;
+      const was = state;
       state = next;
       sec.dataset.state = next;
-      // The controls exist only in the dark world. Outside it they are inert, and any open topic is put away.
-      const ready = next === 'immersive';
-      explore.inert = !ready;
-      spots.forEach((s) => (s.disabled = !ready));
-      if (!ready && open) select(null);
+      const controls = next === 'overview' || next === 'heart' || next === 'explore';
+      uis.forEach((u) => (u.inert = !controls));
+      if (next === 'explore') {
+        // hand over: the explorer starts on the remembered system (the heart on a first visit)
+        show(sel, shown === '' && sel === 'heart');
+        if (was !== '') warm();
+      }
     };
 
+    // fetch the remaining artwork quietly once the visitor is exploring, so later choices are immediate
+    let warmed = false;
+    const warm = () => {
+      if (warmed) return;
+      warmed = true;
+      const rest = order.filter((k) => k !== sel);
+      const next = () => {
+        const k = rest.shift();
+        if (!k) return;
+        const im = new Image();
+        im.sizes = '(max-width: 1023px) 92vw, 44vw';
+        im.srcset = items[k].srcset;
+        im.onload = im.onerror = () => setTimeout(next, 120);
+        im.src = items[k].src;
+      };
+      ('requestIdleCallback' in window ? requestIdleCallback : setTimeout)(next as () => void);
+    };
+
+    // ---------- scroll: one rAF-throttled listener, attached only while the scene is near the viewport ----------
     let ticking = false;
     const update = () => {
       ticking = false;
+      if (staticMode) return;
       const span = pin.offsetHeight - stage.offsetHeight;
       const top = pin.getBoundingClientRect().top;
-      let p = span > 8 ? -top / span : top < window.innerHeight * 0.5 ? 1 : 0;
-      p = Math.min(1, Math.max(0, p));
-      // Reduced motion: the same three states, but stepped rather than scrubbed.
-      if (reduce.matches) p = p < 0.3 ? 0 : 1;
+      p = span > 8 ? clamp(-top / span) : 0;
+      const approach = clamp(1 - top / (window.innerHeight * 0.9));
+      setState(p < 0.12 ? 'phone' : p < 0.42 ? 'enter' : p < 0.57 ? 'overview' : p < 0.9 ? 'heart' : 'explore');
+      render(approach);
       sec.style.setProperty('--p', p.toFixed(4));
-      setState(p < 0.1 ? 'luminous' : p < 0.64 ? 'passage' : 'immersive');
+      syncUi();
     };
     const request = () => {
       if (!ticking) {
@@ -225,43 +544,95 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
         }
         request();
       },
-      { rootMargin: '25% 0px 25% 0px' },
+      { rootMargin: '40% 0px 40% 0px' },
     ).observe(sec);
-    reduce.addEventListener('change', request);
-    update();
 
-    chips.forEach((c) => c.addEventListener('click', () => select(open === c.dataset.s3Topic ? null : c.dataset.s3Topic!)));
-    spots.forEach((s) => s.addEventListener('click', () => select(open === s.dataset.s3Spot ? null : s.dataset.s3Spot!)));
-    sec.querySelectorAll('[data-s3-close]').forEach((b) => b.addEventListener('click', () => select(null, true)));
-    sec.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && open) {
-        e.preventDefault();
-        select(null, true);
+    // Reduced motion: no pinned sequence and no zoom. The overview and the explorer are simply there.
+    const applyMotionPref = () => {
+      staticMode = reduce.matches;
+      sec.classList.toggle('is-static', staticMode);
+      if (staticMode) {
+        p = 1;
+        sel = shown || 'overview';
+        sec.style.setProperty('--s3-blush', '1');
+        [phone, lOverview, lHeartLum, lHeart, veil].forEach((el) => (el.style.opacity = '0'));
+        screenUi.inert = true;
+        state = '';
+        setState('explore');
+        syncUi();
+      } else {
+        state = '';
+        update();
       }
+    };
+    reduce.addEventListener('change', applyMotionPref);
+    applyMotionPref();
+
+    // ---------- controls ----------
+    sysBtns.forEach((b) => b.addEventListener('click', () => choose(b.dataset.s3Sys!)));
+    ticks.forEach((b) => b.addEventListener('click', () => choose(b.dataset.s3Tick!)));
+    $$<HTMLButtonElement>('[data-s3-spot]').forEach((b) => b.addEventListener('click', () => choose(b.dataset.s3Spot!)));
+    overBtn.addEventListener('click', () => choose('overview'));
+    $('[data-s3-prev]').addEventListener('click', () => stepBy(-1));
+    $('[data-s3-next]').addEventListener('click', () => stepBy(1));
+    $('[data-s3-enter]').addEventListener('click', () => choose(sel));
+    // arrow keys step through the systems while focus is on the system list or the strip
+    sec.addEventListener('keydown', (e) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest('.s3__nav, .s3__ticks')) return;
+      const fwd = e.key === 'ArrowDown' || e.key === 'ArrowRight';
+      const back = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!fwd && !back) return;
+      e.preventDefault();
+      const list = t.closest('.s3__nav') ? sysBtns : ticks;
+      const i = list.indexOf(t.closest('button') as HTMLButtonElement);
+      list[(i + (fwd ? 1 : -1) + list.length) % list.length]?.focus();
     });
   }
 </script>
 
 <style>
+  @property --s3-dark {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
   .s3 {
-    /* scene palette (directional values from the approved artwork) */
-    --s3-lum: #f2e6e1;
-    --s3-blush: #e9c5cf;
-    --s3-rose: #c77991;
-    --s3-garnet: #89445f;
+    /* palette sampled from the approved artwork */
+    --s3-ivory: #f0e7e5;
+    --s3-pale: #e8c5c9;
+    --s3-coral: #f38286;
+    --s3-rose: #99616c;
+    --s3-deep: #3a1c23;
     --p: 0;
-    /* derived ramps, all 0..1 */
-    --room: clamp(0, (var(--p) - 0.1) / 0.24, 1); /* the room darkens: 0.10 → 0.34 */
-    --lo: calc(1 - var(--room)); /* the luminous figure leaves with the light */
-    --dk: clamp(0, (var(--p) - 0.42) / 0.2, 1); /* the dark figure arrives: 0.42 → 0.62, after a quiet gap */
-    --ink: clamp(0, (var(--p) - 0.2) / 0.04, 1); /* text flips from ink to warm white as the room passes mid-tone */
+    --s3-blush: 0; /* 0..1 ivory → blush as the visitor enters the screen */
+    --s3-dark: 0; /* 0..1 blush → deep rose as the heart comes into focus, and per chosen system */
+    --ink: clamp(0, (var(--s3-dark) - 0.4) / 0.2, 1);
+    --s3-room: color-mix(in srgb, var(--s3-deep) calc(var(--s3-dark) * 100%), color-mix(in srgb, var(--s3-pale) calc(var(--s3-blush) * 100%), var(--s3-ivory)));
     position: relative;
-    background: color-mix(in srgb, var(--carbon) calc(var(--room) * 100%), var(--s3-lum));
+    background: var(--s3-room);
     color: color-mix(in srgb, var(--text-on-dark) calc(var(--ink) * 100%), var(--text-on-light));
     --text: color-mix(in srgb, var(--text-on-dark) calc(var(--ink) * 100%), var(--text-on-light));
-    --muted: color-mix(in srgb, var(--muted-on-dark) calc(var(--ink) * 100%), var(--muted-on-light));
-    --rule: color-mix(in srgb, var(--rule-on-dark) calc(var(--ink) * 100%), var(--rule-on-light));
-    --accent: color-mix(in srgb, var(--amber) calc(var(--ink) * 100%), var(--amber-deep));
+    --muted: color-mix(in srgb, #d9c9cc calc(var(--ink) * 100%), #5a4a4d);
+    --rule: color-mix(in srgb, rgba(243, 239, 230, 0.2) calc(var(--ink) * 100%), rgba(58, 28, 35, 0.2));
+    --accent: color-mix(in srgb, #f6b3b6 calc(var(--ink) * 100%), #8e3f52);
+    /* glass: one material for the system list, the strip and the markers */
+    --glass: color-mix(in srgb, rgba(74, 40, 49, 0.5) calc(var(--ink) * 100%), rgba(255, 255, 255, 0.46));
+    --glass-edge: color-mix(in srgb, rgba(255, 226, 230, 0.26) calc(var(--ink) * 100%), rgba(110, 60, 72, 0.22));
+  }
+  /* in the explorer the room follows the chosen view, so let it ease rather than snap */
+  .s3[data-state='explore'] {
+    transition: --s3-dark 420ms var(--ease-human);
+  }
+  /* Scene 02's ivory hands over to the scene's own ivory without a seam */
+  .s3::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: clamp(120px, 18vw, 240px);
+    background: linear-gradient(180deg, var(--ivory), rgba(236, 232, 223, 0));
+    opacity: calc((1 - var(--s3-blush)) * (1 - var(--s3-dark)));
+    pointer-events: none;
   }
   .s3__grid {
     display: grid;
@@ -283,82 +654,179 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 12px;
     padding-block: 24px 40px;
   }
-
-  /* ---- the artwork: one frame, two stills, never visible together ---- */
-  .s3__art {
+  .s3__view {
     width: 100%;
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 1.6vw, 22px);
     min-height: 0;
   }
+  .s3__art {
+    display: flex;
+    justify-content: center;
+    width: min(100%, 520px);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* ---- the frame: a 3:4 window. Layers move inside it; the interface never does. ---- */
   .s3__frame {
     position: relative;
-    aspect-ratio: 1122 / 1402;
-    width: min(100%, 560px);
+    aspect-ratio: 3 / 4;
+    width: min(100%, 520px);
   }
-  /* edges dissolve into the room, so neither still shows a rectangle */
-  .s3__light,
-  .s3__frame :global(.s3__img--dark) {
-    /* feather the four edges only, so the shoulders and ribcage stay whole */
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 11%, #000 89%, transparent 100%), linear-gradient(180deg, transparent 0, #000 8%, #000 86%, transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, #000 11%, #000 89%, transparent 100%), linear-gradient(180deg, transparent 0, #000 8%, #000 86%, transparent 100%);
+  .s3__layers {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    /* the four edges dissolve into the room, so no still ever shows a rectangle */
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(180deg, transparent 0, #000 6%, #000 93%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(180deg, transparent 0, #000 6%, #000 93%, transparent 100%);
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
   }
-  /* The luminous still keeps its own proportions (it is a slightly squarer render) and sits on the same chest
-     line as the dark one. Behind it is a backing that darkens with the room, so as the still fades it sinks
-     into the darkness instead of glowing against it. */
-  .s3__light {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6%;
-    aspect-ratio: 1199 / 1312;
-    background: rgb(11 13 15 / clamp(0, var(--room) * 3, 1));
-    opacity: clamp(0, (0.37 - var(--p)) / 0.03, 1); /* fully gone by 0.37; the dark still starts at 0.42 */
-  }
-  .s3__frame :global(.s3__img--light) {
-    display: block;
-    width: 100%;
-    height: 100%;
-    opacity: var(--lo);
-  }
-  .s3__frame :global(.s3__img--dark) {
+  .s3__l,
+  .s3__ex,
+  .s3__ex img,
+  .s3__veil {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+  }
+  .s3__l,
+  .s3__ex img {
     object-fit: cover;
-    opacity: var(--dk);
   }
-  .s3[data-topic='beyond'] .s3__frame :global(.s3__img--dark) {
-    opacity: calc(var(--dk) * 0.5);
-  }
-  .s3__frame :global(.s3__img--dark) {
-    transition: opacity 420ms var(--ease-human);
-  }
-  .s3:not([data-state='immersive']) .s3__frame :global(.s3__img--dark) {
-    transition: none; /* scroll owns the opacity during the passage */
-  }
-  .s3__cap {
-    margin-top: 14px;
-    text-align: center;
-  }
-  /* Scene 02's ivory hands over to the blush room without a seam */
-  .s3::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: clamp(120px, 18vw, 240px);
-    background: linear-gradient(180deg, var(--ivory), rgba(236, 232, 223, 0));
-    opacity: var(--lo);
+  /* artwork never takes the pointer: only the phone's own button and the markers do */
+  .s3__l,
+  .s3__ex,
+  .s3__phone > img {
     pointer-events: none;
   }
+  .s3__l {
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+  .s3__l--overview {
+    opacity: 1; /* the still shown when nothing else can run */
+    transform-origin: 56% 44%; /* the heart on the overview */
+  }
+  .s3__veil {
+    background: var(--s3-pale);
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* the photograph keeps its own 4:5 shape, centred in the window; it scales about the chest of the figure on screen */
+  .s3__phone {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    aspect-ratio: 1122 / 1402;
+    margin-top: calc(-0.5 * 100% * 1402 / 1122);
+    transform-origin: 52.6% 51.4%;
+    will-change: transform, opacity;
+    display: none;
+  }
+  .s3__phone img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* the phone's display, measured on the photograph: overlays are placed in its coordinates and clipped to it */
+  .s3__screen {
+    position: absolute;
+    left: 26.6%;
+    right: 26.6%;
+    top: 7.6%;
+    bottom: 13%;
+    border-radius: 13% / 6%;
+    overflow: hidden;
+  }
+  .s3__dot {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.22);
+  }
+  .s3__enter {
+    position: absolute;
+    left: 50%;
+    bottom: 5%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.3);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: #3a1c23;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .s3__enter svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  @media (hover: hover) {
+    .s3__enter:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  }
+  .s3__ex {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 320ms var(--ease-human),
+      visibility 0s linear 320ms;
+  }
+  .s3[data-state='explore'] .s3__ex {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .s3__ex img {
+    opacity: 0;
+  }
+  .s3__ex img:not([src]) {
+    visibility: hidden;
+  }
 
-  /* ---- markers on the artwork (pointer conveniences; the labelled buttons below are the real controls) ---- */
+  /* ---- markers on the overview ---- */
+  .s3__spots {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 300ms var(--ease-human),
+      visibility 0s linear 300ms;
+  }
+  .s3__spots:global(.is-on) {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 120ms, 0s;
+  }
   .s3__spot {
     position: absolute;
     width: 44px;
@@ -371,213 +839,291 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
     border-radius: 50%;
     background: none;
     cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity 500ms var(--ease-human) 200ms,
-      visibility 0s linear 700ms;
   }
-  .s3[data-state='immersive'] .s3__spot {
-    opacity: 1;
-    visibility: visible;
-    transition-delay: 500ms, 0s;
-  }
-  .s3__spot-dot {
+  .s3__spot span {
     position: relative;
-    width: 8px;
-    height: 8px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: var(--s3-blush);
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: transform var(--motion-control) var(--ease-human);
   }
-  .s3__spot-dot::before,
-  .s3__spot-dot::after {
+  .s3__spot span::after {
     content: '';
     position: absolute;
+    inset: 7px;
     border-radius: 50%;
-    border: 1px solid rgba(233, 197, 207, 0.55);
-    inset: -8px;
-    transition:
-      inset var(--motion-control) var(--ease-human),
-      border-color var(--motion-control) var(--ease-human),
-      opacity var(--motion-control) var(--ease-human);
-  }
-  .s3__spot-dot::after {
-    inset: -14px;
-    opacity: 0.4;
-  }
-  @media (hover: hover) {
-    .s3__spot:hover .s3__spot-dot::before {
-      inset: -10px;
-      border-color: var(--s3-blush);
-    }
-  }
-  .s3__spot:global(.is-on) .s3__spot-dot {
     background: #fff;
   }
-  .s3__spot:global(.is-on) .s3__spot-dot::before {
-    inset: -9px;
-    border-width: 2px;
-    border-color: var(--s3-blush);
+  @media (hover: hover) {
+    .s3__spot:hover span {
+      transform: scale(1.18);
+    }
   }
-  .s3__spot:global(.is-on) .s3__spot-dot::after {
-    opacity: 0.8;
+  .s3__spot:focus-visible {
+    outline: 3px solid #3a1c23;
+    outline-offset: 0;
   }
 
-  /* ---- explore: a hint, three labelled topics, one panel at a time ---- */
-  .s3__explore {
+  /* ---- the system list ---- */
+  .s3__nav {
     position: relative;
-    width: 100%;
-    display: grid;
-    justify-items: center;
-    gap: 12px;
-    margin-top: 16px;
+    z-index: 3;
   }
-  .s3__hint {
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 1.25rem;
-    line-height: 1.2;
-    color: var(--text-on-dark);
-  }
-  .s3__topics {
+  .s3__nav ul {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    border-radius: 34px;
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
-  .s3__chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 6px 16px;
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(243, 239, 230, 0.28);
-    background: rgba(11, 13, 15, 0.4);
-    color: var(--text-on-dark);
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+  .s3__sys {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: none;
+    color: inherit;
     cursor: pointer;
     transition:
       background var(--motion-micro) var(--ease-human),
-      border-color var(--motion-micro) var(--ease-human);
+      border-color var(--motion-micro) var(--ease-human),
+      color var(--motion-micro) var(--ease-human);
   }
-  .s3__chip-short {
-    display: none;
+  .s3__sys svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.82;
   }
-  .s3__chip-n {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    color: var(--s3-blush);
-    font-variant-numeric: tabular-nums;
+  /* wide screens: the name appears beside the icon on hover and keyboard focus (and is always the accessible name) */
+  .s3__sys-label {
+    position: absolute;
+    left: calc(100% + 14px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    background: #2a1319;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--motion-micro) var(--ease-human);
+  }
+  .s3__sys:focus-visible .s3__sys-label {
+    opacity: 1;
+    visibility: visible;
   }
   @media (hover: hover) {
-    .s3__chip:hover {
-      border-color: rgba(243, 239, 230, 0.6);
+    .s3__sys:hover {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+    .s3__sys:hover .s3__sys-label {
+      opacity: 1;
+      visibility: visible;
     }
   }
-  /* selected: a filled surface, a heavier edge and a leading mark — not colour alone */
-  .s3__chip[aria-expanded='true'] {
-    background: rgba(243, 239, 230, 0.12);
-    border-color: var(--text-on-dark);
-    font-weight: 600;
+  .s3__sys:active {
+    transform: scale(0.96);
   }
-  .s3__chip[aria-expanded='true'] .s3__chip-n::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    margin-right: 8px;
-    border-radius: 50%;
-    background: var(--s3-blush);
-    vertical-align: 1px;
+  /* selected: a coral ring and a filled disc, with a heavier icon — shape as well as colour */
+  .s3__sys[aria-pressed='true'] {
+    background: rgba(243, 130, 134, 0.22);
+    border-color: var(--s3-coral);
   }
-  .s3__chip:focus-visible,
-  .s3__close:focus-visible {
-    outline: 3px solid var(--focus);
-    outline-offset: 3px;
+  .s3__sys[aria-pressed='true'] svg {
+    opacity: 1;
+    stroke-width: 1.9;
+  }
+  .s3__sys:focus-visible,
+  .s3__step:focus-visible,
+  .s3__tick:focus-visible,
+  .s3__over:focus-visible,
+  .s3__enter:focus-visible {
+    outline: 3px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  /* ---- the strip ---- */
+  .s3__strip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
     border-radius: var(--radius-pill);
-  }
-  .s3__panel {
-    position: relative;
-    padding: 22px 60px 24px 24px;
-    border-radius: var(--radius-control);
-    border: 1px solid rgba(243, 239, 230, 0.16);
-    background: rgba(16, 18, 21, 0.86);
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
-    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.36);
-    color: var(--text-on-dark);
-    text-align: left;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   }
-  .s3__panel-label {
-    font-size: var(--fs-eyebrow);
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--s3-blush);
-  }
-  .s3__panel h3 {
-    margin-top: 10px;
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: clamp(1.625rem, 2.2vw, 2rem);
-    line-height: 1.1;
-  }
-  .s3__panel-body {
-    margin-top: 10px;
-    font-size: var(--fs-small);
-    line-height: 1.55;
-    color: #dcd7cc;
-  }
-  .s3__close {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 44px;
-    height: 44px;
+  .s3__step {
     display: grid;
     place-items: center;
+    width: 44px;
+    height: 44px;
     padding: 0;
     border: 0;
     border-radius: 50%;
     background: none;
-    color: var(--text-on-dark);
+    color: inherit;
     cursor: pointer;
   }
-  .s3__close > span:first-child {
-    position: relative;
-    width: 14px;
-    height: 14px;
+  .s3__step svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
-  .s3__close > span:first-child::before,
-  .s3__close > span:first-child::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 6.5px;
-    height: 1.5px;
+  .s3__ticks {
+    display: flex;
+  }
+  .s3__tick {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .s3__tick span {
+    width: 2px;
+    height: 12px;
+    border-radius: 1px;
     background: currentColor;
-    transform: rotate(45deg);
+    opacity: 0.45;
+    transition:
+      height var(--motion-control) var(--ease-human),
+      opacity var(--motion-micro) var(--ease-human),
+      background var(--motion-micro) var(--ease-human);
   }
-  .s3__close > span:first-child::after {
-    transform: rotate(-45deg);
+  .s3__tick[aria-pressed='true'] span {
+    width: 3px;
+    height: 22px;
+    opacity: 1;
+    background: var(--s3-coral);
   }
   @media (hover: hover) {
-    .s3__close:hover {
-      background: rgba(243, 239, 230, 0.1);
+    .s3__tick:hover span {
+      opacity: 0.9;
+    }
+    .s3__step:hover,
+    .s3__over:hover {
+      background: color-mix(in srgb, currentColor 10%, transparent);
     }
   }
+  .s3__count {
+    display: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .s3__over {
+    min-height: 44px;
+    margin-left: 4px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .s3__over[aria-pressed='true'] {
+    border-color: var(--s3-coral);
+    background: rgba(243, 130, 134, 0.2);
+  }
 
-  /* ---- after the stage: what a picture can't tell you ---- */
+  /* ---- the explanation ---- */
+  .s3__info {
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    max-width: var(--measure);
+  }
+  .s3__info-eyebrow {
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .s3__info h3,
+  .s3__plain h3 {
+    margin-top: 10px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2.1vw, 2rem);
+    line-height: 1.1;
+  }
+  .s3__info-body {
+    margin-top: 10px;
+    font-size: var(--fs-small);
+    line-height: 1.55;
+    min-height: 6.2em; /* four lines: the longest entry, so the layout never jumps between systems */
+  }
+  .s3__info--stage {
+    display: none;
+  }
+  .s3__cap {
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* ---- after the stage: what a picture can't tell you, then back to the page ---- */
   .s3__after {
-    background: var(--carbon);
+    position: relative;
+    background: linear-gradient(180deg, rgba(58, 28, 35, 0) 0, var(--s3-deep) 140px);
     color: var(--text-on-dark);
-    padding-block: clamp(56px, 7vw, 104px) var(--section-y);
+    padding-block: clamp(150px, 16vw, 220px) clamp(72px, 9vw, 128px);
+  }
+  .s3__after::after {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: auto 0 0 0;
+    height: clamp(96px, 12vw, 180px);
+    transform: translateY(100%);
+    background: linear-gradient(180deg, var(--s3-deep) 0%, #6b3c48 30%, #c79aa0 62%, var(--paper) 100%);
+  }
+  .s3 {
+    padding-bottom: clamp(96px, 12vw, 180px); /* room for the hand-back gradient */
   }
   .s3__after-line {
     max-width: 20em;
@@ -596,14 +1142,39 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
   .s3__after-note {
     margin-top: 24px;
     max-width: var(--measure);
-    color: var(--muted-on-dark);
+    color: #d9c9cc;
     text-wrap: pretty;
   }
 
-  /* ---- with JavaScript: a pinned stage, a bounded stretch of scroll, and the interactive controls ---- */
+  /* ---- without JavaScript: a still of the overview, and every system written out ---- */
+  .s3__plain {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 28px var(--col-gap);
+    padding-block: 24px var(--section-y);
+  }
+  .s3__plain p:last-child {
+    margin-top: 8px;
+    font-size: var(--fs-small);
+  }
+  :global(.js) .s3__plain,
+  :global(html:not(.js)) .s3__nav,
+  :global(html:not(.js)) .s3__strip,
+  :global(html:not(.js)) .s3__spots,
+  :global(html:not(.js)) .s3__info--side {
+    display: none;
+  }
+
+  /* ---- with JavaScript: the pinned guided sequence, which rests as the explorer ---- */
+  :global(.js) .s3__phone {
+    display: block;
+  }
+  :global(.js) .s3__l--overview {
+    opacity: 0;
+  }
   :global(.js) .s3__pin {
-    height: 300vh;
-    height: 300svh;
+    height: 400vh;
+    height: 400svh;
   }
   :global(.js) .s3__stage {
     position: sticky;
@@ -611,7 +1182,7 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
     height: 100vh;
     height: 100svh;
     justify-content: center;
-    padding-block: calc(var(--header-h) + 8px) 20px;
+    padding-block: calc(var(--header-h) + 4px) 16px;
   }
   :global(.js) .s3__copy {
     position: sticky;
@@ -622,90 +1193,95 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-block: var(--header-h) 24px;
+    padding-block: var(--header-h) 16px;
+  }
+  /* the artwork takes the height the viewport leaves and keeps its 3:4 shape */
+  :global(.js) .s3__view {
+    flex: 1 1 auto;
+    height: 0;
   }
   :global(.js) .s3__art {
-    flex: 1 1 auto;
-    justify-content: center;
+    width: auto;
+    height: 100%;
+    flex: 0 1 auto;
   }
-  /* the frame takes whatever height the viewport leaves and keeps the artwork's own proportions */
   :global(.js) .s3__frame {
     width: auto;
-    height: min(100%, 78vh);
+    height: 100%;
     max-width: 100%;
-    flex: 0 1 auto;
-    min-height: 0;
   }
-  :global(.js) .s3__art {
-    min-height: 0;
-    height: 0; /* flex item: grow into the free space, never push the controls off the stage */
-  }
-  :global(.js) .s3__cap {
-    flex: none;
-    color: color-mix(in srgb, var(--muted-on-dark) calc(var(--ink) * 100%), var(--muted-on-light));
-  }
-  :global(.js) .s3__explore {
+  :global(.js) [data-s3-ui] {
     flex: none;
     opacity: 0;
     visibility: hidden;
     transition:
-      opacity 500ms var(--ease-human),
-      visibility 0s linear 500ms;
+      opacity 420ms var(--ease-human),
+      visibility 0s linear 420ms;
   }
-  :global(.js) .s3[data-state='immersive'] .s3__explore {
+  :global(.js) .s3:is([data-state='overview'], [data-state='heart'], [data-state='explore']) [data-s3-ui] {
     opacity: 1;
     visibility: visible;
-    transition-delay: 350ms, 0s;
+    transition-delay: 0s;
   }
-  /* the open panel floats over the lower torso, clear of the heart and lungs */
-  :global(.js) .s3__panels {
-    position: absolute;
-    left: 0;
-    bottom: calc(100% + 14px);
-    width: min(100%, 400px);
+  :global(.js) .s3__info--side {
+    opacity: 0;
+    transition: opacity 420ms var(--ease-human);
   }
-  :global(.js-motion) .s3__panel:not([hidden]) {
-    animation: s3-panel var(--motion-control) var(--ease-human);
+  :global(.js) .s3:not([data-state='phone']) .s3__info--side {
+    opacity: 1;
   }
-  @keyframes s3-panel {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
+  /* reduced motion: no pin, no zoom. The stage is simply the explorer. */
+  :global(.js) .s3:global(.is-static) .s3__pin {
+    height: auto;
   }
-  @media (prefers-reduced-motion: reduce) {
-    :global(.js) .s3__pin {
-      height: 220vh;
-      height: 220svh;
-    }
-    .s3__spot,
-    .s3__explore,
-    .s3__frame :global(.s3__img--dark) {
-      transition: none !important;
-    }
+  :global(.js) .s3:global(.is-static) .s3__stage,
+  :global(.js) .s3:global(.is-static) .s3__copy {
+    position: static;
+    height: auto;
   }
-
-  /* ---- without JavaScript: a still. Luminous figure, copy, and all three topics written out ---- */
-  :global(html:not(.js)) .s3__spot,
-  :global(html:not(.js)) .s3__hint,
-  :global(html:not(.js)) .s3__topics,
-  :global(html:not(.js)) .s3__close {
+  :global(.js) .s3:global(.is-static) .s3__view {
+    height: auto;
+    flex: none;
+  }
+  :global(.js) .s3:global(.is-static) .s3__art {
+    height: auto;
+    width: min(100%, 520px);
+  }
+  :global(.js) .s3:global(.is-static) .s3__frame {
+    width: 100%;
+    height: auto;
+  }
+  :global(.js) .s3:global(.is-static) .s3__phone {
     display: none;
   }
-  :global(html:not(.js)) .s3__panels {
-    display: grid;
-    gap: 12px;
-    width: 100%;
-    max-width: 560px;
+  @media (prefers-reduced-motion: reduce) {
+    .s3,
+    .s3 * {
+      transition-duration: 0.01ms !important;
+    }
   }
-  :global(html:not(.js)) .s3__panel {
-    padding-right: 24px;
-  }
-  :global(html:not(.js)) .s3__stage {
-    padding-bottom: var(--section-y);
+  /* short laptop screens: tighten the copy column so the explanation still fits beside the artwork */
+  @media (min-width: 1024px) and (max-height: 800px) {
+    :global(.js) .s3__copy h2 {
+      font-size: clamp(2.25rem, 4.2vw, 3.6rem);
+      margin-bottom: 20px;
+    }
+    :global(.js) .s3__copy .prose {
+      font-size: var(--fs-small);
+    }
+    .s3__info {
+      margin-top: 18px;
+      padding-top: 16px;
+    }
+    .s3__info h3 {
+      font-size: 1.5rem;
+    }
+    .s3__info-body {
+      font-size: 0.875rem;
+    }
   }
 
-  /* ---- tablet and phone: copy first, then the pinned stage with the artwork and the controls ---- */
+  /* ---- tablet and phone: copy first, then the pinned stage; the system list becomes a labelled row ---- */
   @media (max-width: 1023px) {
     .s3__copy,
     .s3__pin {
@@ -717,77 +1293,120 @@ const widths = (w: number) => [480, 800].filter((x) => x < w).concat([w]);
       display: block;
       padding-block: var(--section-y) 8px;
     }
-    :global(.js) .s3__pin {
-      height: 260vh;
-      height: 260svh;
-    }
-    :global(.js) .s3__panels {
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(100%, 440px);
-    }
-    .s3__chip {
-      padding-inline: 14px;
-      font-size: 0.8125rem;
-    }
-    .s3__chip-n {
+    .s3__info--side {
       display: none;
     }
-    .s3__chip[aria-expanded='true']::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--s3-blush);
+    :global(.js) .s3__info--stage {
+      display: block;
+      flex: none;
+      width: 100%;
+      max-width: 34rem;
+      margin-top: 2px;
+      padding-top: 12px;
     }
-  }
-  @media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
     :global(.js) .s3__pin {
-      height: 200vh;
-      height: 200svh;
+      height: 360vh;
+      height: 360svh;
     }
-  }
-  @media (max-width: 479px) {
-    /* small phones: short labels keep the three topics on one row (the full name stays as the accessible name) */
-    .s3__chip-full {
+    :global(.js) .s3__stage {
+      gap: 10px;
+      padding-block: calc(var(--header-h) + 2px) 10px;
+    }
+    .s3__view {
+      flex-direction: column-reverse;
+      gap: 10px;
+    }
+    :global(.js) .s3__art {
+      flex: 1 1 auto;
+      height: 0;
+      min-height: 220px;
+    }
+    .s3__nav {
+      width: 100%;
+      max-width: 34rem;
+      flex: none;
+    }
+    .s3__nav ul {
+      flex-direction: row;
+      gap: 4px;
+      padding: 5px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+      border-radius: var(--radius-pill);
+    }
+    .s3__nav ul::-webkit-scrollbar {
       display: none;
     }
-    .s3__chip-short {
-      display: inline;
+    .s3__nav li {
+      flex: none;
+      scroll-snap-align: center;
     }
-    .s3__panels {
-      max-height: 52svh;
-      overflow-y: auto;
-      border-radius: var(--radius-control);
+    .s3__sys {
+      width: auto;
+      height: 44px;
+      display: inline-flex;
+      gap: 8px;
+      padding: 0 14px 0 10px;
+      border-radius: var(--radius-pill);
     }
-    .s3__topics {
-      gap: 6px;
+    .s3__sys svg {
+      width: 22px;
+      height: 22px;
     }
-    .s3__chip {
-      padding-inline: 12px;
+    .s3__sys-label {
+      position: static;
+      transform: none;
+      padding: 0;
+      background: none;
+      color: inherit;
+      opacity: 1;
+      visibility: visible;
     }
-    .s3__hint {
-      font-size: 1.125rem;
+    .s3__strip {
+      width: 100%;
+      max-width: 34rem;
     }
-    .s3__panel {
-      padding: 18px 52px 20px 20px;
+    .s3__ticks {
+      display: none;
     }
-  }
-  @media (max-width: 359px) {
-    .s3__chip {
-      padding-inline: 10px;
+    .s3__count {
+      display: block;
+    }
+    .s3__info h3 {
+      margin-top: 6px;
+      font-size: 1.5rem;
+      min-height: 2.2em; /* two lines, so a longer heading never resizes the artwork above it */
+    }
+    .s3__info-body {
+      margin-top: 6px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      min-height: 7.5em; /* five lines at phone width */
+    }
+    .s3__cap {
       font-size: 0.75rem;
     }
   }
-  /* very short screens: the panel never climbs under the header; long copy scrolls inside it */
-  @media (max-height: 620px) {
-    :global(.js) .s3__panels {
-      max-height: calc(100svh - var(--header-h) - 150px);
-      overflow-y: auto;
-      border-radius: var(--radius-control);
+  /* very short screens: let the stage be taller than the viewport rather than crush the artwork */
+  @media (max-width: 1023px) and (max-height: 700px) {
+    :global(.js) .s3__stage {
+      height: auto;
+      min-height: 100svh;
     }
-    .s3__panel-body {
-      font-size: var(--fs-note);
+    :global(.js) .s3__view {
+      height: auto;
+      flex: none;
+    }
+    :global(.js) .s3__art {
+      height: auto;
+      flex: none;
+      width: min(100%, 300px);
+    }
+    :global(.js) .s3__frame {
+      width: 100%;
+      height: auto;
     }
   }
 </style>
