@@ -231,3 +231,43 @@ Regions not being read drop to 60% opacity, never lower. Each change re-runs the
 **Not measured**: Lighthouse, Safari, Firefox, real devices, screen readers, frame rate on low-end phones.
 
 **Evidence**: `docs/reviews/v9-scene05/`.
+
+## Scene 05 rebuild 2: the report film (2026-11-14, later the same day)
+
+Directive: `HUMAN — Scene 05 … Final locked cinematic art direction`. The code-built report from earlier today was rejected by the founders and is replaced; it is kept at git tag `v9-scene05-codebuilt`. Only `Scene05.astro`, `src/assets/scene05/` and `tests/e2e.mjs` changed.
+
+**Assets used** (`src/assets/scene05/`; untouched originals of the slices in `originals/`)
+- `human-s05-environment.webp` — the empty charcoal studio (1672 × 941, as received through chat).
+- `human-s05-macro.webp` — the macro close-up (1672 × 941, as received).
+- `human-s05-frag-*.png` — the eight slices from `HUMAN_S05_04_Report_Fragments.zip`, positioned from `fragment-layout.json`.
+- `human-s05-report.png` — the whole report, rebuilt by stacking those eight slices (pixel-identical to the isolated report); used while the sheet is whole so no seams can show.
+- Production copies of the report and slices have 3,701 stray semi-transparent pixels outside the paper removed (alpha only; paper and type untouched).
+- Not used: the combined dark master (reference only), the glass-card dashboard image (rejected in the directive), and two amber anatomy images that arrived with the brief but are not in its inventory.
+
+**The film**: one sticky full-viewport stage on a 400svh track (300svh on phones and portrait tablets). Every property is a function of scroll progress, so it is reversible and repeatable.
+- I (0–17%) the report rises into the light with a floor shadow; "You got tested. Now what?"
+- II (17–41%) the camera closes to 2.4–3.6× on the title. Wide screens then cut through a beat of shadow to the macro plate and back; phones stay on the enlarged report. "So much information. So little clarity."
+- III (41–56%) the whole report is swapped for its eight slices in place; header and footer fall back; the six rows move to their own offsets, depths and angles, staggered. "But what actually matters?"
+- IV (56–70%) each row cross-fades to a thin glass plane of the same size and position, with one light edge travelling across it and a code-rendered heading. "Numbers alone aren't the whole story."
+- V (70–80%) the six gather in pairs into three planes: Context / What matters?, Questions / What should I ask?, Next steps / What happens next? "Understand more. Guess less."
+- VI (80–100%) the planes close up, the camera withdraws, the light drops. "Getting tested is only the beginning." A link to Scene 06 appears; the stage then releases.
+
+**Controls**: "Skip animation" (jumps to the closing shot and moves focus to the continue link) and the continue link. The three planes are not interactive and carry no clickable styling.
+
+**Simplified against the directive**
+- Macro handover is a match cut through shadow, not a blend: the macro plate's perspective does not register with the report.
+- Glass is flat translucent fills, a champagne top edge and one travelling highlight; no backdrop blur or refraction.
+- The pairing of rows into three planes is positional (1+2, 3+4, 5+6) and purely narrative; it is not a clinical grouping.
+- Phones have no macro plate and far less sideways travel.
+
+**Fallbacks**: with reduced motion or without JavaScript the film is replaced by a still: the report, the three ideas, the closing line, the disclosure and the link. A visually hidden heading and summary carry the six statements for assistive technology.
+
+**Open content points for the founders** (text baked into the supplied images, so not changeable in code)
+- The sheet is headed "LABORATORY REPORT". The earlier Scene 05 brief ruled out implying a real clinical document; the on-screen disclosure "Illustrative report. No patient results." is the only mitigation.
+- Row sub-lines include "risk factors", "deficiencies" and "Next steps & recommendations", which read as findings and advice. The code-rendered glass headings use the category names only.
+
+**Measured**: build 0 errors; e2e 53/53 in Chromium (Scene 05 tests rewritten: slice geometry, six acts and their exclusivity sampled every 1.25% of scroll, reversal, determinism, skip, resize, fallbacks, honesty). No overflow or console errors at 1920×1080, 1440×900, 1280×720, 768×1024, 390×844, 360×800.
+
+**Not measured**: frame rate, Lighthouse, Safari, Firefox, real devices, screen readers, touch scrolling on hardware, image-load failure beyond the macro plate.
+
+**Evidence**: `docs/reviews/v10-scene05/`.

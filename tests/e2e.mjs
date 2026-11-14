@@ -368,155 +368,187 @@ await test('SIG-3', 'Connected journey: all six stages, lines and planned detail
   }
 });
 
-await test('S5-READ', 'Scene 05: the report is real text, and the three questions and answers stay at full opacity at every scroll position', async () => {
-  for (const opts of [{}, { viewport: { width: 390, height: 844 } }, { javaScriptEnabled: false }, { reducedMotion: 'reduce' }]) {
+// ---------- Scene 05: the report film (six acts, one scroll-driven timeline) ----------
+const s5At = async (p, f, wait = 120) => {
+  await p.evaluate((f) => {
+    const t = document.querySelector('[data-s5-track]');
+    const span = t.offsetHeight - document.querySelector('[data-s5-view]').offsetHeight;
+    scrollTo({ top: t.getBoundingClientRect().top + scrollY + span * f, behavior: 'instant' });
+  }, f);
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  if (wait) await p.waitForTimeout(wait);
+};
+const s5Read = (p) =>
+  p.evaluate(() => {
+    const sec = document.querySelector('#scene-05');
+    const o = (el) => { let v = 1; for (let n = el; n && n !== sec; n = n.parentElement) v *= Number(getComputedStyle(n).opacity); return v; };
+    const q = (s) => sec.querySelector(s);
+    const rows = [...sec.querySelectorAll('.s5__piece--row')];
+    return {
+      p: parseFloat(sec.style.getPropertyValue('--p')),
+      act: Number(sec.dataset.s5Act),
+      lines: [...sec.querySelectorAll('[data-s5-line]')].map((e) => +o(e).toFixed(2)),
+      whole: o(q('[data-s5-whole]')),
+      pieces: o(q('[data-s5-pieces]')),
+      macro: o(q('[data-s5-macro]')),
+      paper: rows.map((r) => +o(r.querySelector('img')).toFixed(2)),
+      glass: rows.map((r) => +o(r.querySelector('.s5__glass')).toFixed(2)),
+      planes: [...sec.querySelectorAll('[data-s5-plane]')].map((e) => +o(e).toFixed(2)),
+      moved: rows.map((r) => { const m = new DOMMatrix(getComputedStyle(r).transform); return Math.round(Math.hypot(m.m41, m.m42, m.m43)); }),
+      scale: new DOMMatrix(getComputedStyle(q('[data-s5-cam]')).transform).a,
+      skipHidden: q('[data-s5-skip]').hidden,
+      goInert: q('[data-s5-go]').inert,
+    };
+  });
+const S5_VIEWS = [{}, { viewport: { width: 390, height: 844 } }];
+
+await test('S5-ASSEMBLY', 'Scene 05: the eight slices sit exactly on the founders’ geometry, share one scale and rebuild the report before anything moves', async () => {
+  const GEO = { header: [0, 529], cardiovascular: [529, 110], metabolic: [639, 112], hormonal: [751, 116], nutritional: [867, 116], 'clinical-context': [983, 110], 'follow-up': [1093, 111], footer: [1204, 244] };
+  for (const opts of S5_VIEWS) {
     const p = await ctx(opts);
     await go(p, '/');
-    const box = await p.locator('#scene-05').evaluate((e) => ({ top: e.getBoundingClientRect().top + scrollY, h: e.offsetHeight }));
-    for (let y = box.top - 700; y < box.top + box.h; y += 180) {
-      await p.evaluate((v) => scrollTo({ top: v, behavior: 'instant' }), y);
-      await p.waitForTimeout(60);
-      const lows = await p.locator('.s5__qs li, .s5__qs h3, .s5__qs p').evaluateAll((els) =>
-        els.filter((e) => { let o = 1; for (let n = e; n && n.nodeType === 1; n = n.parentElement) o *= Number(getComputedStyle(n).opacity); return o < 0.99; }).length);
-      assert(lows === 0, `${lows} dimmed question elements at y=${y}`);
+    await s5At(p, 0.08, 400);
+    const m = await p.evaluate(() => {
+      const doc = document.querySelector('[data-s5-doc]');
+      return { H: doc.offsetHeight, W: doc.offsetWidth, pieces: [...document.querySelectorAll('[data-s5-piece]')].map((e) => ({ k: e.dataset.s5Piece, top: e.offsetTop, h: e.offsetHeight, w: e.offsetWidth, left: e.offsetLeft, t: (() => { const m = new DOMMatrix(getComputedStyle(e).transform); return [Math.hypot(m.m41, m.m42, m.m43), m.a]; })(), nat: [e.querySelector('img').naturalWidth, e.querySelector('img').naturalHeight] })) };
+    });
+    assert(m.pieces.length === 8, `pieces: ${m.pieces.length}`);
+    assert(Math.abs(m.W / m.H - 1086 / 1448) < 0.004, `document aspect ${m.W}/${m.H}`);
+    for (const pc of m.pieces) {
+      const [y, h] = GEO[pc.k];
+      assert(Math.abs(pc.top - (y / 1448) * m.H) <= 1 && Math.abs(pc.h - (h / 1448) * m.H) <= 1, `${pc.k} is off its recorded position: top ${pc.top}, height ${pc.h}`);
+      assert(pc.left === 0 && Math.abs(pc.w - m.W) <= 1, `${pc.k} is not full width`);
+      assert(pc.nat[0] === 1086 && pc.nat[1] === h, `${pc.k} image was resized: ${pc.nat}`);
+      assert(pc.t[0] < 0.5 && Math.abs(pc.t[1] - 1) < 0.001, `${pc.k} has moved before the deconstruction`);
     }
-    assert((await p.locator('.s5__qs li').count()) === 3, 'three questions');
-    const doc = await p.locator('.s5__sheet').innerText();
-    for (const t of ['Health assessment', 'ILLUSTRATIVE DOCUMENT', 'Lipid profile', 'Blood glucose', 'Thyroid function', 'Iron status', 'CLINICAL CONTEXT', 'FOLLOW-UP']) assert(doc.toUpperCase().includes(t.toUpperCase()), `report text missing: ${t}`);
-    assert(!/\d/.test(doc.replace(/\s/g, '')), 'the report contains digits (it must hold no values)');
-    assert((await p.locator('#scene-05 img, #scene-05 canvas, #scene-05 video').count()) === 0, 'Scene 05 uses media instead of browser-rendered elements');
-    assert(await p.locator('.s5__cap').isVisible(), 'disclaimer not visible');
-    assert(/Concept illustration\. It contains no values and is not a real report\./.test(await p.locator('.s5__cap').innerText()), 'disclaimer changed');
+    const r = await s5Read(p);
+    assert(r.whole === 1 && r.pieces === 0, 'the whole report should be the one on screen before separation');
     await p.context().close();
   }
 });
 
-const s5Read = (p) =>
-  p.evaluate(() => {
-    const sec = document.querySelector('#scene-05');
-    const sheet = sec.querySelector('[data-s5-sheet]');
-    const lens = sec.querySelector('[data-s5-lens]');
-    const lr = lens.getBoundingClientRect();
-    const hit = [...sec.querySelectorAll('[data-s5-region]')].filter((r) => { const b = r.getBoundingClientRect(); return b.top >= lr.top - 2 && b.bottom <= lr.bottom + 2; }).map((r) => r.dataset.s5Region);
-    const note = sec.querySelector('[data-s5-note]');
-    return {
-      active: sec.dataset.active,
-      lens: hit.join(),
-      lensOpacity: Number(getComputedStyle(lens).opacity),
-      note: note.querySelector('[data-f="title"]').textContent.trim(),
-      noteOpacity: Number(getComputedStyle(note).opacity),
-      pressed: [...new Set([...sec.querySelectorAll('[data-s5-pick][aria-pressed="true"]')].map((b) => b.dataset.s5Pick))].join(),
-      frag: Number(getComputedStyle(sec.querySelector('[data-s5-frag]')).opacity),
-      scale: new DOMMatrix(getComputedStyle(sheet).transform).a,
-      path: getComputedStyle(sec.querySelector('.s5__path')).display,
-    };
-  });
-const S5 = { matters: ['markers', 'Understand the context.'], ask: ['context', 'Start a conversation.'], next: ['followup', 'Know the next step.'] };
-const s5Stage = async (p, q, wait = 300) => {
-  await p.evaluate((q) => { const t = document.querySelector('[data-s5-stage]').getBoundingClientRect().top + scrollY; scrollTo({ top: t - innerHeight * (0.94 - 0.66 * q), behavior: 'instant' }); }, q);
-  await p.waitForTimeout(wait);
-};
-
-await test('S5-INTRO', 'Scene 05 intro: arrival, parting, approach and lens follow scroll, the note resolves once, and it reverses until a choice is made', async () => {
-  const p = await ctx();
-  await go(p, '/');
-  const v = (n) => p.locator('#scene-05').evaluate((e, n) => parseFloat(e.style.getPropertyValue(n)), n);
-  await s5Stage(p, 0.05);
-  assert((await v('--arrive')) < 0.3 && (await v('--part')) === 0 && (await s5Read(p)).lensOpacity === 0, 'not at the start of the passage');
-  await s5Stage(p, 0.4);
-  assert((await v('--arrive')) === 1 && (await v('--part')) > 0.5, 'sheets did not part');
-  let r = await s5Read(p);
-  assert(r.noteOpacity === 0 && r.lensOpacity === 0, `note or lens early: ${JSON.stringify(r)}`);
-  await s5Stage(p, 0.95, 1300);
-  r = await s5Read(p);
-  assert(r.lens === 'markers' && r.lensOpacity === 1 && r.note === S5.matters[1] && r.noteOpacity === 1 && r.frag === 0 && r.scale > 1.03, `resolved: ${JSON.stringify(r)}`);
-  await s5Stage(p, 0.3, 500);
-  r = await s5Read(p);
-  assert(r.noteOpacity === 0 && r.lensOpacity === 0, `did not reverse: ${JSON.stringify(r)}`);
-  // an early choice works at once, and from then on scrolling never resets it
-  await p.locator('.s5__qs [data-s5-pick="next"]').click();
-  await p.waitForTimeout(1100);
-  await s5Stage(p, 0.1, 400);
-  await s5Stage(p, 1.2, 400);
-  r = await s5Read(p);
-  assert(r.active === 'next' && r.note === S5.next[1] && r.noteOpacity === 1 && r.lens === 'followup', `scroll reset the choice: ${JSON.stringify(r)}`);
-  assert(p.consoleErrors.length === 0, `console: ${p.consoleErrors[0]}`);
-  await p.context().close();
-});
-
-await test('S5-STATES', 'Scene 05: each question moves the lens to its own region, shows its own note, and frames the page differently; rapid choices settle on the last', async () => {
-  for (const opts of [{}, { viewport: { width: 390, height: 844 } }, { viewport: { width: 768, height: 1024 } }]) {
+await test('S5-FILM', 'Scene 05: six acts in order, one statement at a time, one picture of the report at a time, and it plays backwards', async () => {
+  for (const opts of S5_VIEWS) {
     const p = await ctx(opts);
-    const widePage = !opts.viewport;
-    const pick = (k) => p.locator(`${widePage ? '.s5__qs' : '.s5__tabs'} [data-s5-pick="${k}"]`);
+    const wideView = !opts.viewport;
     await go(p, '/');
-    await s5Stage(p, 1.1, 1300);
-    for (const k of ['ask', 'next', 'matters']) {
-      await pick(k).click();
-      await p.waitForTimeout(1250);
+    assert((await p.locator('[data-s5-view]').evaluate((e) => getComputedStyle(e).position)) === 'sticky', 'stage is not pinned');
+    const [vw, vh, w] = await p.evaluate(() => { const v = document.querySelector('[data-s5-view]'); return [v.clientWidth, v.clientHeight, innerWidth]; });
+    assert(vw === w && vh >= (await p.evaluate(() => innerHeight)) - 1, 'stage is not full-viewport');
+    const want = { 0.05: 1, 0.35: 2, 0.5: 3, 0.64: 4, 0.76: 5, 0.95: 6 };
+    const seen = {};
+    for (let f = 0; f <= 1.0001; f += 0.0125) {
+      await s5At(p, f, 0);
       const r = await s5Read(p);
-      assert(r.active === k && r.pressed === k && r.lens === S5[k][0] && r.note === S5[k][1] && r.noteOpacity === 1 && r.frag === 0, `${k}: ${JSON.stringify(r)}`);
-      assert((r.path !== 'none') === (k === 'next'), `${k}: progression line shown wrongly`);
-      if (widePage) assert(k === 'next' ? Math.abs(r.scale - 1) < 0.005 : r.scale > 1.03, `${k}: framing ${r.scale}`);
-      const lit = await p.locator('#scene-05 [data-s5-region]').evaluateAll((els) => els.filter((e) => Number(getComputedStyle(e).opacity) === 1).map((e) => e.dataset.s5Region).join());
-      assert(lit === S5[k][0], `${k}: emphasised region ${lit}`);
-      assert((await p.locator('#scene-05 [data-s5-region]').evaluateAll((els) => Math.min(...els.map((e) => Number(getComputedStyle(e).opacity))))) >= 0.55, 'a region became unreadable');
-      // the note never covers the page, and the disclaimer stays in view of the layout
-      const over = await p.evaluate(() => { const a = document.querySelector('[data-s5-note]').getBoundingClientRect(); const b = document.querySelector('[data-s5-stack]').getBoundingClientRect(); return Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)); });
-      assert(over < 400, `${k}: note overlaps the report by ${Math.round(over)}px²`);
+      const up = r.lines.filter((v) => v > 0.6).length;
+      assert(up <= 1, `two statements readable at ${f.toFixed(3)}: ${r.lines}`);
+      assert(r.lines.filter((v) => v > 0.25).length <= 2, `three statements at ${f.toFixed(3)}`);
+      // one picture of the report at a time
+      assert(!(r.whole > 0.02 && r.pieces > 0.02), `whole report and slices together at ${f.toFixed(3)}`);
+      if (r.macro > 0.5) assert(r.whole * 1 < 0.05 || (await p.evaluate(() => Number(getComputedStyle(document.querySelector('[data-s5-cam]')).opacity))) < 0.05, `macro plate and report together at ${f.toFixed(3)}`);
+      if (Math.max(...r.planes) > 0.05) assert(r.macro === 0 && r.whole === 0 && Math.max(...r.paper) < 0.05, `paper or macro behind the final planes at ${f.toFixed(3)}`);
+      if (Math.max(...r.planes) > 0.95) assert(Math.max(...r.glass) < 0.05, `six planes and three planes together at ${f.toFixed(3)}`);
+      for (let i = 0; i < 6; i++) assert(r.paper[i] + r.glass[i] <= 1.02, `row ${i}: paper and glass both strong at ${f.toFixed(3)}`);
+      seen[f.toFixed(2)] = r;
     }
-    // both sets of controls are one state
-    await p.locator('.s5__qs [data-s5-pick="ask"]').click();
-    await p.waitForTimeout(200);
-    assert((await p.locator('.s5__tabs [data-s5-pick="ask"]').getAttribute('aria-pressed')) === 'true', 'the two selectors disagree');
-    // rapid switching: last wins, no stray fragment, no stale note
-    for (const k of ['matters', 'next', 'ask', 'matters', 'next']) await pick(k).click({ delay: 0 });
-    await p.waitForTimeout(1400);
-    const r = await s5Read(p);
-    assert(r.active === 'next' && r.note === S5.next[1] && r.lens === 'followup' && r.frag === 0 && r.noteOpacity === 1, `rapid: ${JSON.stringify(r)}`);
-    assert((await p.locator('[data-s5-frag]').count()) === 1, 'fragments accumulated');
-    // keyboard
-    await p.locator('.s5__qs [data-s5-pick="matters"]').focus();
-    await p.keyboard.press('Enter');
-    await p.waitForTimeout(1200);
-    assert((await s5Read(p)).active === 'matters', 'Enter did not select');
-    assert((await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle)) !== 'none', 'no visible focus');
-    assert(await p.evaluate(() => document.activeElement?.matches('.s5__qs [data-s5-pick="matters"]')), 'focus moved unexpectedly');
+    for (const [f, act] of Object.entries(want)) {
+      await s5At(p, Number(f), 60);
+      const r = await s5Read(p);
+      assert(r.act === act, `act at ${f}: ${r.act}`);
+      assert(r.lines[act - 1] > 0.9, `statement ${act} not shown at ${f}: ${r.lines}`);
+    }
+    await s5At(p, 0.26, 60);
+    assert((await s5Read(p)).scale > 1.8, 'the camera approach is too small to feel like entering the page');
+    if (wideView) { await s5At(p, 0.35, 60); assert((await s5Read(p)).macro === 1, 'macro plate missing on a wide screen'); }
+    await s5At(p, 0.535, 60);
+    let r = await s5Read(p);
+    assert(r.pieces === 1 && Math.min(...r.moved) > 6 && new Set(r.moved).size >= 5 && Math.min(...r.paper) > 0.9, `rows did not separate independently: ${JSON.stringify(r.moved)}`);
+    await s5At(p, 0.69, 60);
+    r = await s5Read(p);
+    assert(Math.min(...r.glass) > 0.9 && Math.max(...r.paper) < 0.1, `paper did not become glass: ${JSON.stringify([r.paper, r.glass])}`);
+    await s5At(p, 0.82, 60);
+    r = await s5Read(p);
+    assert(r.planes.length === 3 && Math.min(...r.planes) > 0.95, `three planes missing: ${r.planes}`);
+    assert((await p.locator('[data-s5-plane] .s5__plane-label').allInnerTexts()).map((t) => t.trim().toUpperCase()).join() === 'CONTEXT,QUESTIONS,NEXT STEPS', 'plane labels');
+    // backwards: glass returns to paper, paper to the sheet, the sheet to the opening shot
+    await s5At(p, 0.535, 60);
+    r = await s5Read(p);
+    assert(Math.max(...r.planes) === 0 && Math.max(...r.glass) < 0.05 && Math.min(...r.paper) > 0.9, `did not return to paper: ${JSON.stringify(r)}`);
+    await s5At(p, 0.05, 60);
+    r = await s5Read(p);
+    assert(r.whole === 1 && r.pieces === 0 && Math.max(...r.moved) === 0 && r.macro === 0 && r.lines[0] > 0.9 && Math.abs(r.scale - 1) < 0.02, `did not return to the opening: ${JSON.stringify(r)}`);
+    // same scroll position, same picture
+    await s5At(p, 0.6, 60);
+    const a = JSON.stringify(await s5Read(p));
+    await s5At(p, 0.9, 30);
+    await s5At(p, 0.6, 60);
+    assert(a === JSON.stringify(await s5Read(p)), 'the film is not deterministic');
+    // disclosure always there; never trapped; no overflow; no errors
+    assert(await p.locator('.s5__view .s5__disclosure').isVisible(), 'disclosure hidden');
+    await p.evaluate(() => document.querySelector('#scene-06').scrollIntoView({ behavior: 'instant' }));
+    assert(await p.locator('#s6-title').isVisible(), 'cannot reach Scene 06');
     assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'horizontal overflow');
-    // resize: coordinates are re-measured, state survives
-    await p.setViewportSize({ width: widePage ? 600 : 1300, height: 900 });
-    await p.waitForTimeout(600);
-    const z = await s5Read(p);
-    assert(z.active === 'matters' && z.lens === 'markers' && z.noteOpacity === 1 && z.frag === 0, `after resize: ${JSON.stringify(z)}`);
-    assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow after resize');
     assert(p.consoleErrors.length === 0, `console: ${p.consoleErrors[0]}`);
     await p.context().close();
   }
 });
 
-await test('S5-FALLBACK', 'Scene 05 with reduced motion: no arrival, zoom or travelling fragment, all three states work; without JS: report, note and questions are plain text', async () => {
-  const r = await ctx({ reducedMotion: 'reduce' });
-  await go(r, '/');
-  await s5Stage(r, 0.1, 300);
-  let st = await s5Read(r);
-  assert(st.noteOpacity === 1 && st.lensOpacity === 1 && Math.abs(st.scale - 1.05) < 0.01, `reduced start: ${JSON.stringify(st)}`);
-  assert((await r.locator('[data-s5-stack]').evaluate((e) => getComputedStyle(e).transform)) === 'none' || (await r.locator('#scene-05').evaluate((e) => e.style.getPropertyValue('--arrive'))) === '1', 'arrival animation with reduced motion');
-  for (const k of ['ask', 'next', 'matters']) {
-    await r.locator(`.s5__qs [data-s5-pick="${k}"]`).click();
-    await r.waitForTimeout(120);
-    st = await s5Read(r);
-    assert(st.active === k && st.note === S5[k][1] && st.lens === S5[k][0] && st.frag === 0 && st.noteOpacity === 1, `reduced ${k}: ${JSON.stringify(st)}`);
-  }
-  await r.context().close();
-  const p = await ctx({ javaScriptEnabled: false });
+await test('S5-SKIP', 'Scene 05: Skip animation jumps to the closing shot; the continue link works only when shown; resize keeps the film coherent', async () => {
+  const p = await ctx();
   await go(p, '/');
-  await p.locator('#scene-05').scrollIntoViewIfNeeded();
-  assert(await p.locator('.s5__sheet').isVisible() && (await p.locator('.s5__note').isVisible()), 'report or note hidden without JS');
-  assert(Number(await p.locator('.s5__note').evaluate((e) => getComputedStyle(e).opacity)) === 1, 'note transparent without JS');
-  assert(Number(await p.locator('[data-s5-stack]').evaluate((e) => getComputedStyle(e).opacity)) === 1, 'report faded without JS');
-  assert(!(await p.locator('.s5__lens').isVisible()), 'unplaced lens shown without JS');
-  assert((await p.locator('.s5__qs p:visible').count()) === 3, 'question text missing without JS');
-  assert((await p.locator('#scene-05 a[href="#scene-06"]').count()) === 1, 'link to Scene 06 missing');
+  await s5At(p, 0.1, 200);
+  let r = await s5Read(p);
+  assert(!r.skipHidden && r.goInert, `controls at the start: ${JSON.stringify([r.skipHidden, r.goInert])}`);
+  await p.locator('[data-s5-skip]').focus();
+  await p.keyboard.press('Enter');
+  await p.waitForTimeout(400);
+  r = await s5Read(p);
+  assert(r.p > 0.95 && r.act === 6 && r.lines[5] > 0.9 && r.skipHidden && !r.goInert, `after skip: ${JSON.stringify(r)}`);
+  assert(await p.evaluate(() => document.activeElement?.matches('[data-s5-go]')), 'focus not moved to the continue link');
+  await p.keyboard.press('Enter');
+  await p.waitForTimeout(900);
+  assert((await p.evaluate(() => location.hash)) === '#scene-06', 'continue link did not go to Scene 06');
+  await s5At(p, 0.5, 100);
+  await p.setViewportSize({ width: 390, height: 844 });
+  await p.waitForTimeout(500);
+  r = await s5Read(p);
+  // the track is shorter on a phone, so the same pixel offset lands later in the film; what matters is a coherent frame
+  assert(r.lines.filter((v) => v > 0.6).length <= 1 && !(r.whole > 0.02 && r.pieces > 0.02) && !(Math.max(...r.planes) > 0.05 && Math.max(...r.paper) > 0.05), `incoherent after resize: ${JSON.stringify(r)}`);
+  assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow after resize');
+  await p.setViewportSize({ width: 844, height: 390 });
+  await p.waitForTimeout(400);
+  assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow in landscape');
+  await p.context().close();
+});
+
+await test('S5-FALLBACK', 'Scene 05 with reduced motion or without JavaScript: a still (report, three ideas, closing line, link), no pinned film', async () => {
+  for (const opts of [{ reducedMotion: 'reduce' }, { javaScriptEnabled: false }, { reducedMotion: 'reduce', viewport: { width: 390, height: 844 } }]) {
+    const p = await ctx(opts);
+    await go(p, '/');
+    await p.locator('#scene-05').scrollIntoViewIfNeeded();
+    assert(!(await p.locator('[data-s5-track]').isVisible()), 'film shown');
+    assert(await p.locator('.s5__still').isVisible(), 'still missing');
+    assert((await p.locator('#scene-05').evaluate((e) => e.offsetHeight)) < 2200, 'long scroll track without the film');
+    const t = await p.locator('.s5__still').innerText();
+    for (const w of ['CONTEXT', 'What matters?', 'QUESTIONS', 'What should I ask?', 'NEXT STEPS', 'What happens next?', 'Illustrative report. No patient results.']) assert(t.toUpperCase().includes(w.toUpperCase()), `still is missing: ${w}`);
+    assert(await p.locator('.s5__still-report').isVisible(), 'report image missing in the still');
+    assert((await p.locator('.s5__still a[href="#scene-06"]').count()) === 1, 'link to Scene 06 missing');
+    assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow');
+    await p.context().close();
+  }
+});
+
+await test('S5-HONEST', 'Scene 05 adds no values, scores or findings, shows no anatomy, and keeps its disclosure and a text equivalent', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const t = await p.locator('#scene-05').evaluate((e) => e.textContent);
+  assert(/Illustrative report\. No patient results\./.test(t), 'disclosure missing');
+  assert(!/\d\s?(mg|mmol|bpm|%|\/)/i.test(t) && !/\b(score|abnormal|high risk|diagnos|your results?)\b/i.test(t), 'values or diagnostic wording in code-rendered text');
+  assert((await p.locator('#s5-title').innerText()).includes('Getting tested is only the beginning'), 'heading text equivalent missing');
+  const imgs = await p.locator('#scene-05 img').evaluateAll((els) => els.map((e) => e.currentSrc || e.src));
+  assert(imgs.every((u) => /human-s05-/.test(u)), `unexpected image in Scene 05: ${imgs.find((u) => !/human-s05-/.test(u))}`);
+  assert((await p.locator('#scene-05 [data-s5-piece] img[alt=""]').count()) === 8, 'decorative slices are announced');
+  assert((await p.locator('#scene-05 button, #scene-05 a').count()) <= 3, 'unexpected controls');
   await p.context().close();
 });
 

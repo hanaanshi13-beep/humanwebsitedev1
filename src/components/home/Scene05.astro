@@ -1,397 +1,370 @@
 ---
-// Scene 05 — GETTING TESTED IS ONLY THE BEGINNING. "A report, translated for a human being."
+// Scene 05 — AFTER THE REPORT. A full-viewport, scroll-controlled film in six acts, built from the founders'
+// approved assets: one studio plate, the isolated report, a macro close-up, and eight exact slices of the report.
 //
-// One typeset, value-free document (real text, no image) on a small stack of paper. As the stage scrolls into
-// view the stack arrives, the sheets part, the view leans toward the page and a reading lens settles on one
-// region. A fragment of that region then lifts off the page and resolves into an interpretation note.
-// Three questions choose which region is read; each has its own lens position, framing and note.
+//   I   arrival          the report rises into the studio light
+//   II  immersion        the camera moves into the page (macro plate on wide screens)
+//   III deconstruction   the six information rows leave the sheet, each to its own depth
+//   IV  transformation   each paper row becomes a thin optical plane in the same place
+//   V   understanding    six planes gather into three: context, questions, next steps
+//   VI  resolution       the camera withdraws; the closing line
 //
-// Two separate sources of truth so they never fight:
-//   intro progress (scroll)  — arrival, separation, approach. Stops mattering once the visitor chooses.
-//   data-active              — matters | ask | next. Everything interactive derives from it.
+// Everything on screen is a pure function of one number, the scroll progress p (0..1), so the same scroll
+// position always gives the same picture, forwards or backwards. Nothing is timed, queued or one-shot.
+// The depth is CSS perspective and compositing; nothing here is a 3D model or real refraction.
 //
-// The document is a concept. It holds no values, flags or findings, and the lens marks the topic being
-// discussed, never a result. Without JavaScript the report, the first note and all three questions are plain text.
-const markers = [
-  { area: 'Cardiovascular', marker: 'Lipid profile' },
-  { area: 'Metabolic', marker: 'Blood glucose' },
-  { area: 'Hormonal', marker: 'Thyroid function' },
-  { area: 'Nutritional', marker: 'Iron status' },
+// The report is an illustration. No values, scores or findings are shown or added, and the three final planes
+// are ideas (context, questions, next steps), not a classification of anyone's results.
+// With reduced motion or without JavaScript the film is replaced by a still: the report, the three ideas, the line.
+import { getImage } from 'astro:assets';
+import env from '../../assets/scene05/human-s05-environment.webp';
+import macro from '../../assets/scene05/human-s05-macro.webp';
+import report from '../../assets/scene05/human-s05-report.png';
+import fHeader from '../../assets/scene05/human-s05-frag-header.png';
+import fCardio from '../../assets/scene05/human-s05-frag-cardiovascular.png';
+import fMetabolic from '../../assets/scene05/human-s05-frag-metabolic.png';
+import fHormonal from '../../assets/scene05/human-s05-frag-hormonal.png';
+import fNutritional from '../../assets/scene05/human-s05-frag-nutritional.png';
+import fContext from '../../assets/scene05/human-s05-frag-clinical-context.png';
+import fFollow from '../../assets/scene05/human-s05-frag-follow-up.png';
+import fFooter from '../../assets/scene05/human-s05-frag-footer.png';
+
+// Exact geometry from the founders' fragment-layout.json (source canvas 1086 × 1448).
+const CW = 1086;
+const CH = 1448;
+const pieces = [
+  { key: 'header', src: fHeader, y: 0, h: 529, row: false, label: '' },
+  { key: 'cardiovascular', src: fCardio, y: 529, h: 110, row: true, label: 'Cardiovascular' },
+  { key: 'metabolic', src: fMetabolic, y: 639, h: 112, row: true, label: 'Metabolic' },
+  { key: 'hormonal', src: fHormonal, y: 751, h: 116, row: true, label: 'Hormonal' },
+  { key: 'nutritional', src: fNutritional, y: 867, h: 116, row: true, label: 'Nutritional' },
+  { key: 'clinical-context', src: fContext, y: 983, h: 110, row: true, label: 'Clinical context' },
+  { key: 'follow-up', src: fFollow, y: 1093, h: 111, row: true, label: 'Follow-up' },
+  { key: 'footer', src: fFooter, y: 1204, h: 244, row: false, label: '' },
 ];
-const states = [
-  {
-    key: 'matters',
-    n: '01',
-    q: 'What matters?',
-    a: 'Which parts of a report deserve attention first — and which are simply context.',
-    short: 'Matters',
-    region: 'markers',
-    lift: 'Example health markers',
-    eyebrow: '01 — Understanding',
-    title: 'Understand the context.',
-    body: 'Which findings are relevant to my health history?',
-  },
-  {
-    key: 'ask',
-    n: '02',
-    q: 'What should I ask?',
-    a: 'The questions worth taking to a qualified professional.',
-    short: 'Ask',
-    region: 'context',
-    lift: 'Clinical context',
-    eyebrow: '02 — Guidance',
-    title: 'Start a conversation.',
-    body: 'Is there anything I should discuss with my clinician?',
-  },
-  {
-    key: 'next',
-    n: '03',
-    q: 'What happens next?',
-    a: 'What following through could look like, and when it makes sense to look again.',
-    short: 'Next',
-    region: 'followup',
-    lift: 'Follow-up',
-    eyebrow: '03 — Follow-through',
-    title: 'Know the next step.',
-    body: 'Would follow-up or further assessment be appropriate?',
-  },
+// alpha is kept; the slices stay at their native size so they tile exactly
+const webp = (src: ImageMetadata, quality = 92) => getImage({ src, width: src.width, format: 'webp', quality });
+const frag = await Promise.all(pieces.map(async (p) => ({ ...p, url: (await webp(p.src)).src })));
+const reportImg = await webp(report);
+const envImg = await getImage({ src: env, width: env.width, format: 'webp', quality: 86 });
+const macroImg = await getImage({ src: macro, width: macro.width, format: 'webp', quality: 88 });
+
+const acts = [
+  { a: 'You got tested.', b: 'Now what?' },
+  { a: 'So much information.', b: 'So little clarity.' },
+  { a: 'But what', b: 'actually matters?' },
+  { a: 'Numbers alone', b: 'aren’t the whole story.' },
+  { a: 'Understand more.', b: 'Guess less.' },
+  { a: 'Getting tested', b: 'is only the beginning.' },
 ];
-const path = ['Information', 'Context', 'Conversation', 'Follow-through'];
+const planes = [
+  { key: 'context', label: 'Context', q: 'What matters?' },
+  { key: 'questions', label: 'Questions', q: 'What should I ask?' },
+  { key: 'next', label: 'Next steps', q: 'What happens next?' },
+];
+const pct = (n: number, d: number) => `${((n / d) * 100).toFixed(4)}%`;
 ---
 
-<section class="section on-light on-ivory s5" id="scene-05" aria-labelledby="s5-title" data-s5 data-active="matters">
-  <div class="wrap">
-    <div class="s5__head">
-      <p class="eyebrow" data-reveal><span class="num">05</span><span>After the report</span></p>
-      <h2 class="display" id="s5-title" data-reveal="mask">
-        <span class="mask"><span>Getting tested</span></span>
-        <span class="mask" style="--i:1"><span><em>is only the beginning.</em></span></span>
-      </h2>
-      <div class="prose s5__intro" data-reveal style="--d:120ms">
-        <p>
-          You got your report. Looked through the numbers. Maybe searched a few things.
-          <strong>But what happened next?</strong>
-        </p>
-        <p>
-          Did you know which results mattered, where to start, how to follow through, or whether anything had
-          changed when you checked again?
-        </p>
-      </div>
-    </div>
+<section class="s5 on-dark" id="scene-05" aria-labelledby="s5-title" data-s5>
+  <!-- The whole story in words, for assistive technology and for anyone the film does not reach. -->
+  <div class="vh">
+    <h2 id="s5-title">Getting tested is only the beginning.</h2>
+    <p>
+      You got tested. Now what? So much information, so little clarity. But what actually matters? Numbers alone
+      aren’t the whole story. Understand more. Guess less.
+    </p>
+    <p>Three ideas: Context — what matters? Questions — what should I ask? Next steps — what happens next?</p>
+  </div>
 
-    <div class="s5__stage" data-s5-stage>
-      <!-- LAYERS 02–04: the paper stack, the report, the reading lens -->
-      <figure class="s5__report">
-        <div class="s5__stack" data-s5-stack>
-          <span class="s5__under s5__under--b" aria-hidden="true"></span>
-          <span class="s5__under s5__under--a" aria-hidden="true"></span>
-          <div class="s5__sheet" data-s5-sheet>
-            <span class="s5__lens" data-s5-lens aria-hidden="true"></span>
-            <header class="s5__doc-head">
-              <p class="s5__doc-mark">HUMAN</p>
-              <p class="s5__doc-tag">Illustrative document</p>
-            </header>
-            <p class="s5__doc-title">Health assessment</p>
-            <p class="s5__doc-sub">An introduction to understanding your health information.</p>
+  <div class="s5__track" data-s5-track>
+    <div class="s5__view" data-s5-view>
+      <!-- LAYER 1: the studio -->
+      <img class="s5__env" src={envImg.src} width={env.width} height={env.height} alt="" loading="lazy" decoding="async" />
+      <span class="s5__dim" data-s5-dim aria-hidden="true"></span>
+      <span class="s5__shadow" data-s5-shadow aria-hidden="true"></span>
 
-            <div class="s5__region" data-s5-region="markers">
-              <p class="s5__doc-label"><span>Example health markers</span><span>Result</span></p>
-              <dl class="s5__rows">
-                {
-                  markers.map((m) => (
-                    <div>
-                      <dt>{m.area}</dt>
-                      <dd>{m.marker}</dd>
-                      <dd class="s5__dash"><span aria-hidden="true">—</span><span class="vh">not shown</span></dd>
-                    </div>
-                  ))
-                }
-              </dl>
-            </div>
-            <div class="s5__region" data-s5-region="context">
-              <p class="s5__doc-label"><span>Clinical context</span></p>
-              <p class="s5__doc-body">Medical history, symptoms and relevant assessments.</p>
-            </div>
-            <div class="s5__region" data-s5-region="followup">
-              <p class="s5__doc-label"><span>Follow-up</span></p>
-              <p class="s5__doc-body">Discuss appropriate next steps with a qualified professional.</p>
-            </div>
-            <span class="s5__sweep" aria-hidden="true"></span>
+      <!-- LAYER 2: the macro plate (wide screens) -->
+      <img class="s5__macro" data-s5-macro src={macroImg.src} width={macro.width} height={macro.height} alt="" loading="lazy" decoding="async" />
+
+      <!-- LAYER 3: camera → document → pieces -->
+      <div class="s5__cam" data-s5-cam>
+        <div class="s5__doc" data-s5-doc>
+          <img
+            class="s5__whole"
+            data-s5-whole
+            src={reportImg.src}
+            width={CW}
+            height={CH}
+            alt="Illustration of a one-page health report with six headings: cardiovascular, metabolic, hormonal, nutritional, clinical context and follow-up. It shows no results."
+            loading="lazy"
+            decoding="async"
+          />
+          <div class="s5__pieces" data-s5-pieces aria-hidden="true">
+            {
+              frag.map((f) => (
+                <div class={`s5__piece ${f.row ? 's5__piece--row' : 's5__piece--edge'}`} data-s5-piece={f.key} style={`top:${pct(f.y, CH)};height:${pct(f.h, CH)}`}>
+                  <img src={f.url} width={CW} height={f.h} alt="" loading="lazy" decoding="async" />
+                  {f.row && (
+                    <span class="s5__glass">
+                      <span>{f.label}</span>
+                    </span>
+                  )}
+                </div>
+              ))
+            }
+            {
+              planes.map((pl) => (
+                <div class="s5__plane" data-s5-plane={pl.key}>
+                  <span class="s5__plane-label">{pl.label}</span>
+                  <span class="s5__plane-q">{pl.q}</span>
+                </div>
+              ))
+            }
           </div>
         </div>
-        <figcaption class="note s5__cap">Concept illustration. It contains no values and is not a real report.</figcaption>
-      </figure>
+      </div>
 
-      <!-- small screens: the same three states, right under the page, so the report answers without scrolling -->
-      <div class="s5__tabs" role="group" aria-label="Choose a question">
+      <!-- LAYER 4: one statement at a time -->
+      <span class="s5__scrim" data-s5-scrim aria-hidden="true"></span>
+      <div class="s5__lines" aria-hidden="true">
         {
-          states.map((s) => (
-            <button type="button" data-s5-pick={s.key} aria-pressed={s.key === 'matters' ? 'true' : 'false'}>
-              <span aria-hidden="true">{s.n}</span>
-              {s.short}
-            </button>
+          acts.map((t, i) => (
+            <p class="s5__line" data-s5-line={i}>
+              <span class="s5__line-a">{t.a}</span>
+              <em class="s5__line-b">{t.b}</em>
+            </p>
           ))
         }
       </div>
 
-      <!-- LAYER 06: the interpretation note. One object; its words follow the chosen question. -->
-      <aside class="s5__note" data-s5-note aria-live="polite" aria-label="Interpretation">
-        <p class="s5__note-thought">What does this mean <em>for me?</em></p>
-        <p class="s5__note-eyebrow" data-f="eyebrow">{states[0].eyebrow}</p>
-        <p class="s5__note-title" data-f="title">{states[0].title}</p>
-        <p class="s5__note-body" data-f="body">{states[0].body}</p>
-        <ol class="s5__path" aria-label="From information to follow-through">
-          {path.map((s) => <li>{s}</li>)}
-        </ol>
-      </aside>
-
-      <!-- LAYER 07: the three questions are the controls -->
-      <ol class="s5__qs">
-        {
-          states.map((s) => (
-            <li data-s5-q={s.key}>
-              <span class="s5__thread" aria-hidden="true" />
-              <h3>
-                <button type="button" data-s5-pick={s.key} aria-pressed={s.key === 'matters' ? 'true' : 'false'}>
-                  <span class="s5__qn" aria-hidden="true">{s.n}</span>
-                  <span class="s5__qt">{s.q}</span>
-                  <span class="s5__qi" aria-hidden="true" />
-                </button>
-              </h3>
-              <p>{s.a}</p>
-            </li>
-          ))
-        }
-      </ol>
-
-      <!-- LAYER 05: decorative only. The lifting fragment and the thread from the page to the note. -->
-      <svg class="s5__wire" data-s5-wire aria-hidden="true" focusable="false"><path /><circle r="3" /></svg>
-      <span class="s5__frag" data-s5-frag aria-hidden="true"><span></span></span>
-    </div>
-
-    <div class="s5__close" data-reveal>
-      <p class="s5__close-line">
-        Getting information is a start. <em>Understanding it and knowing what to do</em> makes it useful.
-      </p>
-      <a class="link" href="#scene-06">See how HUMAN is designed to help <span class="arr arr--down" aria-hidden="true">↓</span></a>
+      <p class="s5__disclosure">Illustrative report. No patient results.</p>
+      <button type="button" class="s5__skip" data-s5-skip>Skip animation</button>
+      <a class="link s5__go" data-s5-go href="#scene-06">See how HUMAN is designed to help <span class="arr arr--down" aria-hidden="true">↓</span></a>
+      <span class="s5__floor" data-s5-floor aria-hidden="true"></span>
     </div>
   </div>
-  <script type="application/json" data-s5-data set:html={JSON.stringify(Object.fromEntries(states.map((s) => [s.key, { region: s.region, lift: s.lift, eyebrow: s.eyebrow, title: s.title, body: s.body }])))} />
+
+  <!-- The still: shown instead of the film with reduced motion or without JavaScript. -->
+  <div class="s5__still">
+    <img class="s5__env" src={envImg.src} width={env.width} height={env.height} alt="" loading="lazy" decoding="async" />
+    <div class="wrap s5__still-in">
+      <img class="s5__still-report" src={reportImg.src} width={CW} height={CH} alt="Illustration of a one-page health report with six headings. It shows no results." loading="lazy" decoding="async" />
+      <div class="s5__still-copy">
+        <p class="s5__line s5__line--still" aria-hidden="true">
+          <span class="s5__line-a">Getting tested</span>
+          <em class="s5__line-b">is only the beginning.</em>
+        </p>
+        <ul class="s5__still-planes">
+          {
+            planes.map((pl) => (
+              <li>
+                <span class="s5__plane-label">{pl.label}</span>
+                <span class="s5__plane-q">{pl.q}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="s5__disclosure s5__disclosure--still">Illustrative report. No patient results.</p>
+        <a class="link" href="#scene-06">See how HUMAN is designed to help <span class="arr arr--down" aria-hidden="true">↓</span></a>
+      </div>
+    </div>
+  </div>
 </section>
 
 <script>
   const sec = document.querySelector<HTMLElement>('[data-s5]');
-  if (sec) {
-    type St = { region: string; lift: string; eyebrow: string; title: string; body: string };
-    const data = JSON.parse(sec.querySelector('[data-s5-data]')!.textContent!) as Record<string, St>;
-    const $ = <T extends Element = HTMLElement>(s: string) => sec.querySelector<T>(s)!;
-    const stage = $('[data-s5-stage]');
-    const stack = $('[data-s5-stack]');
-    const sheet = $('[data-s5-sheet]');
-    const lens = $('[data-s5-lens]');
-    const note = $('[data-s5-note]');
-    const frag = $('[data-s5-frag]');
-    const fragText = frag.firstElementChild as HTMLElement;
-    const wire = $<SVGSVGElement>('[data-s5-wire]');
-    const wirePath = wire.querySelector('path')!;
-    const wireDot = wire.querySelector('circle')!;
-    const picks = Array.from(sec.querySelectorAll<HTMLButtonElement>('[data-s5-pick]'));
-    const regions = Array.from(sec.querySelectorAll<HTMLElement>('[data-s5-region]'));
+  const track = sec?.querySelector<HTMLElement>('[data-s5-track]');
+  const view = sec?.querySelector<HTMLElement>('[data-s5-view]');
+  if (sec && track && view) {
+    const $ = <T extends HTMLElement = HTMLElement>(s: string) => sec.querySelector<T>(s)!;
+    const cam = $('[data-s5-cam]');
+    const doc = $('[data-s5-doc]');
+    const whole = $('[data-s5-whole]');
+    const piecesBox = $('[data-s5-pieces]');
+    const macroEl = $('[data-s5-macro]');
+    const dim = $('[data-s5-dim]');
+    const shadow = $('[data-s5-shadow]');
+    const scrim = $('[data-s5-scrim]');
+    const floor = $('[data-s5-floor]');
+    const skip = $<HTMLButtonElement>('[data-s5-skip]');
+    const go = $<HTMLAnchorElement>('[data-s5-go]');
+    const lines = Array.from(sec.querySelectorAll<HTMLElement>('[data-s5-line]'));
+    const all = Array.from(sec.querySelectorAll<HTMLElement>('[data-s5-piece]'));
+    const rows = all.filter((e) => e.classList.contains('s5__piece--row'));
+    const edges = all.filter((e) => e.classList.contains('s5__piece--edge'));
+    const rowImg = rows.map((r) => r.querySelector('img')!);
+    const rowGlass = rows.map((r) => r.querySelector<HTMLElement>('.s5__glass')!);
+    const rowText = rowGlass.map((g) => g.firstElementChild as HTMLElement);
+    const planeEls = Array.from(sec.querySelectorAll<HTMLElement>('[data-s5-plane]'));
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const wide = window.matchMedia('(min-width: 1100px)');
-    const EASE = 'cubic-bezier(.22, 1, .36, 1)';
-
-    // ---------- state ----------
-    let active = 'matters';
-    let interacted = false; // a deliberate choice has been made: scroll no longer drives anything
-    let resolved = false; // the note is out (the intro reached its end, or the visitor chose)
-    let introP = 0;
-    let version = 0; // latest transition wins
-    let running: Animation[] = [];
 
     const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
     const ramp = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
     const ease = (t: number) => t * t * (3 - 2 * t);
-    const regionOf = (key: string) => regions.find((r) => r.dataset.s5Region === data[key].region)!;
-
-    // How closely each state reads the page. The third pulls back: the page is seen whole again.
-    const camScale = (key: string) => (!wide.matches ? 1 : key === 'next' ? 1 : 1.05);
-
-    // The region's box in the sheet's own, untransformed coordinates.
-    const local = (key: string) => {
-      const r = regionOf(key);
-      return { x: 0, y: r.offsetTop, w: sheet.clientWidth, h: r.offsetHeight };
-    };
-    // The camera: scale the sheet about the middle of the region being read. `amount` 0..1 blends it in.
-    const camera = (key: string, amount: number) => {
-      const b = local(key);
-      const s = 1 + (camScale(key) - 1) * amount;
-      const cx = b.w / 2;
-      const cy = b.y + b.h / 2;
-      return { s, tx: (1 - s) * cx, ty: (1 - s) * cy };
-    };
-    const applyCamera = (key: string, amount: number, animate: boolean) => {
-      const c = camera(key, amount);
-      sheet.style.transition = animate && !reduce.matches ? `transform 480ms ${EASE}` : 'none';
-      sheet.style.transform = c.s === 1 ? 'none' : `translate3d(${c.tx.toFixed(2)}px, ${c.ty.toFixed(2)}px, 0) scale(${c.s.toFixed(4)})`;
-    };
-    const placeLens = (key: string, animate: boolean) => {
-      const b = local(key);
-      lens.style.transition = animate && !reduce.matches ? `top 400ms ${EASE}, height 400ms ${EASE}, opacity 240ms ease` : 'opacity 240ms ease';
-      lens.style.top = `${b.y - 9}px`;
-      lens.style.height = `${b.h + 18}px`;
-    };
-    // Where the region will sit on the stage once the camera has settled (computed, so it is right mid-transition).
-    const sourceBox = (key: string) => {
-      const st = stage.getBoundingClientRect();
-      // the stack carries no transform once the page has arrived, so its box is the sheet's resting box
-      const sk = stack.getBoundingClientRect();
-      const b = local(key);
-      const c = camera(key, 1);
-      const inset = 14;
-      return { x: sk.left - st.left + c.tx + inset * c.s, y: sk.top - st.top + c.ty + (b.y - 9) * c.s, w: (b.w - inset * 2) * c.s, h: (b.h + 18) * c.s };
-    };
-    const noteBox = () => {
-      const st = stage.getBoundingClientRect();
-      const n = note.getBoundingClientRect();
-      return { x: n.left - st.left, y: n.top - st.top, w: n.width, h: n.height };
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    // piecewise-linear keyframes: [[p, value], …]
+    const key = (p: number, ks: number[][]) => {
+      if (p <= ks[0][0]) return ks[0][1];
+      for (let i = 1; i < ks.length; i++) if (p <= ks[i][0]) return lerp(ks[i - 1][1], ks[i][1], ease((p - ks[i - 1][0]) / (ks[i][0] - ks[i - 1][0])));
+      return ks[ks.length - 1][1];
     };
 
-    const stop = () => {
-      running.forEach((a) => a.cancel());
-      running = [];
-      frag.style.opacity = '0';
+    // ---- the choreography of the six rows (fractions of the report's width / height; depth in px; degrees) ----
+    // [dx, dy, z, rotateY, rotateZ, when it starts within the act (0..0.35)]
+    const SEP = [
+      [-0.17, -0.125, 40, 7, -2.2, 0.0],
+      [0.15, -0.078, 5, -6, 1.6, 0.1],
+      [-0.03, -0.03, 70, 2, -0.6, 0.05],
+      [0.11, 0.028, -20, -5, -1.2, 0.18],
+      [-0.14, 0.08, 85, 6, 1.8, 0.12],
+      [0.06, 0.13, 25, -4, -1.6, 0.25],
+    ];
+    const ROW_Y = [529, 639, 751, 867, 983, 1093];
+    const ROW_H = [110, 112, 116, 116, 110, 111];
+    const rowCentre = (i: number) => (ROW_Y[i] + ROW_H[i] / 2) / 1448;
+    // the three planes: centres down the page, a shallow fan in depth
+    const PLANE_Y = [0.44, 0.615, 0.79];
+    const PLANE_Z = [60, 0, -60];
+    const PLANE_X = [-0.045, 0, 0.045];
+
+    let W = 0;
+    let H = 0;
+    let vw = 0;
+    let vh = 0;
+    let wide = true;
+    const measure = () => {
+      W = doc.offsetWidth;
+      H = doc.offsetHeight;
+      vw = view.clientWidth;
+      vh = view.clientHeight;
+      wide = vw >= 900 && vw > vh;
     };
-    const setNote = (key: string) => {
-      const d = data[key];
-      note.querySelector('[data-f="eyebrow"]')!.textContent = d.eyebrow;
-      note.querySelector('[data-f="title"]')!.textContent = d.title;
-      note.querySelector('[data-f="body"]')!.textContent = d.body;
-      note.dataset.for = key;
-    };
-    const drawWire = (key: string, animate: boolean) => {
-      if (!wide.matches) {
-        wire.style.opacity = '0';
-        return;
+
+    let lastState = '';
+    const render = (p: number, arrive: number) => {
+      if (!W) return;
+      const spread = wide ? 1 : 0.24; // phones: far less sideways travel
+      // ---------- camera ----------
+      const sIn = clamp((1.04 * vw) / (W * 0.875), 2.4, 3.6); // the paper a little wider than the screen
+      // how large the separated rows sit: as big as the room between the header and the statement allows
+      const sOpen = wide ? Math.min(1.5, (0.46 * vw) / W, (vh - 330) / (0.8 * H)) : Math.min(1.12, (0.8 * vw) / W, (vh - 300) / (0.78 * H));
+      const scale = key(p, [[0, 1], [0.16, 1], [0.31, sIn], [0.385, sIn * 1.04], [0.4, sIn * 0.7], [0.5, sOpen], [0.8, sOpen], [1, sOpen * 0.88]]);
+      // which point of the page the camera looks at (fractions of the page), and how firmly
+      const fx = key(p, [[0.16, 0.5], [0.31, 0.43], [0.4, 0.46], [0.52, 0.5]]);
+      const fy = key(p, [[0.16, 0.5], [0.31, 0.25], [0.4, 0.42], [0.5, 0.6], [0.8, 0.615], [1, 0.6]]);
+      const hold = key(p, [[0.16, 0], [0.3, 1]]);
+      const lift = (1 - ease(arrive)) * vh * 0.06;
+      const tx = -(fx - 0.5) * W * scale * hold;
+      const ty = -(fy - 0.5) * H * scale * hold + lift;
+      cam.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) scale(${(scale * (0.88 + 0.12 * ease(arrive))).toFixed(4)})`;
+      // the page's own attitude: master pose → leaning away at the deepest point → turned to show depth
+      const ry = key(p, [[0.16, -8], [0.31, -5], [0.42, -4], [0.54, -13], [0.8, -16], [1, -10]]);
+      const rx = key(p, [[0.16, 2], [0.31, 13], [0.42, 8], [0.54, 4], [0.8, 6], [1, 4]]);
+      const rz = key(p, [[0.16, -2.5], [0.31, 4.5], [0.42, 2], [0.52, 0]]);
+      doc.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) rotateZ(${rz.toFixed(2)}deg)`;
+
+      // ---------- which picture of the report is on screen (never two at once, beyond a short handover) ----------
+      // The macro plate and the report never share the frame: each handover is a short cut through shadow.
+      const macroIn = wide ? ramp(p, 0.312, 0.33) : 0;
+      const macroOut = wide ? 1 - ramp(p, 0.382, 0.396) : 0;
+      const macroO = Math.min(macroIn, macroOut);
+      macroEl.style.opacity = macroO.toFixed(3);
+      macroEl.style.transform = `scale(${(1.1 - 0.06 * ease(ramp(p, 0.292, 0.36)) + 0.05 * ramp(p, 0.36, 0.42)).toFixed(4)})`;
+      const sep = ramp(p, 0.415, 0.56); // act III master progress
+      const apart = sep > 0;
+      // while the macro plate is fully up the rig is hidden; it returns underneath as the plate leaves
+      const rigO = wide ? (p < 0.36 ? 1 - ramp(p, 0.296, 0.312) : ramp(p, 0.396, 0.412)) : 1;
+      const bump = (a: number, m: number, b: number) => (p <= a || p >= b ? 0 : p < m ? (p - a) / (m - a) : (b - p) / (b - m));
+      const cut = wide ? Math.max(bump(0.288, 0.312, 0.334), bump(0.378, 0.396, 0.416)) : 0;
+      const arriveO = clamp(arrive * 1.5);
+      cam.style.opacity = (rigO * arriveO).toFixed(3);
+      whole.style.opacity = apart ? '0' : '1';
+      piecesBox.style.opacity = apart ? '1' : '0';
+
+      // ---------- act III–V: the rows ----------
+      const mat = (i: number) => ease(ramp(p, 0.565 + i * 0.012, 0.635 + i * 0.012));
+      const gather = ease(ramp(p, 0.7, 0.79));
+      const settle = ease(ramp(p, 0.8, 0.96));
+      const planeY = (k: number) => lerp(PLANE_Y[k], 0.615 + (PLANE_Y[k] - 0.615) * 0.86, settle);
+      rows.forEach((el, i) => {
+        const [dx, dy, z, rY, rZ, t0] = SEP[i];
+        const s = ease(ramp(sep, t0, t0 + 0.65));
+        const k = Math.floor(i / 2);
+        // separated position → its plane's position
+        const x = lerp(dx * spread * s, PLANE_X[k] * spread, gather) * W;
+        const y = lerp(dy * s, planeY(k) - rowCentre(i), gather) * H;
+        const zz = lerp(z * s, PLANE_Z[k], gather);
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${zz.toFixed(1)}px) rotateY(${(rY * s * (1 - gather)).toFixed(2)}deg) rotateZ(${(rZ * s * (1 - gather)).toFixed(2)}deg)`;
+        const m = mat(i);
+        el.style.setProperty('--lift', s.toFixed(3));
+        rowImg[i].style.opacity = (1 - m).toFixed(3);
+        rowGlass[i].style.opacity = (m * (1 - ramp(gather, 0.55, 1))).toFixed(3);
+        rowGlass[i].style.setProperty('--wipe', m.toFixed(3));
+        rowText[i].style.opacity = (ramp(m, 0.55, 1) * (1 - ramp(gather, 0, 0.45))).toFixed(3);
+      });
+      // header and footer: stay with the sheet for a beat, then fall back into the dark
+      const edgeO = 1 - ease(ramp(sep, 0.12, 0.7));
+      edges.forEach((el, i) => {
+        el.style.opacity = edgeO.toFixed(3);
+        el.style.transform = `translate3d(0, ${((i ? 1 : -1) * 0.03 * H * ease(ramp(sep, 0, 0.7))).toFixed(1)}px, ${(-120 * ease(ramp(sep, 0, 0.7))).toFixed(1)}px)`;
+      });
+      // the three planes take over from the six
+      planeEls.forEach((el, k) => {
+        const o = ramp(gather, 0.5, 1);
+        el.style.opacity = o.toFixed(3);
+        el.style.transform = `translate3d(${(PLANE_X[k] * spread * W).toFixed(1)}px, ${((planeY(k) - 0.5) * H).toFixed(1)}px, ${lerp(PLANE_Z[k], PLANE_Z[k] * 0.6, settle).toFixed(1)}px) translate(-50%, -50%)`;
+        el.style.setProperty('--words', ramp(gather, 0.75, 1).toFixed(3));
+      });
+
+      // ---------- light ----------
+      dim.style.opacity = Math.max(cut * 0.86, key(p, [[0, 0], [0.2, 0.05], [0.31, 0.4], [0.42, 0.34], [0.55, 0.2], [0.8, 0.26], [1, 0.42]])).toFixed(3);
+      const sh = arriveO * (1 - ramp(p, 0.17, 0.26)) + 0.5 * ramp(p, 0.84, 1);
+      shadow.style.opacity = sh.toFixed(3);
+      shadow.style.transform = `translate(-50%, 0) scaleX(${(0.92 + 0.12 * ease(arrive) - 0.1 * ramp(p, 0.84, 1)).toFixed(3)})`;
+      scrim.style.opacity = Math.max(macroO, wide ? 0 : ramp(p, 0.24, 0.31) * (1 - ramp(p, 0.4, 0.46))).toFixed(3);
+      floor.style.opacity = ramp(p, 0.9, 1).toFixed(3);
+
+      // ---------- words: one statement at a time ----------
+      const win = [
+        [-1, -1, 0.13, 0.165],
+        [0.325, 0.345, 0.368, 0.384],
+        [0.47, 0.5, 0.535, 0.558],
+        [0.572, 0.6, 0.672, 0.695],
+        [0.712, 0.74, 0.785, 0.808],
+        [0.855, 0.9, 2, 3],
+      ];
+      if (!wide) win[1] = [0.27, 0.31, 0.375, 0.405];
+      lines.forEach((el, i) => {
+        const [a, b, c, d] = win[i];
+        const inn = i === 0 ? clamp((arrive - 0.6) / 0.3) : ramp(p, a, b);
+        const out = ramp(p, c, d);
+        el.style.opacity = (ease(inn) * (1 - ease(out))).toFixed(3);
+        el.style.transform = `translate3d(0, ${((1 - ease(inn)) * 16 - ease(out) * 14).toFixed(1)}px, 0)`;
+      });
+
+      // ---------- controls exist only while they are visible ----------
+      const state = p < 0.86 ? 'film' : 'end';
+      if (state !== lastState) {
+        lastState = state;
+        sec.dataset.s5State = state;
+        skip.hidden = state === 'end';
+        go.inert = state !== 'end';
       }
-      const s = sourceBox(key);
-      const n = noteBox();
-      const x1 = s.x + s.w;
-      const y1 = s.y + s.h / 2;
-      const x2 = n.x;
-      const y2 = clamp(y1, n.y + 28, n.y + n.h - 28);
-      const dx = Math.max(24, (x2 - x1) * 0.5);
-      wirePath.setAttribute('d', `M${x1.toFixed(1)} ${y1.toFixed(1)} C${(x1 + dx).toFixed(1)} ${y1.toFixed(1)}, ${(x2 - dx).toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`);
-      wireDot.setAttribute('cx', x1.toFixed(1));
-      wireDot.setAttribute('cy', y1.toFixed(1));
-      wire.style.opacity = '1';
-      const len = wirePath.getTotalLength();
-      wirePath.style.strokeDasharray = String(len);
-      if (animate && !reduce.matches) running.push(wirePath.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 460, delay: 260, easing: EASE, fill: 'backwards' }));
-      wirePath.style.strokeDashoffset = '0';
+      sec.dataset.s5Act = String(p < 0.17 ? 1 : p < 0.41 ? 2 : p < 0.56 ? 3 : p < 0.7 ? 4 : p < 0.8 ? 5 : 6);
     };
 
-    // The extraction: a strip the size of the lens leaves the page, crosses to the note's place, darkens into it.
-    const extract = (key: string, label: string) => {
-      const mine = ++version;
-      stop();
-      const instant = reduce.matches;
-      sec.classList.add('is-resolved');
-      if (instant) {
-        setNote(key);
-        note.style.opacity = '1';
-        drawWire(key, false);
-        return;
-      }
-      const from = sourceBox(key);
-      const to = noteBox();
-      fragText.textContent = label;
-      note.style.transition = 'opacity 130ms ease';
-      note.style.opacity = '0';
-      wire.style.opacity = '0';
-      const px = (b: { x: number; y: number; w: number; h: number }) => ({ left: `${b.x}px`, top: `${b.y}px`, width: `${b.w}px`, height: `${b.h}px` });
-      frag.style.opacity = '1';
-      // lift off the page, cross as a strip of paper, and only then darken into the note
-      const mid = { x: from.x + (to.x - from.x) * 0.6, y: from.y + (to.y - from.y) * 0.6 - 8, w: from.w + (to.w - from.w) * 0.6, h: from.h + (to.h - from.h) * 0.6 };
-      const paper = { backgroundColor: '#fdfbf5', color: '#292d29' };
-      const travel = frag.animate(
-        [
-          { ...px(from), ...paper, boxShadow: '0 1px 2px rgba(41,45,41,.10), 0 0 0 1px rgba(191,150,76,.45)', offset: 0 },
-          { ...px({ x: from.x + 6, y: from.y - 10, w: from.w, h: from.h }), ...paper, boxShadow: '0 18px 30px -14px rgba(41,45,41,.38), 0 0 0 1px rgba(191,150,76,.5)', offset: 0.28 },
-          { ...px(mid), ...paper, boxShadow: '0 24px 40px -18px rgba(41,45,41,.42), 0 0 0 1px rgba(191,150,76,.4)', offset: 0.68 },
-          { ...px(to), backgroundColor: '#292d29', color: '#292d29', boxShadow: '0 26px 44px -22px rgba(41,45,41,.55), 0 0 0 1px rgba(41,45,41,0)', offset: 1 },
-        ],
-        { duration: 660, easing: 'cubic-bezier(.3, .7, .3, 1)', fill: 'forwards' },
-      );
-      const words = fragText.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0, offset: 0.82 }, { opacity: 0 }], { duration: 660, fill: 'forwards' });
-      running.push(travel, words);
-      travel.finished
-        .then(() => {
-          if (mine !== version) return; // a newer choice took over
-          setNote(key);
-          note.style.transition = 'opacity 200ms ease';
-          note.style.opacity = '1';
-          frag.style.opacity = '0';
-          travel.cancel();
-          words.cancel();
-          drawWire(key, true);
-        })
-        .catch(() => {});
-    };
-
-    const syncControls = () => {
-      sec.dataset.active = active;
-      picks.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s5Pick === active)));
-    };
-
-    // Put the page in its interactive resting state for the active question.
-    const settle = (animate: boolean) => {
-      sec.style.setProperty('--arrive', '1');
-      sec.style.setProperty('--part', '1');
-      sec.style.setProperty('--lens', '1');
-      sec.style.setProperty('--sweep', '2');
-      placeLens(active, animate);
-      applyCamera(active, 1, animate);
-    };
-    // A deliberate choice. From here on the visitor, not the scroll position, decides what is shown.
-    const choose = (key: string) => {
-      const first = !interacted;
-      interacted = true;
-      resolved = true;
-      if (key === active && !first && note.dataset.for === key && note.style.opacity !== '0') return;
-      active = key;
-      syncControls();
-      settle(true);
-      extract(key, data[key].lift);
-    };
-
-    // ---------- the intro: a short scroll passage, no pin, no added height ----------
+    // ---------- scroll: one rAF-throttled listener, only while the scene is near the viewport ----------
     let ticking = false;
+    let on = false; // film mode (not reduced motion)
     const update = () => {
       ticking = false;
-      if (interacted || reduce.matches) return;
-      const top = stage.getBoundingClientRect().top;
-      const vh = window.innerHeight;
-      introP = clamp((vh * 0.94 - top) / (vh * 0.66)); // 0 as the stage enters, 1 once its top is about a quarter down
-      sec.style.setProperty('--arrive', ease(ramp(introP, 0, 0.26)).toFixed(4));
-      sec.style.setProperty('--part', ease(ramp(introP, 0.2, 0.5)).toFixed(4));
-      sec.style.setProperty('--sweep', (ramp(introP, 0.3, 0.62) * 2).toFixed(4));
-      sec.style.setProperty('--lens', ramp(introP, 0.62, 0.8).toFixed(4));
-      placeLens('matters', false);
-      applyCamera('matters', ease(ramp(introP, 0.42, 0.74)), false);
-      if (introP >= 0.86 && !resolved) {
-        resolved = true;
-        extract('matters', 'What does this mean for me?');
-      } else if (introP < 0.7 && resolved) {
-        // scrolled back before choosing anything: let the passage run in reverse
-        resolved = false;
-        version++;
-        stop();
-        sec.classList.remove('is-resolved');
-        note.style.transition = 'opacity 160ms ease';
-        note.style.opacity = '0';
-        wire.style.opacity = '0';
-      }
+      if (!on) return;
+      const span = track.offsetHeight - view.offsetHeight;
+      const top = track.getBoundingClientRect().top;
+      const p = span > 8 ? clamp(-top / span) : 0;
+      const arrive = clamp(1 - top / (window.innerHeight * 0.85));
+      sec.style.setProperty('--p', p.toFixed(4));
+      render(p, arrive);
     };
     const request = () => {
       if (!ticking) {
@@ -411,633 +384,414 @@ const path = ['Information', 'Context', 'Conversation', 'Follow-through'];
         }
         request();
       },
-      { rootMargin: '30% 0px 30% 0px' },
+      { rootMargin: '40% 0px 40% 0px' },
     ).observe(sec);
-
-    // ---------- layout changes: re-measure, never keep a stale coordinate ----------
-    let lastW = 0;
-    const relayout = () => {
-      const w = stage.clientWidth;
-      if (w === lastW) return;
-      lastW = w;
-      version++;
-      stop();
-      if (interacted || reduce.matches || resolved) {
-        settle(false);
-        setNote(active);
-        note.style.opacity = '1';
-        sec.classList.add('is-resolved');
-        drawWire(active, false);
-      } else update();
-    };
-    new ResizeObserver(relayout).observe(stage);
-    wide.addEventListener('change', relayout);
+    new ResizeObserver(() => {
+      measure();
+      request();
+    }).observe(view);
 
     const applyMotionPref = () => {
-      sec.classList.add('is-live');
-      if (reduce.matches) {
-        // no arrival, parting, approach or travelling fragment: the page, the lens and the note are simply there
-        resolved = true;
-        settle(false);
-        setNote(active);
-        note.style.opacity = '1';
-        sec.classList.add('is-resolved');
-        drawWire(active, false);
-      } else if (!interacted) {
-        note.style.opacity = '0';
+      on = !reduce.matches;
+      sec.classList.toggle('is-film', on);
+      if (on) {
+        measure();
         update();
       }
     };
     reduce.addEventListener('change', applyMotionPref);
     applyMotionPref();
 
-    picks.forEach((b) => b.addEventListener('click', () => choose(b.dataset.s5Pick!)));
+    // Skip: go straight to the closing shot (the page then scrolls on as normal).
+    skip.addEventListener('click', () => {
+      const span = track.offsetHeight - view.offsetHeight;
+      window.scrollTo({ top: track.getBoundingClientRect().top + window.scrollY + span * 0.985, behavior: 'instant' });
+      update(); // bring the closing shot (and its link) up now, so focus has somewhere to land
+      go.focus({ preventScroll: true });
+    });
+    // if a picture fails to load, the film still runs on the others; the macro plate simply never shows
+    macroEl.addEventListener('error', () => (macroEl.style.display = 'none'));
   }
 </script>
 
 <style>
   .s5 {
-    /* local materials: paper, ink and one warm accent */
-    --s5-paper: #fdfbf5;
-    --s5-paper-2: #f4f0e6;
-    --s5-ink: #292d29;
-    --s5-soft: #6a665d;
-    --s5-rule: #d5cec0;
-    --s5-amber: #bf964c;
-    --s5-champagne: #e2c58b;
-    --arrive: 1; /* 0..1 the stack has arrived */
-    --part: 1; /* 0..1 the sheets have parted */
-    --lens: 1; /* 0..1 the reading lens is present */
-    --sweep: 2; /* 0..2 one pass of light across the page */
-    --calm: 1; /* how far apart the sheets rest; the third state draws them together */
-    overflow: clip;
-  }
-  .s5[data-active='next'] {
-    --calm: 0.45;
-  }
-  .s5__head {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    column-gap: var(--col-gap);
-    align-items: end;
-  }
-  .s5__head > .eyebrow,
-  .s5__head > h2 {
-    grid-column: 1 / span 7;
-  }
-  .s5__head h2 {
-    margin: var(--stack-label) 0 0;
-  }
-  .s5__intro {
-    grid-column: 8 / span 5;
-    grid-row: 2;
-  }
-
-  /* ---- the stage: page · note · questions ---- */
-  .s5__stage {
+    --s5-ink: #0d0d0e;
+    --s5-white: #f4efe6;
+    --s5-champagne: #d9c39a;
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    column-gap: var(--col-gap);
-    row-gap: 32px;
-    align-items: center;
-    margin-top: clamp(56px, 7vw, 104px);
-    isolation: isolate;
-  }
-  /* LAYER 01: a patch of warm studio light behind the page */
-  .s5__stage::before {
-    content: '';
-    position: absolute;
-    left: -6%;
-    top: -8%;
-    width: 58%;
-    height: 116%;
-    background: radial-gradient(60% 55% at 42% 40%, rgba(255, 252, 244, 0.85), rgba(255, 252, 244, 0) 72%);
-    opacity: calc(0.35 + var(--arrive) * 0.65);
-    pointer-events: none;
-    z-index: -1; /* light falls behind the page and the controls, never over them */
-  }
-  .s5__report {
-    grid-column: 1 / span 5;
-    position: relative;
-    perspective: 1400px;
-  }
-  /* LAYER 02: the stack arrives as one object, then its sheets part */
-  .s5__stack {
-    position: relative;
-    transform: translate3d(0, calc((1 - var(--arrive)) * 38px), 0) rotateX(calc((1 - var(--arrive)) * 7deg)) rotate(calc((1 - var(--arrive)) * -1.6deg)) scale(calc(0.955 + var(--arrive) * 0.045));
-    transform-origin: 50% 70%;
-    opacity: calc(0.25 + var(--arrive) * 0.75);
-  }
-  .s5__under {
-    position: absolute;
-    inset: 0;
-    border-radius: 3px;
-    background:
-      repeating-linear-gradient(180deg, transparent 0 34px, rgba(41, 45, 41, 0.045) 34px 35px),
-      linear-gradient(180deg, #f8f5ec, var(--s5-paper-2));
-    border: 1px solid rgba(41, 45, 41, 0.07);
-    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .s5__under--a {
-    transform: translate3d(calc(var(--part) * var(--calm) * 22px), calc(var(--part) * var(--calm) * 16px), 0) rotate(calc(var(--part) * var(--calm) * 2.3deg));
-    box-shadow: 0 10px 22px -14px rgba(41, 45, 41, 0.3);
-  }
-  .s5__under--b {
-    transform: translate3d(calc(var(--part) * var(--calm) * -20px), calc(var(--part) * var(--calm) * 32px), 0) rotate(calc(var(--part) * var(--calm) * -3deg));
-    box-shadow: 0 16px 30px -18px rgba(41, 45, 41, 0.28);
-    filter: brightness(0.985);
-  }
-
-  /* LAYER 03: the report. Paper, not a card: fine edge, three shadows from one light, no rounding to speak of. */
-  .s5__sheet {
-    position: relative;
-    padding: clamp(22px, 2.6vw, 38px) clamp(22px, 2.6vw, 38px) clamp(24px, 2.8vw, 40px);
-    border-radius: 3px;
-    background:
-      linear-gradient(118deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 38%),
-      linear-gradient(180deg, var(--s5-paper), #f9f6ee);
-    border: 1px solid rgba(41, 45, 41, 0.09);
-    box-shadow:
-      0 1px 0 #fff inset,
-      0 1px 1px rgba(41, 45, 41, 0.1),
-      0 12px 22px -12px rgba(41, 45, 41, calc(0.14 + var(--part) * 0.12)),
-      0 44px 70px -40px rgba(41, 45, 41, calc(0.22 + var(--part) * 0.2));
-    color: var(--s5-ink);
-    transform-origin: 0 0;
-    overflow: hidden;
-    container-type: inline-size;
-  }
-  .s5__doc-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--s5-ink);
-  }
-  .s5__doc-mark {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.34em;
-  }
-  .s5__doc-tag,
-  .s5__doc-label {
-    font-size: 0.625rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--s5-soft);
-  }
-  .s5__doc-title {
-    margin-top: clamp(18px, 2vw, 26px);
-    font-family: var(--serif);
-    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
-    line-height: 1.05;
-    letter-spacing: -0.01em;
-  }
-  .s5__doc-sub {
-    margin-top: 8px;
-    max-width: 24em;
-    font-size: 0.8125rem;
-    line-height: 1.45;
-    color: var(--s5-soft);
-  }
-  .s5__region {
-    position: relative;
-    margin-top: clamp(20px, 2.2vw, 28px);
-    transition: opacity 320ms ease;
-  }
-  .s5__doc-label {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--s5-rule);
-  }
-  .s5__rows > div {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) 3.2em;
-    align-items: baseline;
-    gap: 12px;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--s5-rule);
-  }
-  /* narrow pages: the category sits above its marker instead of beside it */
-  @container (max-width: 400px) {
-    .s5__rows > div {
-      grid-template-columns: minmax(0, 1fr) 3.2em;
-      gap: 2px 12px;
-    }
-    .s5__rows dt {
-      grid-column: 1 / -1;
-    }
-  }
-  .s5__rows dt {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--s5-soft);
-  }
-  .s5__rows dd {
-    margin: 0;
-    font-size: 0.9375rem;
-    line-height: 1.3;
-  }
-  .s5__dash {
-    text-align: right;
-    color: var(--s5-soft);
-  }
-  .s5__doc-body {
-    margin-top: 9px;
-    max-width: 26em;
-    font-size: 0.9375rem;
-    line-height: 1.45;
-  }
-  /* reading is selective, never destructive: the regions not being read step back but stay legible */
-  .s5:global(.is-resolved) .s5__region {
-    opacity: 0.6;
-  }
-  .s5[data-active='matters']:global(.is-resolved) [data-s5-region='markers'],
-  .s5[data-active='ask']:global(.is-resolved) [data-s5-region='context'],
-  .s5[data-active='next']:global(.is-resolved) [data-s5-region='followup'] {
-    opacity: 1;
-  }
-
-  /* LAYER 04: the reading lens. A field of attention: champagne wash, hairline amber edge, a little reflected light. */
-  .s5__lens {
-    position: absolute;
-    left: clamp(8px, 1vw, 16px);
-    right: clamp(8px, 1vw, 16px);
-    top: 0;
-    height: 0;
-    border-radius: 3px;
-    background: linear-gradient(105deg, rgba(245, 232, 201, 0.55) 0%, rgba(226, 197, 139, 0.2) 55%, rgba(245, 232, 201, 0.4) 100%);
-    box-shadow:
-      inset 0 0 0 1px rgba(191, 150, 76, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.7),
-      0 6px 16px -10px rgba(191, 150, 76, 0.55);
-    opacity: var(--lens);
-    pointer-events: none;
-  }
-  /* one pass of warm light across the paper as the page is approached */
-  .s5__sweep {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 38%, rgba(255, 250, 235, 0.75) 50%, rgba(255, 255, 255, 0) 62%);
-    transform: translateX(calc((var(--sweep) - 1) * 110%));
-    pointer-events: none;
-  }
-  .s5__cap {
-    position: relative;
-    margin-top: clamp(30px, 3vw, 44px);
-  }
-
-  /* LAYER 06: the interpretation note. Charcoal on paper, square-shouldered, typeset. */
-  .s5__note {
-    grid-column: 6 / span 3;
-    position: relative;
-    z-index: 2;
-    display: grid;
-    align-content: start;
-    min-height: 15.5rem;
-    padding: 22px 22px 24px;
-    border-radius: 3px;
     background: var(--s5-ink);
-    color: var(--s5-paper);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.06) inset,
-      0 14px 24px -14px rgba(41, 45, 41, 0.5),
-      0 40px 60px -36px rgba(41, 45, 41, 0.55);
+    color: var(--s5-white);
   }
-  .s5__note-thought {
-    padding-bottom: 14px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid rgba(253, 251, 245, 0.18);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: rgba(253, 251, 245, 0.78);
-  }
-  .s5__note-thought em {
-    font-family: var(--serif);
-    font-size: 1.15em;
-    color: var(--s5-champagne);
-  }
-  .s5__note-eyebrow {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--s5-champagne);
-  }
-  .s5__note-title {
-    margin-top: 10px;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: clamp(1.5rem, 2vw, 1.875rem);
-    line-height: 1.08;
-  }
-  .s5__note-body {
-    margin-top: 10px;
-    font-size: var(--fs-small);
-    line-height: 1.45;
-    color: rgba(253, 251, 245, 0.86);
-  }
-  /* the third state's quiet conclusion: four words in order, nothing to complete */
-  .s5__path {
-    display: none;
-    flex-wrap: wrap;
-    gap: 4px 6px;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(253, 251, 245, 0.18);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: rgba(253, 251, 245, 0.78);
-  }
-  .s5__path li:not(:last-child)::after {
-    content: '→';
-    margin-left: 6px;
-    color: var(--s5-champagne);
-  }
-  .s5__path li:last-child {
-    color: var(--s5-champagne);
-  }
-  .s5__note[data-for='next'] .s5__path {
-    display: flex;
-  }
-
-  /* LAYER 07: the questions */
-  .s5__qs {
-    grid-column: 9 / span 4;
-    display: grid;
-  }
-  .s5__qs li {
-    position: relative;
-    padding: 18px 0 20px;
-    border-top: 1px solid var(--rule);
-  }
-  .s5__qs li:last-child {
-    border-bottom: 1px solid var(--rule);
-  }
-  .s5__thread {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -1px;
-    height: 2px;
-    background: var(--s5-amber);
-    transform-origin: left;
-    transform: scaleX(0);
-    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .s5[data-active='matters'] [data-s5-q='matters'] .s5__thread,
-  .s5[data-active='ask'] [data-s5-q='ask'] .s5__thread,
-  .s5[data-active='next'] [data-s5-q='next'] .s5__thread {
-    transform: scaleX(1);
-  }
-  .s5__qs h3 {
-    font: inherit;
-  }
-  .s5__qs button {
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 6px;
-    width: 100%;
-    min-height: 44px;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--text);
-    text-align: left;
-    cursor: pointer;
-  }
-  .s5__qn {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
-  }
-  .s5__qt {
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: clamp(1.75rem, 2.6vw, 2.5rem);
-    line-height: 1.06;
-  }
-  /* the indicator: an open ring that fills when its question is the one being read (shape, not colour alone) */
-  .s5__qi {
-    align-self: center;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1.5px solid var(--text);
-    opacity: 0.5;
-    transition:
-      opacity var(--motion-micro) ease,
-      box-shadow var(--motion-control) var(--ease-human),
-      transform var(--motion-control) var(--ease-human);
-  }
-  .s5__qs button[aria-pressed='true'] .s5__qi {
-    opacity: 1;
-    box-shadow: inset 0 0 0 6px var(--s5-ink);
-  }
-  @media (hover: hover) {
-    .s5__qs button:hover .s5__qi {
-      opacity: 1;
-      transform: scale(1.15);
-    }
-  }
-  .s5__qs button:focus-visible,
-  .s5__tabs button:focus-visible {
-    outline: 3px solid var(--ink);
-    outline-offset: 4px;
-    border-radius: 2px;
-  }
-  .s5__qs p {
-    margin: 8px 0 0 calc(2rem + 6px);
-    max-width: 28em;
-    color: var(--text);
-  }
-  .s5__tabs {
-    display: none;
-  }
-
-  /* LAYER 05: decoration only */
-  .s5__wire {
+  .s5__env {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    overflow: visible;
-    z-index: 1;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 200ms ease;
-  }
-  .s5__wire path {
-    fill: none;
-    stroke: var(--s5-amber);
-    stroke-width: 1.25;
-  }
-  .s5__wire circle {
-    fill: var(--s5-amber);
-  }
-  .s5__frag {
-    position: absolute;
-    z-index: 3;
-    left: 0;
-    top: 0;
-    display: flex;
-    align-items: flex-start;
-    padding: 12px 14px;
-    border-radius: 3px;
-    opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-  .s5__frag span {
-    font-size: 0.625rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    white-space: nowrap;
+    object-fit: cover;
+    object-position: 22% 60%;
   }
 
-  .s5__close {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px 40px;
-    margin-top: clamp(56px, 7vw, 104px);
-    padding-top: 28px;
-    border-top: 1px solid var(--rule);
-  }
-  .s5__close-line {
-    max-width: 26em;
-    font-size: clamp(1.25rem, 1.9vw, 1.7rem);
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-  }
-  .s5__close-line em {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 1.1em;
-  }
-
-  /* without JavaScript: nothing waits on a script. The lens (which needs measuring) and dead controls step aside. */
-  .s5:not(:global(.is-live)) .s5__lens,
-  .s5:not(:global(.is-live)) .s5__sweep,
-  .s5:not(:global(.is-live)) .s5__qi,
-  .s5:not(:global(.is-live)) .s5__tabs {
+  /* ---- the film (only when the script has confirmed motion is welcome) ---- */
+  .s5__track {
     display: none;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .s5 *,
-    .s5 *::before {
-      transition-duration: 0.01ms !important;
-    }
-    .s5__sweep {
-      display: none;
-    }
+  .s5:global(.is-film) .s5__track {
+    display: block;
+    height: 400vh;
+    height: 400svh;
+  }
+  .s5:global(.is-film) .s5__still {
+    display: none;
+  }
+  .s5__view {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+    /* the report's resting size: tall, central, with room beneath for one statement */
+    --h: min(67svh, calc(78vw * 1448 / 1086));
+  }
+  .s5__dim,
+  .s5__scrim,
+  .s5__floor {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .s5__dim {
+    background: #070708;
+  }
+  /* reading room for the statement over the bright macro plate: a low gradient, not a box */
+  .s5__scrim {
+    background: linear-gradient(180deg, rgba(8, 8, 9, 0) 38%, rgba(8, 8, 9, 0.72) 74%, rgba(8, 8, 9, 0.92) 100%);
+  }
+  /* the last frames ease into Scene 06's ground */
+  .s5__floor {
+    z-index: 0;
+    background: linear-gradient(180deg, rgba(11, 13, 15, 0) 55%, var(--carbon) 100%);
+  }
+  /* the report's shadow on the studio floor: thrown down and to the right by the upper-left light */
+  .s5__shadow {
+    position: absolute;
+    left: calc(50% + var(--h) * 0.1);
+    top: calc(42.5% + var(--h) * 0.5 + 1.5svh);
+    width: calc(var(--h) * 0.86);
+    height: calc(var(--h) * 0.085);
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.4) 55%, rgba(0, 0, 0, 0) 100%);
+    filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .s5__macro {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 46% 42%;
+    opacity: 0;
+    pointer-events: none;
+    will-change: opacity, transform;
+  }
+  /* camera: scale and travel. document: attitude in space. pieces: their own depth. */
+  .s5__cam {
+    position: absolute;
+    left: 50%;
+    top: 42.5%;
+    width: calc(var(--h) * 1086 / 1448);
+    height: var(--h);
+    margin: calc(var(--h) * -0.5) 0 0 calc(var(--h) * 1086 / 1448 * -0.5);
+    perspective: 1700px;
+    will-change: transform, opacity;
+    pointer-events: none;
+  }
+  .s5__doc {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform: rotateX(2deg) rotateY(-8deg) rotateZ(-2.5deg);
+  }
+  .s5__whole,
+  .s5__pieces {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .s5__pieces {
+    transform-style: preserve-3d;
+    opacity: 0;
+  }
+  .s5__piece {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    transform-style: preserve-3d;
+    --lift: 0;
+  }
+  .s5__piece img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* a strip of paper that has left the sheet catches a little light and throws a thin shadow */
+  .s5__piece--row img {
+    filter: drop-shadow(0 calc(var(--lift) * 10px) calc(var(--lift) * 14px) rgba(0, 0, 0, calc(var(--lift) * 0.5)));
+  }
+  /* ACT IV: the optical plane. Same place, same size as the paper strip (the strip's printed area within its slice). */
+  .s5__glass {
+    position: absolute;
+    left: 6.26%;
+    right: 6.17%;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: 9.5%;
+    opacity: 0;
+    --wipe: 0;
+    background:
+      linear-gradient(100deg, rgba(255, 255, 255, 0) calc(var(--wipe) * 130% - 34%), rgba(255, 244, 222, 0.34) calc(var(--wipe) * 130% - 22%), rgba(255, 255, 255, 0) calc(var(--wipe) * 130% - 10%)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.035));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+      inset 0 1px 0 rgba(217, 195, 154, 0.7),
+      0 14px 26px -14px rgba(0, 0, 0, 0.6);
+  }
+  .s5__glass span {
+    font-size: calc(var(--h) * 0.026);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--s5-white);
+    white-space: nowrap;
+  }
+  /* ACT V: three planes */
+  .s5__plane {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 86%;
+    height: 14.5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: calc(var(--h) * 0.008);
+    padding-inline: 8%;
+    opacity: 0;
+    --words: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+      inset 0 1px 0 rgba(217, 195, 154, 0.8),
+      0 22px 36px -20px rgba(0, 0, 0, 0.7);
+  }
+  .s5__plane > * {
+    opacity: var(--words);
+  }
+  .s5__plane-label {
+    font-size: calc(var(--h) * 0.019);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--s5-champagne);
+  }
+  .s5__plane-q {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: calc(var(--h) * 0.052);
+    line-height: 1;
+    color: var(--s5-white);
   }
 
-  /* ---- tablet and phone: page, a compact chooser, the note, then the three questions ---- */
-  @media (max-width: 1099px) {
-    .s5__head > .eyebrow,
-    .s5__head > h2,
-    .s5__intro {
-      grid-column: 1 / -1;
+  /* ---- the statements ---- */
+  .s5__lines {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(44px, 6svh, 72px);
+    display: grid;
+    justify-items: center;
+    pointer-events: none;
+    z-index: 1; /* the statement stays above the closing gradient */
+  }
+  .s5__line {
+    grid-area: 1 / 1;
+    display: grid;
+    justify-items: center;
+    gap: 0.04em;
+    padding-inline: var(--gutter);
+    text-align: center;
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+  .s5__line-a {
+    font-size: clamp(1.875rem, 4.2vw, 4rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--s5-white);
+  }
+  .s5__line-b {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2rem, 4.4vw, 4.1rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--s5-champagne);
+  }
+  .s5__disclosure {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 18px;
+    font-size: var(--fs-note);
+    color: rgba(244, 239, 230, 0.82);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+  .s5__skip,
+  .s5__go {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 6px;
+    z-index: 2;
+  }
+  .s5__skip {
+    min-height: 44px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: rgba(244, 239, 230, 0.82);
+    font-size: var(--fs-note);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+  }
+  .s5__skip:hover {
+    color: #fff;
+  }
+  .s5__skip:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .s5__go {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 300ms var(--ease-human),
+      visibility 0s linear 300ms;
+  }
+  .s5[data-s5-state='end'] .s5__go {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  /* ---- the still (reduced motion, or no JavaScript) ---- */
+  .s5__still {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding-block: var(--section-y);
+  }
+  .s5__still .s5__env {
+    z-index: -1;
+  }
+  .s5__still-in {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(32px, 6vw, 96px);
+    align-items: center;
+  }
+  .s5__still-report {
+    width: min(100%, 420px);
+    height: auto;
+    justify-self: center;
+    filter: drop-shadow(18px 30px 30px rgba(0, 0, 0, 0.55));
+  }
+  .s5__line--still {
+    position: static;
+    opacity: 1;
+    justify-items: start;
+    padding: 0;
+    text-align: left;
+  }
+  .s5__still-planes {
+    display: grid;
+    gap: 10px;
+    margin: clamp(28px, 3vw, 44px) 0 22px;
+    max-width: 30rem;
+  }
+  .s5__still-planes li {
+    display: grid;
+    gap: 6px;
+    padding: 16px 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+      inset 0 1px 0 rgba(217, 195, 154, 0.8);
+  }
+  .s5__still-planes .s5__plane-label {
+    font-size: 0.6875rem;
+  }
+  .s5__still-planes .s5__plane-q {
+    font-size: 1.625rem;
+  }
+  .s5__disclosure--still {
+    position: static;
+    margin-bottom: 14px;
+  }
+
+  /* ---- phones and portrait tablets: same story, shorter travel, statement kept clear of the object ---- */
+  @media (max-width: 899px), (orientation: portrait) {
+    .s5:global(.is-film) .s5__track {
+      height: 300vh;
+      height: 300svh;
     }
-    .s5__intro {
-      grid-row: auto;
-      margin-top: 26px;
+    .s5__view {
+      --h: min(54svh, calc(76vw * 1448 / 1086));
     }
-    .s5__stage {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 20px;
+    .s5__cam,
+    .s5__shadow {
+      top: 40%;
     }
-    .s5__stage::before {
-      width: 110%;
-      left: -5%;
+    .s5__shadow {
+      top: calc(40% + var(--h) * 0.5 + 2svh);
     }
-    .s5__report {
-      width: 100%;
-      max-width: 460px;
-      margin-inline: auto;
+    .s5__env {
+      object-position: 12% 60%;
     }
-    /* less depth on a small screen: one supporting sheet, smaller offsets */
-    .s5__under--b {
-      display: none;
+    .s5__lines {
+      bottom: clamp(64px, 10svh, 110px);
     }
-    .s5 {
-      --calm: 0.6;
+    .s5__line-a {
+      font-size: clamp(1.75rem, 8.4vw, 3rem);
     }
-    .s5[data-active='next'] {
-      --calm: 0.3;
+    .s5__line-b {
+      font-size: clamp(1.875rem, 9vw, 3.2rem);
     }
-    .s5__cap {
-      margin-top: 22px;
-      text-align: center;
+    .s5__glass span {
+      font-size: calc(var(--h) * 0.03);
     }
-    .s5__tabs {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      width: 100%;
-      max-width: 460px;
-      margin-inline: auto;
-      border: 1px solid var(--rule);
-      border-radius: 3px;
+    /* at the end the link sits above the disclosure instead of beside it */
+    .s5__go {
+      right: auto;
+      left: var(--gutter);
+      bottom: 40px;
     }
-    .s5__tabs button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 48px;
-      padding: 0 8px;
-      border: 0;
-      border-left: 1px solid var(--rule);
-      background: none;
-      color: var(--text);
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
+    .s5__still-in {
+      grid-template-columns: 1fr;
     }
-    .s5__tabs button:first-child {
-      border-left: 0;
-    }
-    .s5__tabs button span {
-      font-size: 0.6875rem;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-    }
-    .s5__tabs button[aria-pressed='true'] {
-      background: var(--s5-ink);
-      color: var(--s5-paper);
-      box-shadow: inset 0 -3px 0 var(--s5-amber);
-    }
-    .s5__tabs button[aria-pressed='true'] span {
-      color: var(--s5-champagne);
-    }
-    .s5__note {
-      width: 100%;
-      max-width: 460px;
-      margin-inline: auto;
-      min-height: 13.5rem;
-    }
-    .s5__qs {
-      margin-top: 12px;
-    }
-    .s5__qt {
-      font-size: min(8vw, 2rem);
+    .s5__still-report {
+      width: min(72%, 320px);
     }
   }
 </style>
