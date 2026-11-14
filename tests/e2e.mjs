@@ -54,27 +54,167 @@ await test('E2E-01', 'Direct load /: exact headline, CTA visible, no missing ass
   await p.context().close();
 });
 
-await test('GATE1-390', 'Hero at 390x844: headline, CTA and status all inside first viewport; nothing overlaps the faces', async () => {
+await test('GATE1-390', 'Hero at 390x844: wordmark, headline, CTA and status all inside first viewport; copy sits below the wordmark', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 } });
   await go(p, '/');
   for (const sel of ['.hero h1', '.hero a.btn', '.hero .status-pill']) {
     const b = await p.locator(sel).boundingBox();
     assert(b && b.y >= 0 && b.y + b.height <= 844, `${sel} outside first viewport`);
   }
-  const img = await p.locator('.hero__media').boundingBox();
+  const img = await p.locator('[data-ih-slot]').boundingBox();
   const h1 = await p.locator('.hero h1').boundingBox();
-  assert(h1.y > img.y + img.height * 0.6, 'headline overlaps the portrait area');
+  assert(img.y >= 60 && img.x >= 0 && img.x + img.width <= 390, 'wordmark outside the viewport or under the header');
+  assert(h1.y >= img.y + img.height, 'headline overlaps the wordmark');
   await p.context().close();
 });
 
-await test('GATE1-1440', 'Hero at 1440x900: headline fully inside the dark left zone (not clipped, clear of faces)', async () => {
+await test('GATE1-1440', 'Hero at 1440x900: headline in the left half below the wordmark, not clipped', async () => {
   const p = await ctx();
   await go(p, '/');
   const b = await p.locator('.hero__l1').boundingBox();
   assert(b.x + b.width < 1440 * 0.5, `headline right edge at ${Math.round(b.x + b.width)}px`);
   const clipped = await p.locator('.hero h1').evaluate((e) => e.scrollWidth > e.clientWidth + 1);
   assert(!clipped, 'headline clipped');
+  const art = await p.locator('[data-ih-slot]').boundingBox();
+  assert(b.y >= art.y + art.height, 'headline overlaps the wordmark');
+  for (const sel of ['.hero h1', '.hero a.btn', '.hero .status-pill', '[data-ih-slot]']) {
+    const r = await p.locator(sel).boundingBox();
+    assert(r.y >= 0 && r.y + r.height <= 900, sel + ' outside first viewport');
+  }
   await p.context().close();
+});
+
+// ── INSIDE HUMAN hero film ──────────────────────────────────────────────────────────────────────────────────────
+const ihAt = async (p, f) => {
+  await p.evaluate((f) => {
+    const t = document.querySelector('[data-ih-track]');
+    const span = t.offsetHeight - document.querySelector('[data-ih-stage]').offsetHeight;
+    scrollTo({ top: span * f, behavior: 'instant' });
+  }, f);
+  await p.waitForTimeout(220);
+};
+const ihState = (p) =>
+  p.evaluate(() => {
+    const sec = document.querySelector('[data-ih]');
+    const vb = sec.querySelector('[data-ih-art]').getAttribute('viewBox').split(/\s+/).map(Number);
+    return {
+      act: sec.dataset.ihAct,
+      vb,
+      open: Number(sec.querySelector('[data-ih-open]').getAttribute('r')),
+      dark: Number(getComputedStyle(sec.querySelector('[data-ih-dark]')).opacity),
+      copy: Number(getComputedStyle(sec.querySelector('.ih__below')).opacity),
+      inert: sec.querySelector('.ih__below').inert,
+      film: sec.classList.contains('is-film'),
+    };
+  });
+
+await test('IH-01', 'INSIDE HUMAN: five letters H-U-M-A-N, each clipped to its own letterform and carrying its assigned photograph; one eye image only', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const d = await p.evaluate(() =>
+    [...document.querySelectorAll('[data-ih-letter]')].map((g) => ({
+      k: g.dataset.ihLetter,
+      clip: g.getAttribute('clip-path'),
+      imgs: [...g.querySelectorAll('image')].map((i) => i.getAttribute('href')),
+      x: g.getBoundingClientRect().x,
+    })),
+  );
+  assert(d.map((l) => l.k).join('') === 'human', 'letters: ' + d.map((l) => l.k).join(''));
+  const want = { h: 'h-run-club', u: 'u-female', m: 'm-eye', a: 'a-couple', n: 'n-mature-man' };
+  for (const l of d) {
+    assert(l.clip === `url(#ih-clip-${l.k})`, l.k + ' clip ' + l.clip);
+    assert(l.imgs.length === 1 && l.imgs[0].includes(want[l.k]), l.k + ' photo ' + l.imgs);
+    assert(await p.locator(`#ih-clip-${l.k} path`).count(), l.k + ' has no letter path');
+  }
+  for (let i = 1; i < d.length; i++) assert(d[i].x > d[i - 1].x, 'letters out of order');
+  assert((await p.locator('.hero image[href*="m-eye"]').count()) === 1, 'more than one eye image');
+  assert((await p.locator('.hero video, .hero canvas').count()) === 0, 'video or canvas in the hero');
+  await p.context().close();
+});
+
+await test('IH-02', 'INSIDE HUMAN: scroll drives statement → entering M → full-screen eye → darkness, and reverses exactly', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const s0 = await ihState(p);
+  assert(s0.film && s0.act === '1' && s0.copy === 1 && !s0.inert && s0.dark === 0 && s0.open === 0, 'start ' + JSON.stringify(s0));
+  await ihAt(p, 0.2);
+  const s2 = await ihState(p);
+  assert(s2.act === '2' && Math.abs(s2.vb[2] - s0.vb[2]) < 0.5, 'wordmark should hold still while the photographs move');
+  await ihAt(p, 0.7);
+  const s4 = await ihState(p);
+  assert(s4.vb[2] < 120, 'eye not full-screen: viewBox width ' + s4.vb[2]);
+  assert(Math.abs(s4.vb[0] + s4.vb[2] / 2 - 270.6) < 1 && Math.abs(s4.vb[1] + s4.vb[3] / 2 - 66.4) < 1, 'camera not centred on the pupil');
+  assert(s4.open > Math.hypot(s4.vb[2], s4.vb[3]) / 2, 'letter still masks the eye: r=' + s4.open);
+  assert(s4.copy === 0 && s4.inert, 'hero copy still present during the eye');
+  assert(s4.dark === 0, 'darkness too early');
+  await ihAt(p, 1);
+  const s6 = await ihState(p);
+  assert(s6.act === '6' && s6.dark === 1, 'end ' + JSON.stringify(s6));
+  await ihAt(p, 0.7);
+  const r4 = await ihState(p);
+  assert(JSON.stringify(r4.vb.map((v) => v.toFixed(2))) === JSON.stringify(s4.vb.map((v) => v.toFixed(2))) && r4.dark === 0, 'reverse to the eye differs');
+  await ihAt(p, 0);
+  const r0 = await ihState(p);
+  assert(JSON.stringify(r0) === JSON.stringify(s0), 'reverse to start differs: ' + JSON.stringify(r0));
+  assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('IH-03', 'INSIDE HUMAN: the film hands over to the next section on dark; Skip intro jumps there and moves focus', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  await ihAt(p, 1);
+  const next = await p.evaluate(() => {
+    const n = document.querySelector('[data-ih] ~ section');
+    return { top: n.getBoundingClientRect().top, bg: getComputedStyle(n).backgroundColor };
+  });
+  assert(Math.abs(next.top - 900) < 4, 'next section not directly below the stage: ' + next.top);
+  await ihAt(p, 0);
+  await p.locator('[data-ih-skip]').click();
+  await p.waitForTimeout(500);
+  const after = await p.evaluate(() => {
+    const n = document.querySelector('[data-ih] ~ section');
+    return { top: n.getBoundingClientRect().top, focus: n.contains(document.activeElement) || document.activeElement === n };
+  });
+  assert(after.top < 120 && after.top > -120, 'skip landed at ' + after.top);
+  assert(after.focus, 'focus did not move past the film');
+  await p.context().close();
+});
+
+await test('IH-04', 'INSIDE HUMAN: reduced motion and no JavaScript both give a single static screen with the full copy', async () => {
+  for (const opt of [{ reducedMotion: 'reduce' }, { javaScriptEnabled: false }]) {
+    const p = await ctx(opt);
+    await go(p, '/');
+    const d = await p.evaluate(() => {
+      const sec = document.querySelector('[data-ih]');
+      return { film: sec.classList.contains('is-film'), h: sec.offsetHeight, vh: innerHeight, skip: getComputedStyle(sec.querySelector('[data-ih-skip]')).display };
+    });
+    assert(!d.film && d.h < d.vh * 1.6, JSON.stringify(opt) + ' ' + JSON.stringify(d));
+    assert(d.skip === 'none', 'skip control shown without a film');
+    for (const sel of ['.hero h1', '.hero a.btn', '.hero .status-pill', '[data-ih-art]']) assert(await p.locator(sel).isVisible(), sel + ' hidden');
+    await p.context().close();
+  }
+});
+
+await test('IH-05', 'INSIDE HUMAN: no horizontal overflow and wordmark fully on screen at eight viewport sizes; header legible on the light hero', async () => {
+  for (const [w, h] of [[1920, 1080], [1600, 900], [1366, 768], [1280, 720], [768, 1024], [390, 844], [375, 667], [360, 640]]) {
+    const p = await ctx({ viewport: { width: w, height: h } });
+    await go(p, '/');
+    const d = await p.evaluate(() => {
+      const r = document.querySelector('[data-ih-slot]').getBoundingClientRect();
+      const b = document.querySelector('.hero a.btn').getBoundingClientRect();
+      const hd = document.querySelector('.site-header').getBoundingClientRect();
+      const logo = document.querySelector('.site-header a');
+      return { over: document.documentElement.scrollWidth - innerWidth, l: r.left, r: r.right, t: r.top, hb: hd.bottom, btn: b.bottom, color: getComputedStyle(logo).color };
+    });
+    assert(d.over <= 0, `${w}x${h} overflow ${d.over}`);
+    assert(d.l >= 0 && d.r <= w + 0.5, `${w}x${h} wordmark off screen`);
+    assert(d.t >= d.hb - 1, `${w}x${h} wordmark under the header`);
+    assert(d.btn <= h, `${w}x${h} CTA below the fold (${Math.round(d.btn)})`);
+    const [r, g, b] = d.color.match(/\d+/g).map(Number);
+    assert(r + g + b < 300, `${w}x${h} header text too light on ivory: ${d.color}`);
+    await p.context().close();
+  }
 });
 
 await test('E2E-03', 'Hero waitlist CTA opens /waitlist on the Welcome chapter', async () => {
@@ -756,13 +896,17 @@ await test('E2E-37', 'JavaScript off: homepage story, headline, nav and CTAs all
   await p.context().close();
 });
 
-await test('E2E-15/44', 'Images blocked: hero headline, CTA and status still readable on a dark background (V3-QA-02)', async () => {
+await test('E2E-15/44', 'Images blocked: hero headline, CTA and status still readable; wordmark still drawn as solid letters (V3-QA-02)', async () => {
   const p = await ctx();
   await p.route('**/*.{webp,png,jpg,jpeg,avif}', (r) => r.abort());
   await go(p, '/');
   assert(await p.locator('h1').isVisible(), 'h1');
   const bg = await p.locator('.hero').evaluate((e) => getComputedStyle(e).backgroundColor);
-  assert(bg === 'rgb(11, 13, 15)', 'hero bg ' + bg);
+  assert(bg === 'rgb(242, 238, 230)', 'hero bg ' + bg);
+  const ink = await p.locator('.hero h1').evaluate((e) => getComputedStyle(e).color);
+  assert(ink.match(/\d+/g).slice(0, 3).reduce((a, v) => a + Number(v), 0) < 200, 'headline not dark on ivory: ' + ink);
+  assert((await p.locator('[data-ih-letter] rect').count()) === 5, 'letters have no solid fallback fill');
+  assert(await p.locator('.hero a.btn').isVisible(), 'CTA');
   await p.context().close();
 });
 

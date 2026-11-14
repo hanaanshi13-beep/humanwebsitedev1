@@ -271,3 +271,39 @@ Directive: `HUMAN — Scene 05 … Final locked cinematic art direction`. The co
 **Not measured**: frame rate, Lighthouse, Safari, Firefox, real devices, screen readers, touch scrolling on hardware, image-load failure beyond the macro plate.
 
 **Evidence**: `docs/reviews/v10-scene05/`.
+
+---
+
+## INSIDE HUMAN — homepage hero film (2026-11-14)
+
+Replaces the previous dark photographic hero. Rollback tag: `v10-before-inside-human`. Nothing else on the site was changed.
+
+**Source assets** (supplied; no images generated, no video): `src/assets/inside-human/` — H run club, U female portrait, M eye macro, A couple (1122×1402 each), N mature man (1611×2000).
+
+**How it is built**: one inline SVG wordmark, five letterforms as clip paths, one photograph per letter. The camera is the SVG `viewBox`, recomputed from scroll progress, so the eye inside the M is the same single image that fills the screen — there is no second copy and no cross-fade. A circle in the M's clip path opens once the camera is inside the letter. The darkness is a radial gradient that starts at the pupil's own size.
+
+**The film** (sticky stage on a 380svh track, 300svh on phones; every value is a function of scroll, so it reverses exactly)
+- 0–10% statement: eyebrow, wordmark, headline, supporting copy, both CTAs, disclosure.
+- 10–40% each photograph makes its own slow move inside its letter; the wordmark holds.
+- 22–34% copy fades and is made inert.
+- 32–64% camera closes on the M and centres on the pupil; the letter opens.
+- 64–76% full-screen eye.
+- 76–97% the pupil's dark spreads to the whole frame; the stage releases onto the next (dark) section.
+
+**Preserved**: exact headline, eyebrow, supporting copy, "Join the waitlist" / "Explore the story", disclosure, fonts, navigation, waitlist, and every other scene.
+
+**Controls and fallbacks**: "Skip intro" jumps past the film and moves focus to the next section. Reduced motion or no JavaScript gives one static screen with the wordmark and the full copy. If images fail, the letters are drawn as solid shapes and the copy stays readable.
+
+**Fixed during review**: on phones the entry zoom cropped to the iris only (now framed by eye width); the darkness had a hard disc edge (now soft, with the surrounding frame dimming too); "Skip intro" scrolled but did not move focus (found by the new test).
+
+**Limitations**
+- The reference files named in the directive (`INSIDE_HUMAN_Mask_Study.html` / `.png`) were not received; letter geometry follows the paths in the written brief.
+- At full screen the eye image is enlarged roughly 2× on a 1440-wide display and more on larger ones; it holds because the plate is a soft macro, but a higher-resolution original would be sharper.
+- On phones the wordmark is limited by screen width (about 90–100px tall), so it is less monumental than on desktop.
+- The N photograph arrived at a different size from the other four; it is cropped to match.
+
+**Measured**: build 0 errors; e2e 58/58 in Chromium (five new hero tests: letter-to-photo mapping and single eye image, act sequence with exact reversal, handover and skip focus, reduced-motion and no-JS static state, eight viewport sizes for overflow, fold and header legibility). No console errors or horizontal overflow at 1920×1080, 1440×900, 1366×768, 768×1024, 390×844, 360×640.
+
+**Not measured**: frame rate, Lighthouse, Safari, Firefox, real devices, screen readers, touch scrolling on hardware.
+
+**Evidence**: `docs/reviews/v11-inside-human/`.
