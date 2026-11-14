@@ -36,7 +36,32 @@ const go = async (page, path) => {
 const ROUTES = ['/', '/women', '/men', '/about', '/faq', '/waitlist', '/privacy', '/terms', '/medical-disclaimer'];
 
 // ---------- homepage ----------
-await test('E2E-01', 'Direct load /: exact headline, CTA visible, no missing assets, no console errors', async () => {
+// On the homepage the navigation is absent during the opening film and returns with the next section.
+const pastHero = async (p) => {
+  await p.evaluate(() => {
+    const n = document.querySelector('[data-ih] ~ section');
+    scrollTo({ top: n.getBoundingClientRect().top + scrollY, behavior: 'instant' });
+  });
+  await p.waitForTimeout(450);
+};
+const heroOnly = (p) =>
+  p.evaluate(() => {
+    const stage = document.querySelector('[data-ih-stage]');
+    const vis = (e) => {
+      const c = getComputedStyle(e);
+      const r = e.getBoundingClientRect();
+      return c.visibility !== 'hidden' && c.display !== 'none' && Number(c.opacity) > 0.01 && r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0;
+    };
+    const hd = document.querySelector('[data-header]');
+    return {
+      header: vis(hd),
+      interactive: [...stage.querySelectorAll('a, button')].filter(vis).map((e) => e.getAttribute('aria-label') || e.textContent.trim()),
+      text: stage.innerText.replace(/\s+/g, ' ').trim(),
+      headerFocusable: [...hd.querySelectorAll('a, button')].some((e) => !e.closest('[inert]')),
+    };
+  });
+
+await test('E2E-01', 'Direct load /: exact headline; opening shows only eyebrow, wordmark, headline and arrow; no missing assets, no console errors', async () => {
   const p = await ctx();
   const failed = [];
   p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
@@ -47,40 +72,52 @@ await test('E2E-01', 'Direct load /: exact headline, CTA visible, no missing ass
   assert(l1 === 'uppercase|How well do you', 'line 1 styling');
   const l2 = await p.locator('.hero__l2').evaluate((e) => getComputedStyle(e).fontStyle + '|' + e.textContent);
   assert(l2 === 'italic|know your health?', 'line 2 styling');
-  assert(await p.locator('.hero a.btn[href="/waitlist"]').isVisible(), 'hero CTA not visible');
-  assert(await p.locator('.hero .status-pill').isVisible(), 'status label not visible');
+  const o = await heroOnly(p);
+  assert(!o.header && !o.headerFocusable, 'navigation visible or focusable on the opening screen');
+  assert(o.interactive.length === 1 && o.interactive[0] === 'Continue to the next section', 'opening controls: ' + JSON.stringify(o.interactive));
+  assert(/^THE INVISIBLE SIDE OF YOUR HEALTH HOW WELL DO YOU know your health\?$/i.test(o.text), 'opening text: ' + o.text);
+  assert((await p.locator('h1').count()) === 1, 'h1 count');
   assert(failed.length === 0, 'failed requests: ' + failed.join(', '));
   assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
   await p.context().close();
 });
 
-await test('GATE1-390', 'Hero at 390x844: wordmark, headline, CTA and status all inside first viewport; copy sits below the wordmark', async () => {
+await test('GATE1-390', 'Hero at 390x844: eyebrow, wordmark, headline and arrow in that order on one centre line, all inside the first viewport', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 } });
   await go(p, '/');
-  for (const sel of ['.hero h1', '.hero a.btn', '.hero .status-pill']) {
-    const b = await p.locator(sel).boundingBox();
-    assert(b && b.y >= 0 && b.y + b.height <= 844, `${sel} outside first viewport`);
-  }
-  const img = await p.locator('[data-ih-slot]').boundingBox();
-  const h1 = await p.locator('.hero h1').boundingBox();
-  assert(img.y >= 60 && img.x >= 0 && img.x + img.width <= 390, 'wordmark outside the viewport or under the header');
-  assert(h1.y >= img.y + img.height, 'headline overlaps the wordmark');
+  const r = [];
+  for (const sel of ['.ih__eyebrow', '[data-ih-slot]', '.hero h1', '[data-ih-go]']) r.push(await p.locator(sel).boundingBox());
+  r.forEach((b, i) => {
+    assert(b && b.y >= 0 && b.y + b.height <= 844 && b.x >= 0 && b.x + b.width <= 390, `element ${i} outside first viewport`);
+    assert(Math.abs(b.x + b.width / 2 - 195) <= 2, `element ${i} off the centre line by ${b.x + b.width / 2 - 195}`);
+    if (i) assert(b.y >= r[i - 1].y + r[i - 1].height, `element ${i} overlaps the one above`);
+  });
+  assert(r[3].width >= 44 && r[3].height >= 44, 'arrow touch target too small');
   await p.context().close();
 });
 
-await test('GATE1-1440', 'Hero at 1440x900: headline in the left half below the wordmark, not clipped', async () => {
+await test('GATE1-1440', 'Hero at 1440x900: one centred composition; wordmark dominant; headline lines centred, unclipped; arrow near the foot', async () => {
   const p = await ctx();
   await go(p, '/');
-  const b = await p.locator('.hero__l1').boundingBox();
-  assert(b.x + b.width < 1440 * 0.5, `headline right edge at ${Math.round(b.x + b.width)}px`);
+  const box = (sel) => p.locator(sel).boundingBox();
+  const [eb, art, l1, l2, go_] = [await box('.ih__eyebrow'), await box('[data-ih-slot]'), await box('.hero__l1'), await box('.hero__l2'), await box('[data-ih-go]')];
+  for (const [n, b] of Object.entries({ eyebrow: eb, wordmark: art, line1: l1, line2: l2, arrow: go_ })) {
+    assert(Math.abs(b.x + b.width / 2 - 720) <= 2, `${n} off centre by ${Math.round(b.x + b.width / 2 - 720)}px`);
+    assert(b.y >= 0 && b.y + b.height <= 900, `${n} outside first viewport`);
+  }
+  assert(art.width >= 1440 * 0.84 && art.width <= 1440 * 0.92, 'wordmark width ' + Math.round(art.width));
+  assert(eb.y + eb.height <= art.y && art.y + art.height <= l1.y && l1.y + l1.height <= l2.y + 8 && l2.y + l2.height <= go_.y, 'order or overlap');
+  assert(art.y - (eb.y + eb.height) >= 20 && art.y - (eb.y + eb.height) <= 46, 'eyebrow gap ' + (art.y - eb.y - eb.height));
+  assert(go_.y + go_.height / 2 > 900 * 0.86, 'arrow not near the foot');
+  assert(go_.width >= 48 && go_.width <= 58, 'arrow diameter ' + go_.width);
   const clipped = await p.locator('.hero h1').evaluate((e) => e.scrollWidth > e.clientWidth + 1);
   assert(!clipped, 'headline clipped');
-  const art = await p.locator('[data-ih-slot]').boundingBox();
-  assert(b.y >= art.y + art.height, 'headline overlaps the wordmark');
-  for (const sel of ['.hero h1', '.hero a.btn', '.hero .status-pill', '[data-ih-slot]']) {
-    const r = await p.locator(sel).boundingBox();
-    assert(r.y >= 0 && r.y + r.height <= 900, sel + ' outside first viewport');
-  }
+  const st = await p.evaluate(() => {
+    const a = getComputedStyle(document.querySelector('.hero__l1'));
+    const b = getComputedStyle(document.querySelector('.hero__l2'));
+    return { w: a.fontWeight, fa: a.fontFamily, fb: b.fontFamily, sb: b.fontStyle, ra: parseFloat(b.fontSize) / parseFloat(a.fontSize) };
+  });
+  assert(Number(st.w) >= 750 && /Hanken/.test(st.fa) && /Instrument Serif/.test(st.fb) && st.sb === 'italic' && st.ra > 1.1, JSON.stringify(st));
   await p.context().close();
 });
 
@@ -102,8 +139,12 @@ const ihState = (p) =>
       vb,
       open: Number(sec.querySelector('[data-ih-open]').getAttribute('r')),
       dark: Number(getComputedStyle(sec.querySelector('[data-ih-dark]')).opacity),
-      copy: Number(getComputedStyle(sec.querySelector('.ih__below')).opacity),
-      inert: sec.querySelector('.ih__below').inert,
+      copy: Number(getComputedStyle(sec.querySelector('.hero__title')).opacity),
+      inert: sec.querySelector('.hero__title').inert,
+      arrow: Number(getComputedStyle(sec.querySelector('[data-ih-next]')).opacity),
+      arrowInert: sec.querySelector('[data-ih-next]').inert,
+      pulse: getComputedStyle(sec.querySelector('.ih__halo')).animationName,
+      nav: document.querySelector('[data-header]').dataset.ihNav,
       film: sec.classList.contains('is-film'),
     };
   });
@@ -137,6 +178,7 @@ await test('IH-02', 'INSIDE HUMAN: scroll drives statement → entering M → fu
   await go(p, '/');
   const s0 = await ihState(p);
   assert(s0.film && s0.act === '1' && s0.copy === 1 && !s0.inert && s0.dark === 0 && s0.open === 0, 'start ' + JSON.stringify(s0));
+  assert(s0.arrow === 1 && !s0.arrowInert && s0.pulse !== 'none' && s0.nav === 'hidden', 'arrow/nav at start ' + JSON.stringify(s0));
   await ihAt(p, 0.2);
   const s2 = await ihState(p);
   assert(s2.act === '2' && Math.abs(s2.vb[2] - s0.vb[2]) < 0.5, 'wordmark should hold still while the photographs move');
@@ -147,6 +189,8 @@ await test('IH-02', 'INSIDE HUMAN: scroll drives statement → entering M → fu
   assert(s4.open > Math.hypot(s4.vb[2], s4.vb[3]) / 2, 'letter still masks the eye: r=' + s4.open);
   assert(s4.copy === 0 && s4.inert, 'hero copy still present during the eye');
   assert(s4.dark === 0, 'darkness too early');
+  assert(s4.arrow === 0 && s4.arrowInert && s4.pulse === 'none', 'arrow still present over the eye');
+  assert(s4.nav === 'hidden', 'navigation over the film');
   await ihAt(p, 1);
   const s6 = await ihState(p);
   assert(s6.act === '6' && s6.dark === 1, 'end ' + JSON.stringify(s6));
@@ -160,76 +204,175 @@ await test('IH-02', 'INSIDE HUMAN: scroll drives statement → entering M → fu
   await p.context().close();
 });
 
-await test('IH-03', 'INSIDE HUMAN: the film hands over to the next section on dark; Skip intro jumps there and moves focus', async () => {
+await test('IH-03', 'INSIDE HUMAN arrow: targets the real next section, plays the film on the way, lands with the hero released, focus moved, navigation back; interruptible; repeat clicks safe', async () => {
   const p = await ctx();
   await go(p, '/');
-  await ihAt(p, 1);
-  const next = await p.evaluate(() => {
+  const info = await p.evaluate(() => {
+    const a = document.querySelector('[data-ih-go]');
     const n = document.querySelector('[data-ih] ~ section');
-    return { top: n.getBoundingClientRect().top, bg: getComputedStyle(n).backgroundColor };
+    return { href: a.getAttribute('href'), tag: a.tagName, name: a.getAttribute('aria-label'), next: n.id, first: document.querySelector('main section + section, main > section:nth-of-type(2)')?.id };
   });
-  assert(Math.abs(next.top - 900) < 4, 'next section not directly below the stage: ' + next.top);
-  await ihAt(p, 0);
-  await p.locator('[data-ih-skip]').click();
-  await p.waitForTimeout(500);
-  const after = await p.evaluate(() => {
-    const n = document.querySelector('[data-ih] ~ section');
-    return { top: n.getBoundingClientRect().top, focus: n.contains(document.activeElement) || document.activeElement === n };
+  assert(info.tag === 'A' && info.href === '#' + info.next && info.next === 'what-is-human', JSON.stringify(info));
+  assert(info.name === 'Continue to the next section', 'accessible name: ' + info.name);
+  // keyboard: the arrow is the first focusable thing after the skip link
+  await p.keyboard.press('Tab');
+  await p.keyboard.press('Tab');
+  assert(await p.evaluate(() => document.activeElement.matches('[data-ih-go]')), 'arrow not reachable by keyboard right after the skip link');
+  await p.keyboard.press('Enter');
+  await p.locator('[data-ih-go]').click({ force: true }).catch(() => {}); // a second activation mid-travel
+  await p.waitForTimeout(1500);
+  const mid = await p.evaluate(() => ({ y: scrollY, act: document.querySelector('[data-ih]').dataset.ihAct }));
+  assert(mid.y > 300 && Number(mid.act) >= 3, 'film not playing during travel: ' + JSON.stringify(mid));
+  await p.waitForTimeout(2600);
+  const end = await p.evaluate(() => {
+    const n = document.querySelector('#what-is-human');
+    const hd = document.querySelector('[data-header]');
+    const first = n.querySelector('.eyebrow, h2').getBoundingClientRect();
+    return { top: n.getBoundingClientRect().top, focus: document.activeElement === n, nav: hd.dataset.ihNav, inert: hd.inert, op: getComputedStyle(hd).opacity, hb: hd.querySelector('.site-header__shell').getBoundingClientRect().bottom, first: first.top, dark: getComputedStyle(document.querySelector('[data-ih-dark]')).opacity };
   });
-  assert(after.top < 120 && after.top > -120, 'skip landed at ' + after.top);
-  assert(after.focus, 'focus did not move past the film');
+  assert(end.top >= 0 && end.top < 80, 'landed at ' + end.top);
+  assert(end.dark === '1', 'landed before the film had finished');
+  assert(end.focus, 'focus did not move to the next section');
+  assert(end.nav === 'shown' && !end.inert && Number(end.op) > 0.95, 'navigation did not return: ' + JSON.stringify(end));
+  assert(end.first >= end.hb, 'first line of the next section sits under the header');
+  const y1 = await p.evaluate(() => scrollY);
+  await p.waitForTimeout(400);
+  assert((await p.evaluate(() => scrollY)) === y1, 'page still moving after arrival');
+  await p.locator('.site-header .nav a[href="/faq"]').click();
+  await p.waitForURL('**/faq');
+  // interruption
+  await go(p, '/');
+  await p.locator('[data-ih-go]').click();
+  await p.waitForTimeout(600);
+  await p.mouse.wheel(0, 5);
+  await p.waitForTimeout(300);
+  const a = await p.evaluate(() => scrollY);
+  await p.waitForTimeout(700);
+  const b = await p.evaluate(() => scrollY);
+  assert(a === b && a < 2000, `wheel did not take over: ${a} → ${b}`);
   await p.context().close();
 });
 
-await test('IH-04', 'INSIDE HUMAN: reduced motion and no JavaScript both give a single static screen with the full copy', async () => {
+await test('IH-06', 'Homepage navigation: hidden and inert through the whole film, returns with the next section, hides again on the way back, no flicker at the boundary', async () => {
+  for (const vp of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    const p = await ctx({ viewport: vp });
+    await go(p, '/');
+    const nav = () => p.evaluate(() => { const h = document.querySelector('[data-header]'); const c = getComputedStyle(h); return { s: h.dataset.ihNav, inert: h.inert, vis: c.visibility, pe: c.pointerEvents }; });
+    for (const f of [0, 0.02, 0.3, 0.6, 0.9, 1]) {
+      await ihAt(p, f);
+      await p.waitForTimeout(300);
+      const n = await nav();
+      assert(n.s === 'hidden' && n.inert && n.vis === 'hidden' && n.pe === 'none', `${vp.width} nav at ${f}: ${JSON.stringify(n)}`);
+    }
+    await pastHero(p);
+    let n = await nav();
+    assert(n.s === 'shown' && !n.inert && n.vis === 'visible', `${vp.width} nav after hero: ${JSON.stringify(n)}`);
+    // small movements around the boundary must not toggle it
+    const flips = await p.evaluate(async () => {
+      const h = document.querySelector('[data-header]');
+      const n = document.querySelector('[data-ih] ~ section');
+      const base = n.getBoundingClientRect().top + scrollY - innerHeight * 0.62;
+      let last = null, count = 0;
+      for (let i = 0; i < 24; i++) {
+        scrollTo({ top: base + (i % 2 ? 30 : -30), behavior: 'instant' });
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        if (last !== null && h.dataset.ihNav !== last) count++;
+        last = h.dataset.ihNav;
+      }
+      return count;
+    });
+    assert(flips <= 1, `${vp.width} navigation flickered ${flips} times at the boundary`);
+    await ihAt(p, 0.5);
+    await p.waitForTimeout(300);
+    n = await nav();
+    assert(n.s === 'hidden' && n.inert, `${vp.width} nav did not hide on the way back`);
+    await ihAt(p, 0);
+    const o = await heroOnly(p);
+    assert(!o.header && o.interactive.length === 1, `${vp.width} opening not restored: ${JSON.stringify(o)}`);
+    await p.context().close();
+  }
+  // other pages keep their header from the first pixel
+  const q = await ctx();
+  await go(q, '/faq');
+  assert(await q.locator('.site-header .wordmark').isVisible(), 'header missing on /faq');
+  assert(!(await q.evaluate(() => document.querySelector('[data-header]').inert)), 'header inert on /faq');
+  await q.context().close();
+});
+
+await test('IH-04', 'INSIDE HUMAN: reduced motion and no JavaScript both give one static centred screen; arrow is static and still navigates', async () => {
   for (const opt of [{ reducedMotion: 'reduce' }, { javaScriptEnabled: false }]) {
     const p = await ctx(opt);
     await go(p, '/');
     const d = await p.evaluate(() => {
       const sec = document.querySelector('[data-ih]');
-      return { film: sec.classList.contains('is-film'), h: sec.offsetHeight, vh: innerHeight, skip: getComputedStyle(sec.querySelector('[data-ih-skip]')).display };
+      return {
+        film: sec.classList.contains('is-film'), h: sec.offsetHeight, vh: innerHeight,
+        anim: [sec.querySelector('.ih__arrow'), sec.querySelector('.ih__arrow svg'), sec.querySelector('.ih__halo')].map((e) => getComputedStyle(e).animationName).join(),
+      };
     });
-    assert(!d.film && d.h < d.vh * 1.6, JSON.stringify(opt) + ' ' + JSON.stringify(d));
-    assert(d.skip === 'none', 'skip control shown without a film');
-    for (const sel of ['.hero h1', '.hero a.btn', '.hero .status-pill', '[data-ih-art]']) assert(await p.locator(sel).isVisible(), sel + ' hidden');
+    assert(!d.film && d.h < d.vh * 1.3, JSON.stringify(opt) + ' ' + JSON.stringify(d));
+    if (opt.reducedMotion) assert(d.anim === 'none,none,none', 'arrow still animating with reduced motion: ' + d.anim);
+    for (const sel of ['.ih__eyebrow', '.hero h1', '[data-ih-art]', '[data-ih-go]']) {
+      assert(await p.locator(sel).isVisible(), sel + ' hidden');
+      const b = await p.locator(sel).boundingBox();
+      assert(Math.abs(b.x + b.width / 2 - 720) <= 2 && b.y + b.height <= 900, sel + ' not centred in the first screen');
+    }
+    await p.locator('[data-ih-go]').click();
+    await p.waitForTimeout(500);
+    const top = await p.evaluate(() => document.querySelector('#what-is-human').getBoundingClientRect().top);
+    assert(top > -5 && top < 140, JSON.stringify(opt) + ' arrow landed at ' + top);
+    if (!opt.reducedMotion) assert(await p.locator('.site-header .wordmark').isVisible(), 'no-JS: header must stay available');
     await p.context().close();
   }
 });
 
-await test('IH-05', 'INSIDE HUMAN: no horizontal overflow and wordmark fully on screen at eight viewport sizes; header legible on the light hero', async () => {
-  for (const [w, h] of [[1920, 1080], [1600, 900], [1366, 768], [1280, 720], [768, 1024], [390, 844], [375, 667], [360, 640]]) {
+await test('IH-05', 'INSIDE HUMAN opening at eleven viewport sizes: no overflow, four elements centred and inside the first screen, no navigation', async () => {
+  for (const [w, h] of [[1920, 1080], [1600, 900], [1440, 900], [1366, 768], [1280, 720], [1024, 768], [768, 1024], [430, 932], [390, 844], [375, 667], [360, 640]]) {
     const p = await ctx({ viewport: { width: w, height: h } });
     await go(p, '/');
     const d = await p.evaluate(() => {
-      const r = document.querySelector('[data-ih-slot]').getBoundingClientRect();
-      const b = document.querySelector('.hero a.btn').getBoundingClientRect();
-      const hd = document.querySelector('.site-header').getBoundingClientRect();
-      const logo = document.querySelector('.site-header a');
-      return { over: document.documentElement.scrollWidth - innerWidth, l: r.left, r: r.right, t: r.top, hb: hd.bottom, btn: b.bottom, color: getComputedStyle(logo).color };
+      const r = (s) => document.querySelector(s).getBoundingClientRect();
+      const l1 = document.querySelector('.hero__l1');
+      return {
+        over: document.documentElement.scrollWidth - innerWidth,
+        els: ['.ih__eyebrow', '[data-ih-slot]', '.hero__l1', '.hero__l2', '[data-ih-go]'].map((s) => { const b = r(s); return { s, l: b.left, r: b.right, t: b.top, b: b.bottom }; }),
+        l1Lines: Math.round(l1.getBoundingClientRect().height / parseFloat(getComputedStyle(l1).fontSize)),
+        eb: parseFloat(getComputedStyle(document.querySelector('.ih__eyebrow')).fontSize),
+      };
     });
     assert(d.over <= 0, `${w}x${h} overflow ${d.over}`);
-    assert(d.l >= 0 && d.r <= w + 0.5, `${w}x${h} wordmark off screen`);
-    assert(d.t >= d.hb - 1, `${w}x${h} wordmark under the header`);
-    assert(d.btn <= h, `${w}x${h} CTA below the fold (${Math.round(d.btn)})`);
-    const [r, g, b] = d.color.match(/\d+/g).map(Number);
-    assert(r + g + b < 300, `${w}x${h} header text too light on ivory: ${d.color}`);
+    d.els.forEach((e, i) => {
+      assert(e.l >= 0 && e.r <= w + 0.5 && e.t >= 0 && e.b <= h, `${w}x${h} ${e.s} outside the first screen`);
+      assert(Math.abs((e.l + e.r) / 2 - w / 2) <= 2, `${w}x${h} ${e.s} off centre`);
+      if (i && e.s !== '.hero__l2') assert(e.t >= d.els[i - 1].b - 1, `${w}x${h} ${e.s} overlaps the element above`);
+    });
+    assert(d.l1Lines === 1, `${w}x${h} first headline line wraps`);
+    assert(d.eb >= 10.5, `${w}x${h} eyebrow ${d.eb}px`);
+    const wm = d.els[1].r - d.els[1].l;
+    assert(wm >= w * (w < 900 ? 0.9 : 0.8), `${w}x${h} wordmark only ${Math.round((wm / w) * 100)}% wide`);
+    const o = await heroOnly(p);
+    assert(!o.header && o.interactive.length === 1, `${w}x${h} opening not minimal: ${JSON.stringify(o)}`);
     await p.context().close();
   }
 });
 
-await test('E2E-03', 'Hero waitlist CTA opens /waitlist on the Welcome chapter', async () => {
+await test('E2E-03', 'Header waitlist CTA (back after the opening film) opens /waitlist on the Welcome chapter', async () => {
   const p = await ctx();
   await go(p, '/');
-  await p.locator('.hero a.btn').click();
+  await pastHero(p);
+  await p.locator('.site-header .nav a.btn[href="/waitlist"]').click();
   await p.waitForURL('**/waitlist');
   assert(await p.locator('#wl-h-welcome').isVisible(), 'welcome not shown');
   await p.context().close();
 });
 
-await test('E2E-04', 'Story cue scrolls to Scene 01; skip link reaches Scene 06 (V3-QA-09 deep anchors)', async () => {
+await test('E2E-04', 'Arrow reaches the next section; deep links reach Scene 01 and Scene 06 (V3-QA-09 deep anchors)', async () => {
   const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/');
-  await p.locator('.hero a[href="#scene-01"]').click();
+  await p.locator('[data-ih-go]').click();
+  await p.waitForTimeout(300);
+  assert((await p.locator('#what-is-human').boundingBox()).y < 200, 'next section not reached');
+  await go(p, '/#scene-01');
   await p.waitForTimeout(300);
   assert((await p.locator('#scene-01').boundingBox()).y < 200, 'scene 01 not reached');
   await go(p, '/#scene-06');
@@ -758,6 +901,8 @@ await test('PARITY', '/women and /men have the same section count, headings coun
 await test('E2E-12', 'Mobile menu: opens as modal, focus trapped, ESC closes, focus returns, page does not scroll', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 } });
   await go(p, '/');
+  assert(!(await p.locator('[data-menu-open]').isVisible()), 'menu button visible on the opening screen');
+  await pastHero(p);
   await p.locator('[data-menu-open]').click();
   assert(await p.locator('dialog.mobile-menu[open]').isVisible(), 'menu not open');
   assert(await p.evaluate(() => document.querySelector('dialog').matches(':modal')), 'not modal');
@@ -890,13 +1035,14 @@ await test('E2E-37', 'JavaScript off: homepage story, headline, nav and CTAs all
   assert(await p.locator('h1').isVisible(), 'h1');
   for (const id of ['s1-title', 's3-title', 's6-title', 's8-title', 'join-title']) assert(await p.locator('#' + id).isVisible(), id + ' hidden');
   assert((await p.locator('.s6__detail:visible').count()) === 6, 'stage copy hidden');
-  assert(await p.locator('.hero a.btn').isVisible(), 'CTA');
+  assert(await p.locator('[data-ih-go]').isVisible(), 'arrow');
+  assert(await p.locator('.site-header a.btn[href="/waitlist"]').first().isVisible(), 'waitlist CTA in the header');
   await go(p, '/waitlist');
   assert(/needs JavaScript/.test(await p.locator('main').innerText()), 'no-JS waitlist notice');
   await p.context().close();
 });
 
-await test('E2E-15/44', 'Images blocked: hero headline, CTA and status still readable; wordmark still drawn as solid letters (V3-QA-02)', async () => {
+await test('E2E-15/44', 'Images blocked: hero headline and arrow still readable; wordmark still drawn as solid letters (V3-QA-02)', async () => {
   const p = await ctx();
   await p.route('**/*.{webp,png,jpg,jpeg,avif}', (r) => r.abort());
   await go(p, '/');
@@ -906,7 +1052,7 @@ await test('E2E-15/44', 'Images blocked: hero headline, CTA and status still rea
   const ink = await p.locator('.hero h1').evaluate((e) => getComputedStyle(e).color);
   assert(ink.match(/\d+/g).slice(0, 3).reduce((a, v) => a + Number(v), 0) < 200, 'headline not dark on ivory: ' + ink);
   assert((await p.locator('[data-ih-letter] rect').count()) === 5, 'letters have no solid fallback fill');
-  assert(await p.locator('.hero a.btn').isVisible(), 'CTA');
+  assert(await p.locator('[data-ih-go]').isVisible(), 'arrow');
   await p.context().close();
 });
 
