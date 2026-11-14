@@ -456,8 +456,15 @@ const letters = [
     width: var(--ih-arrow);
     height: var(--ih-arrow);
     border-radius: 50%;
-    border: 1.2px solid rgba(138, 95, 10, 0.5);
-    color: var(--ih-ink);
+    border: 1.2px solid var(--glass-tint-border);
+    background: var(--glass-sheen), linear-gradient(var(--glass-tint), var(--glass-tint)), var(--glass-bg);
+    background-clip: padding-box;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--glass-shadow);
+    -webkit-backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+    backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+    color: var(--glass-text);
     pointer-events: auto;
     -webkit-tap-highlight-color: transparent;
     transition:
@@ -516,8 +523,9 @@ const letters = [
   }
   @media (hover: hover) {
     .ih__arrow:hover {
-      border-color: rgba(138, 95, 10, 0.95);
-      background-color: rgba(217, 166, 72, 0.14);
+      border-color: rgba(138, 95, 10, 0.9);
+      background: var(--glass-sheen), linear-gradient(var(--glass-tint-hover), var(--glass-tint-hover)), var(--glass-bg-hover);
+      background-clip: padding-box;
     }
     .ih__arrow:hover svg {
       animation: none;
@@ -526,10 +534,9 @@ const letters = [
   }
   .ih__arrow:active {
     transform: scale(0.95);
-    background-color: rgba(217, 166, 72, 0.22);
   }
   .ih__arrow:focus-visible {
-    outline: 2px solid var(--ih-ink);
+    outline: 2px solid var(--glass-focus);
     outline-offset: 5px;
   }
   /* no pulse once the film has begun, while the opening is off screen, or when motion is not wanted */
@@ -618,18 +625,7 @@ const letters = [
       transform: none !important;
     }
   }
-  /* without scripting the header is on show over the ivory opening: dark type, and room left for it */
-  :global(html:not(.js) body:has(.ih) .site-header:not(.is-solid)) {
-    color: #252923;
-  }
-  :global(html:not(.js) body:has(.ih) .site-header:not(.is-solid) .nav a:not(.btn)) {
-    color: rgba(37, 41, 35, 0.78);
-  }
-  :global(html:not(.js) body:has(.ih) .site-header:not(.is-solid) .menu-btn) {
-    color: #252923;
-    border-color: rgba(37, 41, 35, 0.3);
-    background: rgba(37, 41, 35, 0.04);
-  }
+  /* without scripting the header stays on show, so the opening leaves room for it */
   :global(html:not(.js)) .ih__stage {
     padding-top: calc(var(--header-h) + 12px);
   }

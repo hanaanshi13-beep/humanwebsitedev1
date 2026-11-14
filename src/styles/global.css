@@ -68,6 +68,28 @@
   --glass-inner-line: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --glass-blur: 14px;
   --glass-saturation: 120%;
+
+  /* CLEAR GLASS: one material for the navigation bar and every button.
+     The values below are the material on a dark ground; .on-light / [data-tone='light'] restate it for a light one.
+     Fill is deliberately low: the glass is drawn by its edge, its top light and a soft shadow, not by fog. */
+  --glass-clear-blur: 18px;
+  --glass-clear-saturate: 150%;
+  --glass-radius: var(--radius-pill);
+  --glass-text: #f3efe6;
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-bg-hover: rgba(255, 255, 255, 0.13);
+  --glass-bg-active: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.24);
+  --glass-border-hover: rgba(255, 255, 255, 0.46);
+  --glass-highlight: rgba(255, 255, 255, 0.3); /* the light caught along the top edge */
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 58%);
+  --glass-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --glass-shadow-hover: 0 14px 32px -14px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.22);
+  /* the primary action is the same glass with a breath of the brand's amber in it and a warmer edge */
+  --glass-tint: rgba(232, 180, 90, 0.16);
+  --glass-tint-hover: rgba(232, 180, 90, 0.24);
+  --glass-tint-border: rgba(236, 196, 124, 0.62);
+  --glass-focus: #ffd06b;
   --radius-control: 14px;
   --radius-panel: 20px;
   --motion-micro: 160ms;
@@ -206,6 +228,46 @@ button {
 .on-ivory {
   background: var(--ivory);
 }
+/* clear glass on a dark ground (restated so a dark block inside a light one is right) */
+.on-dark,
+.mobile-menu,
+[data-tone='dark'] {
+  --glass-text: #f3efe6;
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-bg-hover: rgba(255, 255, 255, 0.13);
+  --glass-bg-active: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.24);
+  --glass-border-hover: rgba(255, 255, 255, 0.46);
+  --glass-highlight: rgba(255, 255, 255, 0.3);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 58%);
+  --glass-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --glass-shadow-hover: 0 14px 32px -14px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.22);
+  --glass-tint: rgba(232, 180, 90, 0.16);
+  --glass-tint-hover: rgba(232, 180, 90, 0.24);
+  --glass-tint-border: rgba(236, 196, 124, 0.62);
+  --glass-focus: #ffd06b;
+}
+/* clear glass on ivory and paper: a whisper of white, a bright rim inside a fine dark hairline, warm soft shadow */
+.on-light,
+.ih,
+.wl[data-chapter='you'] .wl__bar,
+.wl[data-chapter='consent'] .wl__bar,
+[data-tone='light'] {
+  --glass-text: #1f231e;
+  --glass-bg: rgba(255, 255, 255, 0.34);
+  --glass-bg-hover: rgba(255, 255, 255, 0.58);
+  --glass-bg-active: rgba(255, 255, 255, 0.24);
+  --glass-border: rgba(46, 40, 28, 0.2);
+  --glass-border-hover: rgba(46, 40, 28, 0.42);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 60%);
+  --glass-shadow: 0 10px 26px -14px rgba(60, 46, 20, 0.32), 0 1px 2px rgba(60, 46, 20, 0.08);
+  --glass-shadow-hover: 0 14px 30px -14px rgba(60, 46, 20, 0.4), 0 1px 3px rgba(60, 46, 20, 0.1);
+  --glass-tint: rgba(217, 166, 72, 0.16);
+  --glass-tint-hover: rgba(217, 166, 72, 0.26);
+  --glass-tint-border: rgba(138, 95, 10, 0.5);
+  --glass-focus: #1f231e;
+}
 
 /* ---------- type ---------- */
 .eyebrow {
@@ -299,14 +361,15 @@ button {
 }
 
 /* ---------- buttons & links ----------
-   One quiet button system. Primary: a flat, muted-amber fill with ink text. Secondary (.btn--ghost): a hairline
-   outline in the text colour. No gradients, gloss or glow; state is shown by fill, border and a 3px arrow nudge. */
+   One button system, cut from the same clear glass as the navigation bar. A button is a low, clear fill, a fine
+   edge, a line of light along its top and a soft shadow; it takes its text colour from the ground it sits on.
+   Primary (.btn): the glass carries a breath of amber and a warmer edge. Secondary (.btn--ghost): the plain glass,
+   quieter. State is shown by the glass clearing and its edge sharpening, plus a 3px arrow nudge. */
 .btn {
-  --btn-bg: var(--amber-ui);
-  --btn-bg-hover: var(--amber-ui-hover);
-  --btn-bg-active: var(--amber-ui-active);
-  --btn-fg: #17130a;
-  --btn-border: transparent;
+  --btn-tint: var(--glass-tint);
+  --btn-fill: var(--glass-bg);
+  --btn-edge: var(--glass-tint-border);
+  --btn-shadow: var(--glass-shadow);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -314,10 +377,19 @@ button {
   gap: 12px;
   min-height: 52px;
   padding: 8px 28px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--btn-border);
-  background: var(--btn-bg);
-  color: var(--btn-fg);
+  border-radius: var(--glass-radius);
+  border: 1px solid var(--btn-edge);
+  background:
+    var(--glass-sheen),
+    linear-gradient(var(--btn-tint), var(--btn-tint)),
+    var(--btn-fill);
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--btn-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  color: var(--glass-text);
   font-size: var(--fs-small);
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -327,10 +399,11 @@ button {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background-color var(--motion-micro) var(--ease-human),
-    border-color var(--motion-micro) var(--ease-human),
+    background-color var(--motion-control) var(--ease-human),
+    border-color var(--motion-control) var(--ease-human),
+    box-shadow var(--motion-control) var(--ease-human),
     color var(--motion-micro) var(--ease-human),
-    transform var(--motion-micro) var(--ease-human);
+    transform var(--motion-control) var(--ease-human);
 }
 /* arrow: one SVG glyph, drawn as a mask so it takes the text colour */
 .btn .arr,
@@ -359,7 +432,11 @@ button {
 }
 @media (hover: hover) {
   .btn:hover {
-    background: var(--btn-bg-hover);
+    --btn-tint: var(--glass-tint-hover);
+    --btn-fill: var(--glass-bg-hover);
+    --btn-shadow: var(--glass-shadow-hover);
+    border-color: color-mix(in srgb, var(--btn-edge) 70%, var(--glass-text));
+    transform: translateY(-1px);
   }
   .btn:hover .arr:not(.arr--down)::before {
     transform: translateX(3px);
@@ -369,34 +446,27 @@ button {
   transform: translateX(3px);
 }
 .btn:active {
-  background: var(--btn-bg-active);
-  transform: translateY(1px);
+  --btn-fill: var(--glass-bg-active);
+  transform: translateY(0) scale(0.985);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 .btn:focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--glass-focus);
   outline-offset: 3px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--glass-radius);
 }
-.on-light .btn:focus-visible {
-  outline-color: var(--ink);
-}
-/* On paper the amber fill gets a thin deeper edge so the control's boundary stays clear. */
-.on-light .btn,
-.btn--dark {
-  --btn-border: #a9781f;
-}
-/* Secondary: outline only. Inherits the surrounding text colour, so it works on dark and light surfaces. */
-.btn--ghost,
-.on-light .btn--ghost {
-  --btn-fg: var(--text, var(--text-on-dark));
-  --btn-bg: transparent;
-  --btn-bg-hover: color-mix(in srgb, var(--btn-fg) 8%, transparent);
-  --btn-bg-active: color-mix(in srgb, var(--btn-fg) 14%, transparent);
-  --btn-border: color-mix(in srgb, var(--btn-fg) 38%, transparent);
+/* Secondary: the plain glass, no amber, lighter shadow. */
+.btn--ghost {
+  --btn-tint: transparent;
+  --btn-edge: var(--glass-border);
+  --btn-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 @media (hover: hover) {
   .btn--ghost:hover {
-    --btn-border: color-mix(in srgb, var(--btn-fg) 70%, transparent);
+    --btn-tint: transparent;
+    border-color: var(--glass-border-hover);
   }
 }
 .btn--sm {
@@ -501,15 +571,16 @@ button {
   background: var(--accent);
 }
 
-/* ---------- header: a floating smoked-glass shell ----------
-   The shell's geometry never changes; only its surface fades in on scroll, so nothing jumps. */
+/* ---------- header: a floating clear-glass capsule ----------
+   The same glass as the buttons. Its text colour follows the ground beneath it (data-tone, set by the header
+   script as sections pass under it); the material itself does not change. */
 .site-header {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: var(--z-header);
   height: var(--header-h);
   padding-top: 12px;
-  color: var(--text-on-dark);
+  color: var(--glass-text);
   pointer-events: none;
 }
 .site-header__shell {
@@ -521,19 +592,40 @@ button {
   gap: 16px;
   margin-inline: -14px;
   padding: 0 6px 0 22px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  background: var(--glass-sheen), var(--glass-bg);
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
   transition:
-    background var(--motion-control) var(--ease-human),
+    background-color var(--motion-control) var(--ease-human),
     border-color var(--motion-control) var(--ease-human),
-    box-shadow var(--motion-control) var(--ease-human);
+    box-shadow var(--motion-control) var(--ease-human),
+    color var(--motion-control) var(--ease-human);
 }
+/* once the page has moved under it, the capsule needs a touch more body to hold its text over busy content */
 .site-header.is-solid .site-header__shell {
-  background: var(--glass-dark-fill-strong);
-  border-color: var(--glass-dark-edge);
-  box-shadow: var(--glass-dark-shadow), var(--glass-inner-line);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow-hover);
+}
+.site-header.is-solid[data-tone='light'] .site-header__shell {
+  --glass-bg: rgba(255, 255, 255, 0.46);
+}
+/* over mixed light-and-dark content (set by the header script) the glass takes more body, for as long as needed */
+.site-header[data-busy] .site-header__shell {
+  --glass-bg: rgba(16, 18, 20, 0.58);
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 58%);
+}
+/* without scripting the tone cannot follow the page, so the capsule is dense enough to read anywhere */
+html:not(.js) .site-header__shell {
+  --glass-bg: rgba(14, 17, 19, 0.82);
+  --glass-sheen: none;
 }
 .wordmark {
   font-weight: 600;
@@ -559,7 +651,7 @@ button {
   font-weight: 500;
   letter-spacing: 0.01em;
   text-decoration: none;
-  color: rgba(243, 239, 230, 0.76);
+  color: color-mix(in srgb, var(--glass-text) 80%, transparent);
   transition: color var(--motion-micro) var(--ease-human);
 }
 .nav a:not(.btn)::after {
@@ -577,7 +669,7 @@ button {
 .nav a:not(.btn):hover,
 .nav a:not(.btn):focus-visible,
 .nav a[aria-current='page'] {
-  color: var(--text-on-dark);
+  color: var(--glass-text);
 }
 .nav a[aria-current='page']::after {
   transform: scaleX(1);
@@ -598,19 +690,25 @@ button {
   height: 44px;
   padding: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--glass-text);
+  background: var(--glass-sheen), var(--glass-bg);
+  background-clip: padding-box;
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
   cursor: pointer;
   transition:
-    background var(--motion-micro) var(--ease-human),
-    border-color var(--motion-micro) var(--ease-human);
+    background-color var(--motion-control) var(--ease-human),
+    border-color var(--motion-control) var(--ease-human),
+    transform var(--motion-control) var(--ease-human);
 }
-.menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.4);
+@media (hover: hover) {
+  .menu-btn:hover {
+    --glass-bg: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+  }
 }
 .menu-btn:active {
-  transform: translateY(1px);
+  transform: scale(0.96);
 }
 .menu-btn:focus-visible {
   border-radius: 50%;
@@ -762,9 +860,20 @@ button {
 
 /* ---------- surface fallbacks ---------- */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass,
-  .site-header.is-solid .site-header__shell {
+  .glass {
     background: rgba(22, 26, 29, 0.97);
+  }
+  /* no backdrop blur: the glass keeps its look but takes enough body to stay legible */
+  .site-header__shell,
+  .btn {
+    --glass-bg: rgba(30, 34, 37, 0.9);
+    --glass-bg-hover: rgba(44, 48, 51, 0.92);
+  }
+  [data-tone='light'] .site-header__shell,
+  .on-light .btn,
+  .ih .btn {
+    --glass-bg: rgba(250, 248, 243, 0.94);
+    --glass-bg-hover: rgba(255, 255, 255, 0.97);
   }
   .glass--light {
     background: rgba(248, 247, 243, 0.98);
@@ -772,11 +881,26 @@ button {
 }
 @media (prefers-reduced-transparency: reduce) {
   .glass,
-  .site-header.is-solid .site-header__shell,
   .mobile-menu {
     background: #171b1e;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+  .site-header__shell,
+  .btn,
+  .menu-btn {
+    --glass-bg: #1c2023;
+    --glass-bg-hover: #2a2e31;
+    --glass-sheen: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-tone='light'] .site-header__shell,
+  [data-tone='light'] .menu-btn,
+  .on-light .btn,
+  .ih .btn {
+    --glass-bg: #f8f6f0;
+    --glass-bg-hover: #ffffff;
   }
   .glass--light {
     background: var(--paper);

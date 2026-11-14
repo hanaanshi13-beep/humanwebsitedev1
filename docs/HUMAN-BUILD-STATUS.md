@@ -307,3 +307,39 @@ Replaces the previous dark photographic hero. Rollback tag: `v10-before-inside-h
 **Not measured**: frame rate, Lighthouse, Safari, Firefox, real devices, screen readers, touch scrolling on hardware.
 
 **Evidence**: `docs/reviews/v11-inside-human/`.
+
+---
+
+## INSIDE HUMAN V2 — minimal opening (2026-11-14)
+
+Rollback tag: `v11-before-hero-v2`. State after this step: tag `v12-hero-v2`.
+
+**Opening screen now holds four things only**, on one centre line: the eyebrow, the photographic HUMAN wordmark (about 88% of a desktop viewport, 92–100% of a phone's), the two-line headline (Hanken Grotesk 800 uppercase over Instrument Serif italic at 1.34×), and one circular arrow.
+
+**Removed from the hero**: supporting paragraph, "Join the waitlist" button, "Explore the story", status pill, disclosure note, "How it works" link, "Skip intro", and the two-column lower grid with its wrappers. The prelaunch disclosure was already stated in the very next section ("A preventive-health membership, being built in India." / "In development. Nothing is available yet; the first pilot is planned for Delhi NCR."), on the waitlist and in the footer, so nothing was moved.
+
+**Navigation**: hidden and inert (no pointer or keyboard focus) from the first pixel through the whole film; returns with a short fade when the next section is 55% up the viewport; hides again above 70% on the way back (two thresholds, so no flicker). Other pages are unaffected. Without JavaScript it stays visible.
+
+**Arrow**: a real link to `#what-is-human` (the section directly after the hero), accessible name "Continue to the next section". Click or Enter travels there in about 3.2 seconds, playing the film on the way; any wheel, touch or key press takes over immediately; a second click mid-travel does nothing. On arrival focus moves to the section and the navigation is back. With reduced motion or no JavaScript it jumps straight there. Pulse: a 3.2 s cycle of a soft ring expanding to 1.5×, a brief warm edge and a 3px dip; it stops once the film starts, when the opening is off screen, and under reduced motion.
+
+**Animation**: the camera, photo moves, M entry, eye handover and pupil-to-dark maths are unchanged. Only the resting size and position changed, and those are measured from the layout at run time, so the camera starts from the new composition. The eyebrow and headline leave with the same fade-and-rise as before; the arrow leaves earlier (3–14% of the scroll).
+
+## Clear-glass navigation and buttons (2026-11-14)
+
+One material for the navigation capsule, every `.btn` (primary and secondary), the menu button and the hero arrow, driven by tokens in `src/styles/global.css`: `--glass-bg`, `--glass-bg-hover`, `--glass-bg-active`, `--glass-border`, `--glass-border-hover`, `--glass-highlight`, `--glass-sheen`, `--glass-shadow`, `--glass-shadow-hover`, `--glass-tint`, `--glass-tint-hover`, `--glass-tint-border`, `--glass-text`, `--glass-radius`, `--glass-focus`, `--glass-clear-blur`, `--glass-clear-saturate`. The token set is stated twice, for dark and for light ground.
+
+- **Material**: 7% white fill on dark, 34% on light; 18px backdrop blur; a fine edge; one line of light along the top; a soft shadow. No solid fills remain.
+- **Primary**: the same glass with a 16% amber tint and a warmer edge. **Secondary** (`.btn--ghost`): plain glass, lighter shadow.
+- **States**: hover clears the glass, sharpens the edge and lifts 1px; press settles with an inner shadow; focus is a 2px ring in the text colour.
+- **Capsule text follows the ground**: the header script reads what is under the capsule (section background, a photograph's measured brightness, Scene 03's own darkness value) and switches between dark and light text. The material does not change.
+- **One exception**: in Scene 05 acts II–III a white sheet crosses a dark room directly under the capsule, where no single text colour can work on clear glass. For those two acts the capsule takes a 58% smoked fill.
+- **Fallbacks**: without backdrop-filter support or with reduced transparency the glass becomes a near-opaque version of itself; without JavaScript the capsule is dense dark glass so it reads anywhere.
+- **Left as they were**: Scene 03's explorer controls and strip (already glass in that scene's own palette), Scene 05's text controls, FAQ disclosure buttons, form fields, and the mobile menu sheet (an opaque panel by design; its button is glass).
+
+**Measured**: build 0 errors; e2e 62/62 in Chromium, including new tests for the minimal opening, eleven viewport sizes, arrow travel/interruption/focus, navigation hide and return with a flicker check, glass material on every route, tone switching, button text contrast ≥ 4.5:1 against the section ground, and focus rings.
+
+**Not measured**: frame rate (backdrop blur costs more than the old flat fills, most on low-end phones), Lighthouse, Safari and Firefox rendering of the blur, real devices, screen readers. Contrast was computed against each section's background colour, not against every photograph that can pass under the capsule.
+
+**Open point for the founders**: the primary call to action is now quieter than the old solid amber button. That is what the directive asked for; whether it costs waitlist clicks is unknown until there is traffic to measure.
+
+**Evidence**: `docs/reviews/v12-hero-v2-glass/`.

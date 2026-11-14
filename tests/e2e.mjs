@@ -1342,6 +1342,78 @@ await test('A11Y-FORM', 'Every input has a label, autocomplete purpose and error
   await p.context().close();
 });
 
+await test('GLASS-01', 'Clear glass: navigation capsule and every button share one translucent material (no solid fills) on every route', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  for (const r of ['/', '/women', '/men', '/about', '/faq', '/waitlist', '/404']) {
+    await go(p, r);
+    const bad = await p.evaluate(() => {
+      const out = [];
+      const alpha = (c) => { const m = c.match(/[\d.]+/g).map(Number); return m.length > 3 ? m[3] : 1; };
+      for (const e of document.querySelectorAll('.btn, .site-header__shell, .menu-btn, .ih__arrow')) {
+        const c = getComputedStyle(e);
+        if (e.matches('[aria-busy="true"]')) continue;
+        const bf = c.backdropFilter || c.webkitBackdropFilter || '';
+        if (!e.matches('.menu-btn') && !/blur\(/.test(bf)) out.push(e.className + ': no backdrop blur');
+        if (alpha(c.backgroundColor) > 0.62) out.push(e.className + ': fill too solid ' + c.backgroundColor);
+        if (/rgb\(217, 166, 72\)|rgb\(232, 165, 35\)/.test(c.backgroundColor)) out.push(e.className + ': solid amber');
+        if (parseFloat(c.borderTopWidth) < 1 || alpha(c.borderTopColor) < 0.15) out.push(e.className + ': edge missing');
+        if (!/inset/.test(c.boxShadow)) out.push(e.className + ': no top light');
+        if (parseFloat(c.borderRadius) < 20) out.push(e.className + ': radius ' + c.borderRadius);
+      }
+      return out;
+    });
+    assert(bad.length === 0, r + ' → ' + bad.slice(0, 4).join(' | '));
+  }
+  await p.context().close();
+});
+
+await test('GLASS-02', 'Clear glass: capsule text follows the ground (dark on light sections, light on dark), text contrast on buttons ≥ 4.5:1', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const toneOver = async (sel, extra = 200) => {
+    await p.evaluate(([sel, extra]) => { const n = document.querySelector(sel); scrollTo({ top: n.getBoundingClientRect().top + scrollY + extra, behavior: 'instant' }); }, [sel, extra]);
+    await p.waitForTimeout(500);
+    return p.evaluate(() => { const h = document.querySelector('[data-header]'); const c = getComputedStyle(h.querySelector('.wordmark')).color.match(/\d+/g).map(Number); return { tone: h.dataset.tone, sum: c[0] + c[1] + c[2] }; });
+  };
+  const light = await toneOver('#scene-01');
+  assert(light.tone === 'light' && light.sum < 200, 'over a light section: ' + JSON.stringify(light));
+  const dark = await toneOver('#scene-06');
+  assert(dark.tone === 'dark' && dark.sum > 600, 'over a dark section: ' + JSON.stringify(dark));
+  const back = await toneOver('#scene-04');
+  assert(back.tone === 'light', 'did not switch back: ' + JSON.stringify(back));
+  // button text against the ground it sits on (the glass adds at most a light veil over that ground)
+  const lumOf = (c) => { const [r, g, b] = c.match(/[\d.]+/g).map(Number).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  for (const r of ['/', '/faq', '/about']) {
+    await go(p, r);
+    const pairs = await p.evaluate(() => [...document.querySelectorAll('main .btn')].map((e) => {
+      let bg = 'rgb(11, 13, 15)';
+      for (let n = e.parentElement; n; n = n.parentElement) { const c = getComputedStyle(n).backgroundColor; const m = c.match(/[\d.]+/g).map(Number); if (m.length < 4 || m[3] > 0.9) { bg = c; break; } }
+      return [getComputedStyle(e).color, bg, e.textContent.trim()];
+    }));
+    for (const [fg, bg, name] of pairs) {
+      const [a, b] = [lumOf(fg), lumOf(bg)];
+      const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      assert(ratio >= 4.5, `${r} "${name}" contrast ${ratio.toFixed(2)}`);
+    }
+  }
+  await p.context().close();
+});
+
+await test('GLASS-03', 'Clear glass: visible keyboard focus on buttons and capsule links; no-JS capsule stays legible', async () => {
+  const p = await ctx();
+  await go(p, '/faq');
+  const f = await p.evaluate(() => { const b = document.querySelector('main a.btn'); b.focus(); const matches = b.matches(':focus-visible'); const c = getComputedStyle(b); return { w: c.outlineWidth, s: c.outlineStyle, matches }; });
+  await p.keyboard.press('Tab'); await p.keyboard.press('Tab');
+  const o = await p.evaluate(() => { const c = getComputedStyle(document.activeElement); return { w: parseFloat(c.outlineWidth), s: c.outlineStyle, tag: document.activeElement.tagName }; });
+  assert(o.w >= 2 && o.s !== 'none', 'focus ring on ' + o.tag + ': ' + JSON.stringify(o) + JSON.stringify(f));
+  await p.context().close();
+  const q = await ctx({ javaScriptEnabled: false });
+  await go(q, '/');
+  const a = await q.evaluate(() => Number(getComputedStyle(document.querySelector('.site-header__shell')).backgroundColor.match(/[\d.]+/g)[3] ?? 1));
+  assert(a >= 0.8, 'no-JS capsule too clear to guarantee legibility: ' + a);
+  await q.context().close();
+});
+
 await test('ZOOM', '200% text size at 390px: hero and waitlist grow vertically, no clipping or overflow', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   for (const r of ['/', '/waitlist', '/faq']) {

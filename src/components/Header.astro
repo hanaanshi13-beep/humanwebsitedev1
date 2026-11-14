@@ -4,7 +4,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 ---
 
-<header class="site-header" data-header>
+<header class="site-header" data-header data-tone="dark">
   <div class="wrap">
     <div class="site-header__shell">
     <a class="wordmark" href="/" aria-label="HUMAN — home">HUMAN</a>
@@ -49,9 +49,88 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
 <script>
   // G-03 header surface, G-06 mobile menu (native <dialog>: focus trap, ESC, focus return, inert page).
   const header = document.querySelector<HTMLElement>('[data-header]');
-  const onScroll = () => header?.classList.toggle('is-solid', window.scrollY > 48);
+  // Clear glass has no colour of its own, so the capsule's text follows the ground passing beneath it:
+  // dark type over light sections, light type over dark ones. The material itself stays the same.
+  const lum = (c: string) => {
+    const m = c.match(/[\d.]+/g)?.map(Number);
+    if (!m || (m.length > 3 && m[3] < 0.5)) return -1; // transparent: keep looking further up
+    return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255;
+  };
+  // a photograph's own brightness, measured once (top band only: that is the part that passes under the capsule)
+  const seen = new WeakMap<HTMLImageElement, number>();
+  const imgLum = (img: HTMLImageElement) => {
+    if (seen.has(img)) return seen.get(img)!;
+    let v = -1;
+    try {
+      if (img.complete && img.naturalWidth) {
+        const c = document.createElement('canvas');
+        c.width = 16;
+        c.height = 16;
+        const g = c.getContext('2d', { willReadFrequently: true })!;
+        g.drawImage(img, 0, 0, 16, 16);
+        const d = g.getImageData(0, 0, 16, 16).data;
+        let sum = 0;
+        let n = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 128) continue;
+          sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+          n++;
+        }
+        if (n > 40) v = sum / n / 255;
+        seen.set(img, v);
+      }
+    } catch {
+      seen.set(img, -1);
+    }
+    return v;
+  };
+  const toneAt = (): 'light' | 'dark' => {
+    if (!header) return 'dark';
+    const y = Math.min(window.innerHeight - 1, header.offsetHeight / 2);
+    // sample beneath the navigation links (the smallest text) on wide screens, the centre on narrow ones
+    const x = window.innerWidth * (window.innerWidth >= 1024 ? 0.7 : 0.5);
+    const under = document.elementsFromPoint(x, y).find((e) => !header.contains(e) && !e.closest('dialog'));
+    for (let el: Element | null = under ?? null; el; el = el.parentElement) {
+      const h = el as HTMLElement;
+      if (h.dataset.navTone) return h.dataset.navTone as 'light' | 'dark';
+      // scenes whose ground changes as they play report it through their own state
+      if (h.matches('.s3')) return parseFloat(getComputedStyle(h).getPropertyValue('--s3-dark')) > 0.42 ? 'dark' : 'light';
+      if (h.matches('[data-ih]')) return Number(getComputedStyle(h).getPropertyValue('--p')) > 0.84 ? 'dark' : 'light';
+      if (h instanceof HTMLImageElement) {
+        const l = imgLum(h);
+        if (l >= 0) return l > 0.5 ? 'light' : 'dark';
+      }
+      const l = lum(getComputedStyle(h).backgroundColor);
+      if (l >= 0) return l > 0.55 ? 'light' : 'dark';
+    }
+    return 'dark';
+  };
+  // Mixed ground: in Scene 05 a white sheet crosses a dark room right under the capsule, so no single text colour
+  // can work on clear glass. For those two acts only, the glass takes more body.
+  const busyAt = () => {
+    const s5 = document.querySelector<HTMLElement>('.s5.is-film');
+    if (!s5 || !header) return false;
+    const r = s5.getBoundingClientRect();
+    return r.top < header.offsetHeight && r.bottom > header.offsetHeight && ['2', '3'].includes(s5.dataset.s5Act ?? '');
+  };
+  let queued = false;
+  const onScroll = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      if (!header) return;
+      header.classList.toggle('is-solid', window.scrollY > 48);
+      const t = toneAt();
+      if (header.dataset.tone !== t) header.dataset.tone = t;
+      header.toggleAttribute('data-busy', busyAt());
+    });
+  };
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  // scenes can change their ground without the page moving (a chosen system, a form chapter)
+  new MutationObserver(onScroll).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-state', 'data-sel', 'data-chapter', 'data-s5-act'] });
 
   const menu = document.querySelector<HTMLDialogElement>('[data-menu]');
   const openBtn = document.querySelector<HTMLButtonElement>('[data-menu-open]');
