@@ -1,20 +1,65 @@
 ---
-// Scene 05 — GETTING TESTED IS ONLY THE BEGINNING. Signature 2: FROM NUMBERS TO CLARITY (V3-SIG-09..14).
-// An illustrative report sheet (blank bars only — no values, names or ranges) quietens as you scroll (--p),
-// leaving one question, which branches into three non-clinical questions. The three questions and their answers
-// are always at full contrast: scroll only draws an amber accent line above each one. Nothing is dimmed.
-const rows = [
-  { w: 62, ox: -26 }, { w: 38, ox: 34, key: true }, { w: 80, ox: -14 }, { w: 46, ox: 22 }, { w: 70, ox: -38, key: true },
-  { w: 30, ox: 18 }, { w: 56, ox: -22 }, { w: 74, ox: 40, key: true }, { w: 42, ox: -16 }, { w: 64, ox: 28 },
+// Scene 05 — GETTING TESTED IS ONLY THE BEGINNING. "A report, translated for a human being."
+//
+// One typeset, value-free document (real text, no image) on a small stack of paper. As the stage scrolls into
+// view the stack arrives, the sheets part, the view leans toward the page and a reading lens settles on one
+// region. A fragment of that region then lifts off the page and resolves into an interpretation note.
+// Three questions choose which region is read; each has its own lens position, framing and note.
+//
+// Two separate sources of truth so they never fight:
+//   intro progress (scroll)  — arrival, separation, approach. Stops mattering once the visitor chooses.
+//   data-active              — matters | ask | next. Everything interactive derives from it.
+//
+// The document is a concept. It holds no values, flags or findings, and the lens marks the topic being
+// discussed, never a result. Without JavaScript the report, the first note and all three questions are plain text.
+const markers = [
+  { area: 'Cardiovascular', marker: 'Lipid profile' },
+  { area: 'Metabolic', marker: 'Blood glucose' },
+  { area: 'Hormonal', marker: 'Thyroid function' },
+  { area: 'Nutritional', marker: 'Iron status' },
 ];
-const questions = [
-  { q: 'What matters?', a: 'Which parts of a report deserve attention first — and which are simply context.' },
-  { q: 'What should I ask?', a: 'The questions worth taking to a qualified professional.' },
-  { q: 'What happens next?', a: 'What following through could look like, and when it makes sense to look again.' },
+const states = [
+  {
+    key: 'matters',
+    n: '01',
+    q: 'What matters?',
+    a: 'Which parts of a report deserve attention first — and which are simply context.',
+    short: 'Matters',
+    region: 'markers',
+    lift: 'Example health markers',
+    eyebrow: '01 — Understanding',
+    title: 'Understand the context.',
+    body: 'Which findings are relevant to my health history?',
+  },
+  {
+    key: 'ask',
+    n: '02',
+    q: 'What should I ask?',
+    a: 'The questions worth taking to a qualified professional.',
+    short: 'Ask',
+    region: 'context',
+    lift: 'Clinical context',
+    eyebrow: '02 — Guidance',
+    title: 'Start a conversation.',
+    body: 'Is there anything I should discuss with my clinician?',
+  },
+  {
+    key: 'next',
+    n: '03',
+    q: 'What happens next?',
+    a: 'What following through could look like, and when it makes sense to look again.',
+    short: 'Next',
+    region: 'followup',
+    lift: 'Follow-up',
+    eyebrow: '03 — Follow-through',
+    title: 'Know the next step.',
+    body: 'Would follow-up or further assessment be appropriate?',
+  },
 ];
+const path = ['Information', 'Context', 'Conversation', 'Follow-through'];
 ---
 
-<section class="section on-light on-ivory s5" id="scene-05" aria-labelledby="s5-title">
+<section class="section on-light on-ivory s5" id="scene-05" aria-labelledby="s5-title" data-s5 data-active="matters">
   <div class="wrap">
     <div class="s5__head">
       <p class="eyebrow" data-reveal><span class="num">05</span><span>After the report</span></p>
@@ -34,38 +79,94 @@ const questions = [
       </div>
     </div>
 
-    <!-- The transformation: a dense, value-free sheet settles, most of it recedes, and three lines of it
-         resolve into three plain questions. Driven by --p; the final state is the default. -->
-    <div class="s5__stage" data-progress>
+    <div class="s5__stage" data-s5-stage>
+      <!-- LAYERS 02–04: the paper stack, the report, the reading lens -->
       <figure class="s5__report">
-        <div class="s5__sheet" aria-hidden="true">
-          <div class="s5__sheet-head"><span></span><span></span></div>
-          {
-            rows.map((r, i) => (
-              <div class={`s5__row ${r.key ? 'is-key' : ''}`} style={`--w:${r.w}%;--ox:${r.ox}px;--k:${(i % 5) / 5}`}>
-                <span />
-                <span />
-                <span />
-              </div>
-            ))
-          }
-          <span class="s5__lens"><span>What does this mean <em>for me?</em></span></span>
+        <div class="s5__stack" data-s5-stack>
+          <span class="s5__under s5__under--b" aria-hidden="true"></span>
+          <span class="s5__under s5__under--a" aria-hidden="true"></span>
+          <div class="s5__sheet" data-s5-sheet>
+            <span class="s5__lens" data-s5-lens aria-hidden="true"></span>
+            <header class="s5__doc-head">
+              <p class="s5__doc-mark">HUMAN</p>
+              <p class="s5__doc-tag">Illustrative document</p>
+            </header>
+            <p class="s5__doc-title">Health assessment</p>
+            <p class="s5__doc-sub">An introduction to understanding your health information.</p>
+
+            <div class="s5__region" data-s5-region="markers">
+              <p class="s5__doc-label"><span>Example health markers</span><span>Result</span></p>
+              <dl class="s5__rows">
+                {
+                  markers.map((m) => (
+                    <div>
+                      <dt>{m.area}</dt>
+                      <dd>{m.marker}</dd>
+                      <dd class="s5__dash"><span aria-hidden="true">—</span><span class="vh">not shown</span></dd>
+                    </div>
+                  ))
+                }
+              </dl>
+            </div>
+            <div class="s5__region" data-s5-region="context">
+              <p class="s5__doc-label"><span>Clinical context</span></p>
+              <p class="s5__doc-body">Medical history, symptoms and relevant assessments.</p>
+            </div>
+            <div class="s5__region" data-s5-region="followup">
+              <p class="s5__doc-label"><span>Follow-up</span></p>
+              <p class="s5__doc-body">Discuss appropriate next steps with a qualified professional.</p>
+            </div>
+            <span class="s5__sweep" aria-hidden="true"></span>
+          </div>
         </div>
-        <figcaption class="note">Concept illustration. It contains no values and is not a real report.</figcaption>
+        <figcaption class="note s5__cap">Concept illustration. It contains no values and is not a real report.</figcaption>
       </figure>
 
+      <!-- small screens: the same three states, right under the page, so the report answers without scrolling -->
+      <div class="s5__tabs" role="group" aria-label="Choose a question">
+        {
+          states.map((s) => (
+            <button type="button" data-s5-pick={s.key} aria-pressed={s.key === 'matters' ? 'true' : 'false'}>
+              <span aria-hidden="true">{s.n}</span>
+              {s.short}
+            </button>
+          ))
+        }
+      </div>
+
+      <!-- LAYER 06: the interpretation note. One object; its words follow the chosen question. -->
+      <aside class="s5__note" data-s5-note aria-live="polite" aria-label="Interpretation">
+        <p class="s5__note-thought">What does this mean <em>for me?</em></p>
+        <p class="s5__note-eyebrow" data-f="eyebrow">{states[0].eyebrow}</p>
+        <p class="s5__note-title" data-f="title">{states[0].title}</p>
+        <p class="s5__note-body" data-f="body">{states[0].body}</p>
+        <ol class="s5__path" aria-label="From information to follow-through">
+          {path.map((s) => <li>{s}</li>)}
+        </ol>
+      </aside>
+
+      <!-- LAYER 07: the three questions are the controls -->
       <ol class="s5__qs">
         {
-          questions.map((x, i) => (
-            <li style={`--i:${i}`}>
+          states.map((s) => (
+            <li data-s5-q={s.key}>
               <span class="s5__thread" aria-hidden="true" />
-              <span class="s5__qn" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-              <h3>{x.q}</h3>
-              <p>{x.a}</p>
+              <h3>
+                <button type="button" data-s5-pick={s.key} aria-pressed={s.key === 'matters' ? 'true' : 'false'}>
+                  <span class="s5__qn" aria-hidden="true">{s.n}</span>
+                  <span class="s5__qt">{s.q}</span>
+                  <span class="s5__qi" aria-hidden="true" />
+                </button>
+              </h3>
+              <p>{s.a}</p>
             </li>
           ))
         }
       </ol>
+
+      <!-- LAYER 05: decorative only. The lifting fragment and the thread from the page to the note. -->
+      <svg class="s5__wire" data-s5-wire aria-hidden="true" focusable="false"><path /><circle r="3" /></svg>
+      <span class="s5__frag" data-s5-frag aria-hidden="true"><span></span></span>
     </div>
 
     <div class="s5__close" data-reveal>
@@ -75,11 +176,304 @@ const questions = [
       <a class="link" href="#scene-06">See how HUMAN is designed to help <span class="arr arr--down" aria-hidden="true">↓</span></a>
     </div>
   </div>
+  <script type="application/json" data-s5-data set:html={JSON.stringify(Object.fromEntries(states.map((s) => [s.key, { region: s.region, lift: s.lift, eyebrow: s.eyebrow, title: s.title, body: s.body }])))} />
 </section>
+
+<script>
+  const sec = document.querySelector<HTMLElement>('[data-s5]');
+  if (sec) {
+    type St = { region: string; lift: string; eyebrow: string; title: string; body: string };
+    const data = JSON.parse(sec.querySelector('[data-s5-data]')!.textContent!) as Record<string, St>;
+    const $ = <T extends Element = HTMLElement>(s: string) => sec.querySelector<T>(s)!;
+    const stage = $('[data-s5-stage]');
+    const stack = $('[data-s5-stack]');
+    const sheet = $('[data-s5-sheet]');
+    const lens = $('[data-s5-lens]');
+    const note = $('[data-s5-note]');
+    const frag = $('[data-s5-frag]');
+    const fragText = frag.firstElementChild as HTMLElement;
+    const wire = $<SVGSVGElement>('[data-s5-wire]');
+    const wirePath = wire.querySelector('path')!;
+    const wireDot = wire.querySelector('circle')!;
+    const picks = Array.from(sec.querySelectorAll<HTMLButtonElement>('[data-s5-pick]'));
+    const regions = Array.from(sec.querySelectorAll<HTMLElement>('[data-s5-region]'));
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const wide = window.matchMedia('(min-width: 1100px)');
+    const EASE = 'cubic-bezier(.22, 1, .36, 1)';
+
+    // ---------- state ----------
+    let active = 'matters';
+    let interacted = false; // a deliberate choice has been made: scroll no longer drives anything
+    let resolved = false; // the note is out (the intro reached its end, or the visitor chose)
+    let introP = 0;
+    let version = 0; // latest transition wins
+    let running: Animation[] = [];
+
+    const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+    const ramp = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
+    const ease = (t: number) => t * t * (3 - 2 * t);
+    const regionOf = (key: string) => regions.find((r) => r.dataset.s5Region === data[key].region)!;
+
+    // How closely each state reads the page. The third pulls back: the page is seen whole again.
+    const camScale = (key: string) => (!wide.matches ? 1 : key === 'next' ? 1 : 1.05);
+
+    // The region's box in the sheet's own, untransformed coordinates.
+    const local = (key: string) => {
+      const r = regionOf(key);
+      return { x: 0, y: r.offsetTop, w: sheet.clientWidth, h: r.offsetHeight };
+    };
+    // The camera: scale the sheet about the middle of the region being read. `amount` 0..1 blends it in.
+    const camera = (key: string, amount: number) => {
+      const b = local(key);
+      const s = 1 + (camScale(key) - 1) * amount;
+      const cx = b.w / 2;
+      const cy = b.y + b.h / 2;
+      return { s, tx: (1 - s) * cx, ty: (1 - s) * cy };
+    };
+    const applyCamera = (key: string, amount: number, animate: boolean) => {
+      const c = camera(key, amount);
+      sheet.style.transition = animate && !reduce.matches ? `transform 480ms ${EASE}` : 'none';
+      sheet.style.transform = c.s === 1 ? 'none' : `translate3d(${c.tx.toFixed(2)}px, ${c.ty.toFixed(2)}px, 0) scale(${c.s.toFixed(4)})`;
+    };
+    const placeLens = (key: string, animate: boolean) => {
+      const b = local(key);
+      lens.style.transition = animate && !reduce.matches ? `top 400ms ${EASE}, height 400ms ${EASE}, opacity 240ms ease` : 'opacity 240ms ease';
+      lens.style.top = `${b.y - 9}px`;
+      lens.style.height = `${b.h + 18}px`;
+    };
+    // Where the region will sit on the stage once the camera has settled (computed, so it is right mid-transition).
+    const sourceBox = (key: string) => {
+      const st = stage.getBoundingClientRect();
+      // the stack carries no transform once the page has arrived, so its box is the sheet's resting box
+      const sk = stack.getBoundingClientRect();
+      const b = local(key);
+      const c = camera(key, 1);
+      const inset = 14;
+      return { x: sk.left - st.left + c.tx + inset * c.s, y: sk.top - st.top + c.ty + (b.y - 9) * c.s, w: (b.w - inset * 2) * c.s, h: (b.h + 18) * c.s };
+    };
+    const noteBox = () => {
+      const st = stage.getBoundingClientRect();
+      const n = note.getBoundingClientRect();
+      return { x: n.left - st.left, y: n.top - st.top, w: n.width, h: n.height };
+    };
+
+    const stop = () => {
+      running.forEach((a) => a.cancel());
+      running = [];
+      frag.style.opacity = '0';
+    };
+    const setNote = (key: string) => {
+      const d = data[key];
+      note.querySelector('[data-f="eyebrow"]')!.textContent = d.eyebrow;
+      note.querySelector('[data-f="title"]')!.textContent = d.title;
+      note.querySelector('[data-f="body"]')!.textContent = d.body;
+      note.dataset.for = key;
+    };
+    const drawWire = (key: string, animate: boolean) => {
+      if (!wide.matches) {
+        wire.style.opacity = '0';
+        return;
+      }
+      const s = sourceBox(key);
+      const n = noteBox();
+      const x1 = s.x + s.w;
+      const y1 = s.y + s.h / 2;
+      const x2 = n.x;
+      const y2 = clamp(y1, n.y + 28, n.y + n.h - 28);
+      const dx = Math.max(24, (x2 - x1) * 0.5);
+      wirePath.setAttribute('d', `M${x1.toFixed(1)} ${y1.toFixed(1)} C${(x1 + dx).toFixed(1)} ${y1.toFixed(1)}, ${(x2 - dx).toFixed(1)} ${y2.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`);
+      wireDot.setAttribute('cx', x1.toFixed(1));
+      wireDot.setAttribute('cy', y1.toFixed(1));
+      wire.style.opacity = '1';
+      const len = wirePath.getTotalLength();
+      wirePath.style.strokeDasharray = String(len);
+      if (animate && !reduce.matches) running.push(wirePath.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 460, delay: 260, easing: EASE, fill: 'backwards' }));
+      wirePath.style.strokeDashoffset = '0';
+    };
+
+    // The extraction: a strip the size of the lens leaves the page, crosses to the note's place, darkens into it.
+    const extract = (key: string, label: string) => {
+      const mine = ++version;
+      stop();
+      const instant = reduce.matches;
+      sec.classList.add('is-resolved');
+      if (instant) {
+        setNote(key);
+        note.style.opacity = '1';
+        drawWire(key, false);
+        return;
+      }
+      const from = sourceBox(key);
+      const to = noteBox();
+      fragText.textContent = label;
+      note.style.transition = 'opacity 130ms ease';
+      note.style.opacity = '0';
+      wire.style.opacity = '0';
+      const px = (b: { x: number; y: number; w: number; h: number }) => ({ left: `${b.x}px`, top: `${b.y}px`, width: `${b.w}px`, height: `${b.h}px` });
+      frag.style.opacity = '1';
+      // lift off the page, cross as a strip of paper, and only then darken into the note
+      const mid = { x: from.x + (to.x - from.x) * 0.6, y: from.y + (to.y - from.y) * 0.6 - 8, w: from.w + (to.w - from.w) * 0.6, h: from.h + (to.h - from.h) * 0.6 };
+      const paper = { backgroundColor: '#fdfbf5', color: '#292d29' };
+      const travel = frag.animate(
+        [
+          { ...px(from), ...paper, boxShadow: '0 1px 2px rgba(41,45,41,.10), 0 0 0 1px rgba(191,150,76,.45)', offset: 0 },
+          { ...px({ x: from.x + 6, y: from.y - 10, w: from.w, h: from.h }), ...paper, boxShadow: '0 18px 30px -14px rgba(41,45,41,.38), 0 0 0 1px rgba(191,150,76,.5)', offset: 0.28 },
+          { ...px(mid), ...paper, boxShadow: '0 24px 40px -18px rgba(41,45,41,.42), 0 0 0 1px rgba(191,150,76,.4)', offset: 0.68 },
+          { ...px(to), backgroundColor: '#292d29', color: '#292d29', boxShadow: '0 26px 44px -22px rgba(41,45,41,.55), 0 0 0 1px rgba(41,45,41,0)', offset: 1 },
+        ],
+        { duration: 660, easing: 'cubic-bezier(.3, .7, .3, 1)', fill: 'forwards' },
+      );
+      const words = fragText.animate([{ opacity: 1 }, { opacity: 1, offset: 0.6 }, { opacity: 0, offset: 0.82 }, { opacity: 0 }], { duration: 660, fill: 'forwards' });
+      running.push(travel, words);
+      travel.finished
+        .then(() => {
+          if (mine !== version) return; // a newer choice took over
+          setNote(key);
+          note.style.transition = 'opacity 200ms ease';
+          note.style.opacity = '1';
+          frag.style.opacity = '0';
+          travel.cancel();
+          words.cancel();
+          drawWire(key, true);
+        })
+        .catch(() => {});
+    };
+
+    const syncControls = () => {
+      sec.dataset.active = active;
+      picks.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s5Pick === active)));
+    };
+
+    // Put the page in its interactive resting state for the active question.
+    const settle = (animate: boolean) => {
+      sec.style.setProperty('--arrive', '1');
+      sec.style.setProperty('--part', '1');
+      sec.style.setProperty('--lens', '1');
+      sec.style.setProperty('--sweep', '2');
+      placeLens(active, animate);
+      applyCamera(active, 1, animate);
+    };
+    // A deliberate choice. From here on the visitor, not the scroll position, decides what is shown.
+    const choose = (key: string) => {
+      const first = !interacted;
+      interacted = true;
+      resolved = true;
+      if (key === active && !first && note.dataset.for === key && note.style.opacity !== '0') return;
+      active = key;
+      syncControls();
+      settle(true);
+      extract(key, data[key].lift);
+    };
+
+    // ---------- the intro: a short scroll passage, no pin, no added height ----------
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      if (interacted || reduce.matches) return;
+      const top = stage.getBoundingClientRect().top;
+      const vh = window.innerHeight;
+      introP = clamp((vh * 0.94 - top) / (vh * 0.66)); // 0 as the stage enters, 1 once its top is about a quarter down
+      sec.style.setProperty('--arrive', ease(ramp(introP, 0, 0.26)).toFixed(4));
+      sec.style.setProperty('--part', ease(ramp(introP, 0.2, 0.5)).toFixed(4));
+      sec.style.setProperty('--sweep', (ramp(introP, 0.3, 0.62) * 2).toFixed(4));
+      sec.style.setProperty('--lens', ramp(introP, 0.62, 0.8).toFixed(4));
+      placeLens('matters', false);
+      applyCamera('matters', ease(ramp(introP, 0.42, 0.74)), false);
+      if (introP >= 0.86 && !resolved) {
+        resolved = true;
+        extract('matters', 'What does this mean for me?');
+      } else if (introP < 0.7 && resolved) {
+        // scrolled back before choosing anything: let the passage run in reverse
+        resolved = false;
+        version++;
+        stop();
+        sec.classList.remove('is-resolved');
+        note.style.transition = 'opacity 160ms ease';
+        note.style.opacity = '0';
+        wire.style.opacity = '0';
+      }
+    };
+    const request = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    let listening = false;
+    new IntersectionObserver(
+      ([en]) => {
+        if (en.isIntersecting && !listening) {
+          window.addEventListener('scroll', request, { passive: true });
+          listening = true;
+        } else if (!en.isIntersecting && listening) {
+          window.removeEventListener('scroll', request);
+          listening = false;
+        }
+        request();
+      },
+      { rootMargin: '30% 0px 30% 0px' },
+    ).observe(sec);
+
+    // ---------- layout changes: re-measure, never keep a stale coordinate ----------
+    let lastW = 0;
+    const relayout = () => {
+      const w = stage.clientWidth;
+      if (w === lastW) return;
+      lastW = w;
+      version++;
+      stop();
+      if (interacted || reduce.matches || resolved) {
+        settle(false);
+        setNote(active);
+        note.style.opacity = '1';
+        sec.classList.add('is-resolved');
+        drawWire(active, false);
+      } else update();
+    };
+    new ResizeObserver(relayout).observe(stage);
+    wide.addEventListener('change', relayout);
+
+    const applyMotionPref = () => {
+      sec.classList.add('is-live');
+      if (reduce.matches) {
+        // no arrival, parting, approach or travelling fragment: the page, the lens and the note are simply there
+        resolved = true;
+        settle(false);
+        setNote(active);
+        note.style.opacity = '1';
+        sec.classList.add('is-resolved');
+        drawWire(active, false);
+      } else if (!interacted) {
+        note.style.opacity = '0';
+        update();
+      }
+    };
+    reduce.addEventListener('change', applyMotionPref);
+    applyMotionPref();
+
+    picks.forEach((b) => b.addEventListener('click', () => choose(b.dataset.s5Pick!)));
+  }
+</script>
 
 <style>
   .s5 {
-    --p: 1; /* static default: the resolved state */
+    /* local materials: paper, ink and one warm accent */
+    --s5-paper: #fdfbf5;
+    --s5-paper-2: #f4f0e6;
+    --s5-ink: #292d29;
+    --s5-soft: #6a665d;
+    --s5-rule: #d5cec0;
+    --s5-amber: #bf964c;
+    --s5-champagne: #e2c58b;
+    --arrive: 1; /* 0..1 the stack has arrived */
+    --part: 1; /* 0..1 the sheets have parted */
+    --lens: 1; /* 0..1 the reading lens is present */
+    --sweep: 2; /* 0..2 one pass of light across the page */
+    --calm: 1; /* how far apart the sheets rest; the third state draws them together */
+    overflow: clip;
+  }
+  .s5[data-active='next'] {
+    --calm: 0.45;
   }
   .s5__head {
     display: grid;
@@ -98,154 +492,427 @@ const questions = [
     grid-column: 8 / span 5;
     grid-row: 2;
   }
+
+  /* ---- the stage: page · note · questions ---- */
   .s5__stage {
-    --t: clamp(0, var(--p) * 2.2, 1); /* rows settle into alignment */
-    --u: clamp(0, (var(--p) - 0.42) * 2.6, 1); /* noise recedes, questions resolve */
+    position: relative;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--col-gap);
-    row-gap: 40px;
+    row-gap: 32px;
     align-items: center;
-    margin-top: clamp(48px, 6vw, 88px);
+    margin-top: clamp(56px, 7vw, 104px);
+    isolation: isolate;
+  }
+  /* LAYER 01: a patch of warm studio light behind the page */
+  .s5__stage::before {
+    content: '';
+    position: absolute;
+    left: -6%;
+    top: -8%;
+    width: 58%;
+    height: 116%;
+    background: radial-gradient(60% 55% at 42% 40%, rgba(255, 252, 244, 0.85), rgba(255, 252, 244, 0) 72%);
+    opacity: calc(0.35 + var(--arrive) * 0.65);
+    pointer-events: none;
+    z-index: -1; /* light falls behind the page and the controls, never over them */
   }
   .s5__report {
     grid-column: 1 / span 5;
+    position: relative;
+    perspective: 1400px;
   }
-  /* paper, not glass: the document is information, the lens on it is interface */
+  /* LAYER 02: the stack arrives as one object, then its sheets part */
+  .s5__stack {
+    position: relative;
+    transform: translate3d(0, calc((1 - var(--arrive)) * 38px), 0) rotateX(calc((1 - var(--arrive)) * 7deg)) rotate(calc((1 - var(--arrive)) * -1.6deg)) scale(calc(0.955 + var(--arrive) * 0.045));
+    transform-origin: 50% 70%;
+    opacity: calc(0.25 + var(--arrive) * 0.75);
+  }
+  .s5__under {
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 34px, rgba(41, 45, 41, 0.045) 34px 35px),
+      linear-gradient(180deg, #f8f5ec, var(--s5-paper-2));
+    border: 1px solid rgba(41, 45, 41, 0.07);
+    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .s5__under--a {
+    transform: translate3d(calc(var(--part) * var(--calm) * 22px), calc(var(--part) * var(--calm) * 16px), 0) rotate(calc(var(--part) * var(--calm) * 2.3deg));
+    box-shadow: 0 10px 22px -14px rgba(41, 45, 41, 0.3);
+  }
+  .s5__under--b {
+    transform: translate3d(calc(var(--part) * var(--calm) * -20px), calc(var(--part) * var(--calm) * 32px), 0) rotate(calc(var(--part) * var(--calm) * -3deg));
+    box-shadow: 0 16px 30px -18px rgba(41, 45, 41, 0.28);
+    filter: brightness(0.985);
+  }
+
+  /* LAYER 03: the report. Paper, not a card: fine edge, three shadows from one light, no rounding to speak of. */
   .s5__sheet {
     position: relative;
-    background: linear-gradient(180deg, #fdfcf8, #f6f3ec);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: clamp(20px, 2.4vw, 34px);
-    aspect-ratio: 4 / 4.6;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    margin-bottom: 14px;
+    padding: clamp(22px, 2.6vw, 38px) clamp(22px, 2.6vw, 38px) clamp(24px, 2.8vw, 40px);
+    border-radius: 3px;
+    background:
+      linear-gradient(118deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 38%),
+      linear-gradient(180deg, var(--s5-paper), #f9f6ee);
+    border: 1px solid rgba(41, 45, 41, 0.09);
     box-shadow:
       0 1px 0 #fff inset,
-      0 40px 70px -44px rgba(20, 25, 28, 0.45),
-      0 2px 6px rgba(20, 25, 28, 0.06);
-    transform: rotate(calc((1 - var(--t)) * -1.6deg)) translateY(calc((1 - var(--t)) * 18px));
+      0 1px 1px rgba(41, 45, 41, 0.1),
+      0 12px 22px -12px rgba(41, 45, 41, calc(0.14 + var(--part) * 0.12)),
+      0 44px 70px -40px rgba(41, 45, 41, calc(0.22 + var(--part) * 0.2));
+    color: var(--s5-ink);
+    transform-origin: 0 0;
+    overflow: hidden;
+    container-type: inline-size;
   }
-  .s5__sheet-head {
+  .s5__doc-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--s5-ink);
+  }
+  .s5__doc-mark {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.34em;
+  }
+  .s5__doc-tag,
+  .s5__doc-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--s5-soft);
+  }
+  .s5__doc-title {
+    margin-top: clamp(18px, 2vw, 26px);
+    font-family: var(--serif);
+    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .s5__doc-sub {
+    margin-top: 8px;
+    max-width: 24em;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--s5-soft);
+  }
+  .s5__region {
+    position: relative;
+    margin-top: clamp(20px, 2.2vw, 28px);
+    transition: opacity 320ms ease;
+  }
+  .s5__doc-label {
     display: flex;
     justify-content: space-between;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--rule);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--s5-rule);
   }
-  .s5__sheet-head span {
-    height: 9px;
-    width: 34%;
-    background: var(--text);
-    opacity: 0.8;
-  }
-  .s5__sheet-head span + span {
-    width: 16%;
-    opacity: 0.25;
-  }
-  .s5__row {
+  .s5__rows > div {
     display: grid;
-    grid-template-columns: var(--w) 1fr 12%;
-    gap: 10px;
-    align-items: center;
-    transform: translateX(calc(var(--ox) * (1 - var(--t))));
-    opacity: calc(1 - var(--u) * (0.4 + var(--k) * 0.2));
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) 3.2em;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--s5-rule);
   }
-  .s5__row span {
-    height: 6px;
-    border-radius: 1px;
-    background: var(--text);
-    opacity: 0.55;
+  /* narrow pages: the category sits above its marker instead of beside it */
+  @container (max-width: 400px) {
+    .s5__rows > div {
+      grid-template-columns: minmax(0, 1fr) 3.2em;
+      gap: 2px 12px;
+    }
+    .s5__rows dt {
+      grid-column: 1 / -1;
+    }
   }
-  .s5__row span:nth-child(2) {
-    opacity: 0;
+  .s5__rows dt {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--s5-soft);
   }
-  .s5__row span:nth-child(3) {
-    opacity: 0.22;
+  .s5__rows dd {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.3;
   }
-  .s5__row.is-key {
+  .s5__dash {
+    text-align: right;
+    color: var(--s5-soft);
+  }
+  .s5__doc-body {
+    margin-top: 9px;
+    max-width: 26em;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+  /* reading is selective, never destructive: the regions not being read step back but stay legible */
+  .s5:global(.is-resolved) .s5__region {
+    opacity: 0.6;
+  }
+  .s5[data-active='matters']:global(.is-resolved) [data-s5-region='markers'],
+  .s5[data-active='ask']:global(.is-resolved) [data-s5-region='context'],
+  .s5[data-active='next']:global(.is-resolved) [data-s5-region='followup'] {
     opacity: 1;
   }
-  .s5__row.is-key span:first-child {
-    opacity: 1;
-    background: color-mix(in srgb, var(--accent) calc(var(--u) * 100%), var(--text));
-    height: calc(6px + var(--u) * 2px);
-  }
-  /* the one glass element: a small lens that settles on the sheet as the noise recedes */
+
+  /* LAYER 04: the reading lens. A field of attention: champagne wash, hairline amber edge, a little reflected light. */
   .s5__lens {
     position: absolute;
-    left: 50%;
-    bottom: 13%;
-    transform: translate(-50%, 0);
-    padding: 12px 22px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
-    color: var(--text-on-dark);
-    font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
-    font-weight: 600;
-    background: var(--ink);
-    box-shadow: 0 14px 30px -12px rgba(20, 20, 16, 0.45);
+    left: clamp(8px, 1vw, 16px);
+    right: clamp(8px, 1vw, 16px);
+    top: 0;
+    height: 0;
+    border-radius: 3px;
+    background: linear-gradient(105deg, rgba(245, 232, 201, 0.55) 0%, rgba(226, 197, 139, 0.2) 55%, rgba(245, 232, 201, 0.4) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(191, 150, 76, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 6px 16px -10px rgba(191, 150, 76, 0.55);
+    opacity: var(--lens);
+    pointer-events: none;
   }
-  .s5__lens em {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 1.12em;
-    color: var(--amber-ui-hover);
+  /* one pass of warm light across the paper as the page is approached */
+  .s5__sweep {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 38%, rgba(255, 250, 235, 0.75) 50%, rgba(255, 255, 255, 0) 62%);
+    transform: translateX(calc((var(--sweep) - 1) * 110%));
+    pointer-events: none;
   }
-  .s5__qs {
-    grid-column: 7 / span 6;
+  .s5__cap {
+    position: relative;
+    margin-top: clamp(30px, 3vw, 44px);
+  }
+
+  /* LAYER 06: the interpretation note. Charcoal on paper, square-shouldered, typeset. */
+  .s5__note {
+    grid-column: 6 / span 3;
+    position: relative;
+    z-index: 2;
     display: grid;
-    gap: clamp(18px, 2.2vw, 30px);
+    align-content: start;
+    min-height: 15.5rem;
+    padding: 22px 22px 24px;
+    border-radius: 3px;
+    background: var(--s5-ink);
+    color: var(--s5-paper);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 14px 24px -14px rgba(41, 45, 41, 0.5),
+      0 40px 60px -36px rgba(41, 45, 41, 0.55);
+  }
+  .s5__note-thought {
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(253, 251, 245, 0.18);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(253, 251, 245, 0.78);
+  }
+  .s5__note-thought em {
+    font-family: var(--serif);
+    font-size: 1.15em;
+    color: var(--s5-champagne);
+  }
+  .s5__note-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--s5-champagne);
+  }
+  .s5__note-title {
+    margin-top: 10px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.5rem, 2vw, 1.875rem);
+    line-height: 1.08;
+  }
+  .s5__note-body {
+    margin-top: 10px;
+    font-size: var(--fs-small);
+    line-height: 1.45;
+    color: rgba(253, 251, 245, 0.86);
+  }
+  /* the third state's quiet conclusion: four words in order, nothing to complete */
+  .s5__path {
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(253, 251, 245, 0.18);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(253, 251, 245, 0.78);
+  }
+  .s5__path li:not(:last-child)::after {
+    content: '→';
+    margin-left: 6px;
+    color: var(--s5-champagne);
+  }
+  .s5__path li:last-child {
+    color: var(--s5-champagne);
+  }
+  .s5__note[data-for='next'] .s5__path {
+    display: flex;
+  }
+
+  /* LAYER 07: the questions */
+  .s5__qs {
+    grid-column: 9 / span 4;
+    display: grid;
   }
   .s5__qs li {
-    --q: clamp(0, (var(--p) - 0.5 - var(--i) * 0.1) * 5, 1);
     position: relative;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    column-gap: 20px;
-    padding-top: 20px;
+    padding: 18px 0 20px;
     border-top: 1px solid var(--rule);
+  }
+  .s5__qs li:last-child {
+    border-bottom: 1px solid var(--rule);
   }
   .s5__thread {
     position: absolute;
     left: 0;
     right: 0;
     top: -1px;
-    height: 1px;
-    background: var(--accent);
+    height: 2px;
+    background: var(--s5-amber);
     transform-origin: left;
-    transform: scaleX(var(--q));
+    transform: scaleX(0);
+    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .s5[data-active='matters'] [data-s5-q='matters'] .s5__thread,
+  .s5[data-active='ask'] [data-s5-q='ask'] .s5__thread,
+  .s5[data-active='next'] [data-s5-q='next'] .s5__thread {
+    transform: scaleX(1);
+  }
+  .s5__qs h3 {
+    font: inherit;
+  }
+  .s5__qs button {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 6px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
   }
   .s5__qn {
-    grid-row: 1 / span 2;
-    padding-top: 0.5em;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.14em;
     color: var(--accent);
+    font-variant-numeric: tabular-nums;
   }
-  .s5__qs h3 {
+  .s5__qt {
     font-family: var(--serif);
     font-style: italic;
-    font-weight: 400;
-    font-size: clamp(1.75rem, 2.8vw, 2.625rem);
-    line-height: 1.08;
-    color: var(--text);
+    font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+    line-height: 1.06;
+  }
+  /* the indicator: an open ring that fills when its question is the one being read (shape, not colour alone) */
+  .s5__qi {
+    align-self: center;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text);
+    opacity: 0.5;
+    transition:
+      opacity var(--motion-micro) ease,
+      box-shadow var(--motion-control) var(--ease-human),
+      transform var(--motion-control) var(--ease-human);
+  }
+  .s5__qs button[aria-pressed='true'] .s5__qi {
+    opacity: 1;
+    box-shadow: inset 0 0 0 6px var(--s5-ink);
+  }
+  @media (hover: hover) {
+    .s5__qs button:hover .s5__qi {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+  }
+  .s5__qs button:focus-visible,
+  .s5__tabs button:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 4px;
+    border-radius: 2px;
   }
   .s5__qs p {
-    margin-top: 8px;
-    max-width: 30em;
+    margin: 8px 0 0 calc(2rem + 6px);
+    max-width: 28em;
     color: var(--text);
   }
+  .s5__tabs {
+    display: none;
+  }
+
+  /* LAYER 05: decoration only */
+  .s5__wire {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+  }
+  .s5__wire path {
+    fill: none;
+    stroke: var(--s5-amber);
+    stroke-width: 1.25;
+  }
+  .s5__wire circle {
+    fill: var(--s5-amber);
+  }
+  .s5__frag {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border-radius: 3px;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .s5__frag span {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
   .s5__close {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
     gap: 16px 40px;
-    margin-top: clamp(48px, 6vw, 88px);
+    margin-top: clamp(56px, 7vw, 104px);
     padding-top: 28px;
     border-top: 1px solid var(--rule);
   }
@@ -262,32 +929,115 @@ const questions = [
     font-weight: 400;
     font-size: 1.1em;
   }
-  @media (max-width: 899px) {
+
+  /* without JavaScript: nothing waits on a script. The lens (which needs measuring) and dead controls step aside. */
+  .s5:not(:global(.is-live)) .s5__lens,
+  .s5:not(:global(.is-live)) .s5__sweep,
+  .s5:not(:global(.is-live)) .s5__qi,
+  .s5:not(:global(.is-live)) .s5__tabs {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .s5 *,
+    .s5 *::before {
+      transition-duration: 0.01ms !important;
+    }
+    .s5__sweep {
+      display: none;
+    }
+  }
+
+  /* ---- tablet and phone: page, a compact chooser, the note, then the three questions ---- */
+  @media (max-width: 1099px) {
     .s5__head > .eyebrow,
     .s5__head > h2,
-    .s5__intro,
-    .s5__report,
-    .s5__qs {
+    .s5__intro {
       grid-column: 1 / -1;
     }
     .s5__intro {
       grid-row: auto;
       margin-top: 26px;
     }
+    .s5__stage {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 20px;
+    }
+    .s5__stage::before {
+      width: 110%;
+      left: -5%;
+    }
     .s5__report {
-      max-width: 360px;
+      width: 100%;
+      max-width: 460px;
+      margin-inline: auto;
     }
-    .s5__sheet {
-      aspect-ratio: 4 / 3.4;
-    }
-    .s5__row:nth-child(n + 9) {
+    /* less depth on a small screen: one supporting sheet, smaller offsets */
+    .s5__under--b {
       display: none;
     }
-    .s5__lens {
-      white-space: normal;
+    .s5 {
+      --calm: 0.6;
+    }
+    .s5[data-active='next'] {
+      --calm: 0.3;
+    }
+    .s5__cap {
+      margin-top: 22px;
       text-align: center;
-      width: max-content;
-      max-width: 86%;
+    }
+    .s5__tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      max-width: 460px;
+      margin-inline: auto;
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+    }
+    .s5__tabs button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 8px;
+      border: 0;
+      border-left: 1px solid var(--rule);
+      background: none;
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .s5__tabs button:first-child {
+      border-left: 0;
+    }
+    .s5__tabs button span {
+      font-size: 0.6875rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+    .s5__tabs button[aria-pressed='true'] {
+      background: var(--s5-ink);
+      color: var(--s5-paper);
+      box-shadow: inset 0 -3px 0 var(--s5-amber);
+    }
+    .s5__tabs button[aria-pressed='true'] span {
+      color: var(--s5-champagne);
+    }
+    .s5__note {
+      width: 100%;
+      max-width: 460px;
+      margin-inline: auto;
+      min-height: 13.5rem;
+    }
+    .s5__qs {
+      margin-top: 12px;
+    }
+    .s5__qt {
+      font-size: min(8vw, 2rem);
     }
   }
 </style>

@@ -197,3 +197,37 @@ Directive: `HUMAN — Scene 03 Complete Cinematic Website Implementation Directi
 - Not measured: Lighthouse, Safari, Firefox, real devices, screen readers, frame rate on low-end phones.
 
 **Evidence**: `docs/reviews/v8-scene03/` (21 states at 1440 and 390, plus overview sheets).
+
+## Scene 05 rebuild: the report, translated (2026-11-14)
+
+Directive: `HUMAN — Scene 05 After the Report: complete cinematic … implementation directive`. Rollback point: git tag `v8-scene05-baseline`. Only `src/components/home/Scene05.astro` and `tests/e2e.mjs` changed.
+
+**What replaced what**: the grey-bar placeholder sheet and its floating black pill are gone. Scene 05 is now a typeset, value-free document built in HTML/CSS/SVG (no image, canvas or video), on a small stack of paper, with a reading lens, an interpretation note and three question controls.
+
+**The document**: HUMAN wordmark, "Illustrative document", "Health assessment", four example markers (lipid profile, blood glucose, thyroid function, iron status) with a result column of dashes only, Clinical context, Follow-up. It contains no digits; a test enforces that. The disclaimer sits under the page and never moves.
+
+**Intro (scroll, not pinned, no added page height)**: as the stage rises into view the stack arrives (lift, slight tilt, scale), the two supporting sheets part, one pass of warm light crosses the page, the view leans about 5% toward the markers, the lens settles, and a strip the size of the lens lifts off the page, crosses to the note's position as paper, then darkens into the note. A thin amber thread then draws from the page to the note. It reverses if the visitor scrolls back, until they choose a question.
+
+**Three states (one source of truth, `data-active`)**
+- What matters? → lens on the example markers; close framing; note "Understand the context."
+- What should I ask? → lens on Clinical context; close framing; note "Start a conversation."
+- What happens next? → lens on Follow-up; the view pulls back to the whole page and the sheets draw together; note "Know the next step." plus the line Information → Context → Conversation → Follow-through.
+Regions not being read drop to 60% opacity, never lower. Each change re-runs the lift from the new region (about 0.66 s). Latest choice wins on rapid clicks; one reusable fragment element, cancelled and reused. After the first choice, scroll no longer drives anything.
+
+**Small screens (< 1100 px)**: page, a compact three-button chooser directly under it (same state as the questions), the note in flow, then the three full questions. One supporting sheet, no zoom, no thread.
+
+**Simplified against the directive**
+- Camera zoom is 5%, not 12–25%: larger values pushed the page into the note and the questions.
+- No magnifying duplicate inside the lens and no optical blur; the lens is a tonal highlight.
+- The fragment changes size while it travels (animated left/top/width/height on one absolutely placed element) rather than using transform-only FLIP, so its edges stay crisp at both ends.
+- Scene 05 still ends in a clean cut to the dark Scene 06, like every other chapter boundary on the site; no gradient was added.
+
+**Fallbacks**: reduced motion shows the page, lens and note at once and switches states instantly. Without JavaScript the report, the first note and the three questions are plain readable text (the lens and state indicators are hidden).
+
+**Copy**: heading, intro, three questions, closing line and link unchanged. New microcopy is the directive's own wording (document text and the three notes). "What does this mean for me?" is kept as the first line of the note.
+
+**Measured**: build 0 errors; e2e 52/52 in Chromium (S5-READ extended; S5-INTRO, S5-STATES, S5-FALLBACK added; desktop, 768 and 390). No overflow or console errors at 1920×1080, 1440×900, 1280×720, 768×1024, 390×844, 360×800.
+
+**Not measured**: Lighthouse, Safari, Firefox, real devices, screen readers, frame rate on low-end phones.
+
+**Evidence**: `docs/reviews/v9-scene05/`.

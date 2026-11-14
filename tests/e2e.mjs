@@ -368,7 +368,7 @@ await test('SIG-3', 'Connected journey: all six stages, lines and planned detail
   }
 });
 
-await test('S5-READ', 'Scene 05: all three questions and answers stay at full opacity at every scroll position (and without JS)', async () => {
+await test('S5-READ', 'Scene 05: the report is real text, and the three questions and answers stay at full opacity at every scroll position', async () => {
   for (const opts of [{}, { viewport: { width: 390, height: 844 } }, { javaScriptEnabled: false }, { reducedMotion: 'reduce' }]) {
     const p = await ctx(opts);
     await go(p, '/');
@@ -381,8 +381,143 @@ await test('S5-READ', 'Scene 05: all three questions and answers stay at full op
       assert(lows === 0, `${lows} dimmed question elements at y=${y}`);
     }
     assert((await p.locator('.s5__qs li').count()) === 3, 'three questions');
+    const doc = await p.locator('.s5__sheet').innerText();
+    for (const t of ['Health assessment', 'ILLUSTRATIVE DOCUMENT', 'Lipid profile', 'Blood glucose', 'Thyroid function', 'Iron status', 'CLINICAL CONTEXT', 'FOLLOW-UP']) assert(doc.toUpperCase().includes(t.toUpperCase()), `report text missing: ${t}`);
+    assert(!/\d/.test(doc.replace(/\s/g, '')), 'the report contains digits (it must hold no values)');
+    assert((await p.locator('#scene-05 img, #scene-05 canvas, #scene-05 video').count()) === 0, 'Scene 05 uses media instead of browser-rendered elements');
+    assert(await p.locator('.s5__cap').isVisible(), 'disclaimer not visible');
+    assert(/Concept illustration\. It contains no values and is not a real report\./.test(await p.locator('.s5__cap').innerText()), 'disclaimer changed');
     await p.context().close();
   }
+});
+
+const s5Read = (p) =>
+  p.evaluate(() => {
+    const sec = document.querySelector('#scene-05');
+    const sheet = sec.querySelector('[data-s5-sheet]');
+    const lens = sec.querySelector('[data-s5-lens]');
+    const lr = lens.getBoundingClientRect();
+    const hit = [...sec.querySelectorAll('[data-s5-region]')].filter((r) => { const b = r.getBoundingClientRect(); return b.top >= lr.top - 2 && b.bottom <= lr.bottom + 2; }).map((r) => r.dataset.s5Region);
+    const note = sec.querySelector('[data-s5-note]');
+    return {
+      active: sec.dataset.active,
+      lens: hit.join(),
+      lensOpacity: Number(getComputedStyle(lens).opacity),
+      note: note.querySelector('[data-f="title"]').textContent.trim(),
+      noteOpacity: Number(getComputedStyle(note).opacity),
+      pressed: [...new Set([...sec.querySelectorAll('[data-s5-pick][aria-pressed="true"]')].map((b) => b.dataset.s5Pick))].join(),
+      frag: Number(getComputedStyle(sec.querySelector('[data-s5-frag]')).opacity),
+      scale: new DOMMatrix(getComputedStyle(sheet).transform).a,
+      path: getComputedStyle(sec.querySelector('.s5__path')).display,
+    };
+  });
+const S5 = { matters: ['markers', 'Understand the context.'], ask: ['context', 'Start a conversation.'], next: ['followup', 'Know the next step.'] };
+const s5Stage = async (p, q, wait = 300) => {
+  await p.evaluate((q) => { const t = document.querySelector('[data-s5-stage]').getBoundingClientRect().top + scrollY; scrollTo({ top: t - innerHeight * (0.94 - 0.66 * q), behavior: 'instant' }); }, q);
+  await p.waitForTimeout(wait);
+};
+
+await test('S5-INTRO', 'Scene 05 intro: arrival, parting, approach and lens follow scroll, the note resolves once, and it reverses until a choice is made', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const v = (n) => p.locator('#scene-05').evaluate((e, n) => parseFloat(e.style.getPropertyValue(n)), n);
+  await s5Stage(p, 0.05);
+  assert((await v('--arrive')) < 0.3 && (await v('--part')) === 0 && (await s5Read(p)).lensOpacity === 0, 'not at the start of the passage');
+  await s5Stage(p, 0.4);
+  assert((await v('--arrive')) === 1 && (await v('--part')) > 0.5, 'sheets did not part');
+  let r = await s5Read(p);
+  assert(r.noteOpacity === 0 && r.lensOpacity === 0, `note or lens early: ${JSON.stringify(r)}`);
+  await s5Stage(p, 0.95, 1300);
+  r = await s5Read(p);
+  assert(r.lens === 'markers' && r.lensOpacity === 1 && r.note === S5.matters[1] && r.noteOpacity === 1 && r.frag === 0 && r.scale > 1.03, `resolved: ${JSON.stringify(r)}`);
+  await s5Stage(p, 0.3, 500);
+  r = await s5Read(p);
+  assert(r.noteOpacity === 0 && r.lensOpacity === 0, `did not reverse: ${JSON.stringify(r)}`);
+  // an early choice works at once, and from then on scrolling never resets it
+  await p.locator('.s5__qs [data-s5-pick="next"]').click();
+  await p.waitForTimeout(1100);
+  await s5Stage(p, 0.1, 400);
+  await s5Stage(p, 1.2, 400);
+  r = await s5Read(p);
+  assert(r.active === 'next' && r.note === S5.next[1] && r.noteOpacity === 1 && r.lens === 'followup', `scroll reset the choice: ${JSON.stringify(r)}`);
+  assert(p.consoleErrors.length === 0, `console: ${p.consoleErrors[0]}`);
+  await p.context().close();
+});
+
+await test('S5-STATES', 'Scene 05: each question moves the lens to its own region, shows its own note, and frames the page differently; rapid choices settle on the last', async () => {
+  for (const opts of [{}, { viewport: { width: 390, height: 844 } }, { viewport: { width: 768, height: 1024 } }]) {
+    const p = await ctx(opts);
+    const widePage = !opts.viewport;
+    const pick = (k) => p.locator(`${widePage ? '.s5__qs' : '.s5__tabs'} [data-s5-pick="${k}"]`);
+    await go(p, '/');
+    await s5Stage(p, 1.1, 1300);
+    for (const k of ['ask', 'next', 'matters']) {
+      await pick(k).click();
+      await p.waitForTimeout(1250);
+      const r = await s5Read(p);
+      assert(r.active === k && r.pressed === k && r.lens === S5[k][0] && r.note === S5[k][1] && r.noteOpacity === 1 && r.frag === 0, `${k}: ${JSON.stringify(r)}`);
+      assert((r.path !== 'none') === (k === 'next'), `${k}: progression line shown wrongly`);
+      if (widePage) assert(k === 'next' ? Math.abs(r.scale - 1) < 0.005 : r.scale > 1.03, `${k}: framing ${r.scale}`);
+      const lit = await p.locator('#scene-05 [data-s5-region]').evaluateAll((els) => els.filter((e) => Number(getComputedStyle(e).opacity) === 1).map((e) => e.dataset.s5Region).join());
+      assert(lit === S5[k][0], `${k}: emphasised region ${lit}`);
+      assert((await p.locator('#scene-05 [data-s5-region]').evaluateAll((els) => Math.min(...els.map((e) => Number(getComputedStyle(e).opacity))))) >= 0.55, 'a region became unreadable');
+      // the note never covers the page, and the disclaimer stays in view of the layout
+      const over = await p.evaluate(() => { const a = document.querySelector('[data-s5-note]').getBoundingClientRect(); const b = document.querySelector('[data-s5-stack]').getBoundingClientRect(); return Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)); });
+      assert(over < 400, `${k}: note overlaps the report by ${Math.round(over)}px²`);
+    }
+    // both sets of controls are one state
+    await p.locator('.s5__qs [data-s5-pick="ask"]').click();
+    await p.waitForTimeout(200);
+    assert((await p.locator('.s5__tabs [data-s5-pick="ask"]').getAttribute('aria-pressed')) === 'true', 'the two selectors disagree');
+    // rapid switching: last wins, no stray fragment, no stale note
+    for (const k of ['matters', 'next', 'ask', 'matters', 'next']) await pick(k).click({ delay: 0 });
+    await p.waitForTimeout(1400);
+    const r = await s5Read(p);
+    assert(r.active === 'next' && r.note === S5.next[1] && r.lens === 'followup' && r.frag === 0 && r.noteOpacity === 1, `rapid: ${JSON.stringify(r)}`);
+    assert((await p.locator('[data-s5-frag]').count()) === 1, 'fragments accumulated');
+    // keyboard
+    await p.locator('.s5__qs [data-s5-pick="matters"]').focus();
+    await p.keyboard.press('Enter');
+    await p.waitForTimeout(1200);
+    assert((await s5Read(p)).active === 'matters', 'Enter did not select');
+    assert((await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle)) !== 'none', 'no visible focus');
+    assert(await p.evaluate(() => document.activeElement?.matches('.s5__qs [data-s5-pick="matters"]')), 'focus moved unexpectedly');
+    assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'horizontal overflow');
+    // resize: coordinates are re-measured, state survives
+    await p.setViewportSize({ width: widePage ? 600 : 1300, height: 900 });
+    await p.waitForTimeout(600);
+    const z = await s5Read(p);
+    assert(z.active === 'matters' && z.lens === 'markers' && z.noteOpacity === 1 && z.frag === 0, `after resize: ${JSON.stringify(z)}`);
+    assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'overflow after resize');
+    assert(p.consoleErrors.length === 0, `console: ${p.consoleErrors[0]}`);
+    await p.context().close();
+  }
+});
+
+await test('S5-FALLBACK', 'Scene 05 with reduced motion: no arrival, zoom or travelling fragment, all three states work; without JS: report, note and questions are plain text', async () => {
+  const r = await ctx({ reducedMotion: 'reduce' });
+  await go(r, '/');
+  await s5Stage(r, 0.1, 300);
+  let st = await s5Read(r);
+  assert(st.noteOpacity === 1 && st.lensOpacity === 1 && Math.abs(st.scale - 1.05) < 0.01, `reduced start: ${JSON.stringify(st)}`);
+  assert((await r.locator('[data-s5-stack]').evaluate((e) => getComputedStyle(e).transform)) === 'none' || (await r.locator('#scene-05').evaluate((e) => e.style.getPropertyValue('--arrive'))) === '1', 'arrival animation with reduced motion');
+  for (const k of ['ask', 'next', 'matters']) {
+    await r.locator(`.s5__qs [data-s5-pick="${k}"]`).click();
+    await r.waitForTimeout(120);
+    st = await s5Read(r);
+    assert(st.active === k && st.note === S5[k][1] && st.lens === S5[k][0] && st.frag === 0 && st.noteOpacity === 1, `reduced ${k}: ${JSON.stringify(st)}`);
+  }
+  await r.context().close();
+  const p = await ctx({ javaScriptEnabled: false });
+  await go(p, '/');
+  await p.locator('#scene-05').scrollIntoViewIfNeeded();
+  assert(await p.locator('.s5__sheet').isVisible() && (await p.locator('.s5__note').isVisible()), 'report or note hidden without JS');
+  assert(Number(await p.locator('.s5__note').evaluate((e) => getComputedStyle(e).opacity)) === 1, 'note transparent without JS');
+  assert(Number(await p.locator('[data-s5-stack]').evaluate((e) => getComputedStyle(e).opacity)) === 1, 'report faded without JS');
+  assert(!(await p.locator('.s5__lens').isVisible()), 'unplaced lens shown without JS');
+  assert((await p.locator('.s5__qs p:visible').count()) === 3, 'question text missing without JS');
+  assert((await p.locator('#scene-05 a[href="#scene-06"]').count()) === 1, 'link to Scene 06 missing');
+  await p.context().close();
 });
 
 await test('E2E-08', 'Keyboard: every homepage link/button is reachable and shows a focus indicator', async () => {
