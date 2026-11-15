@@ -161,10 +161,11 @@ await test('IH-01', 'INSIDE HUMAN: five letters H-U-M-A-N, each clipped to its o
     })),
   );
   assert(d.map((l) => l.k).join('') === 'human', 'letters: ' + d.map((l) => l.k).join(''));
-  const want = { h: 'h-run-club', u: 'u-female', m: 'm-eye', a: 'a-couple', n: 'n-mature-man' };
+  // the portal's A06 is the same file as the U photograph, so the build may serve it under either name
+  const want = { h: 'h-run-club', u: /u-female|A06-womens-portrait/, m: 'm-eye', a: 'a-couple', n: 'n-mature-man' };
   for (const l of d) {
     assert(l.clip === `url(#ih-clip-${l.k})`, l.k + ' clip ' + l.clip);
-    assert(l.imgs.length === 1 && l.imgs[0].includes(want[l.k]), l.k + ' photo ' + l.imgs);
+    assert(l.imgs.length === 1 && (want[l.k] instanceof RegExp ? want[l.k].test(l.imgs[0]) : l.imgs[0].includes(want[l.k])), l.k + ' photo ' + l.imgs);
     assert(await p.locator(`#ih-clip-${l.k} path`).count(), l.k + ' has no letter path');
   }
   for (let i = 1; i < d.length; i++) assert(d[i].x > d[i - 1].x, 'letters out of order');
@@ -1332,7 +1333,7 @@ await test('HP-09', 'Preview mode: a valid submit says registrations are not bei
   await p.locator('[data-demo]').click();
   await settleTo(p, 5);
   assert(await p.locator('[data-preview-flag]').isVisible(), 'closing chapter shown without its preview label');
-  assert(/No registration was made/.test(await p.locator('.hp5').innerText()), 'preview wording');
+  assert(/No registration was made/i.test(await p.locator('.hp5').innerText()), 'preview wording');
   await p.context().close();
 });
 

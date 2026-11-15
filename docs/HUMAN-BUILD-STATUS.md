@@ -343,3 +343,16 @@ One material for the navigation capsule, every `.btn` (primary and secondary), t
 **Open point for the founders**: the primary call to action is now quieter than the old solid amber button. That is what the directive asked for; whether it costs waitlist clicks is unknown until there is traffic to measure.
 
 **Evidence**: `docs/reviews/v12-hero-v2-glass/`.
+
+---
+
+## HUMAN Portal — five-chapter waitlist (2026-11-15)
+
+Replaces the previous `/waitlist` flow (rollback tag `v13-before-portal`). Full notes, the backend contract and launch prerequisites are in `docs/HUMAN-PORTAL.md`.
+
+- **Built**: Opening, Individual, Discovery, Invitation, Finale in one page with in-memory state; counter and five-segment progress; Back on chapters 2–4; browser Back/Forward; focus moved to each chapter heading.
+- **Signature transition** (01 → 02): tube → macro → red cells → portrait as one 1.9 s push-in on three overlapping layers; plain dissolve under reduced motion or if images are not decoded.
+- **Discovery panel**: selection and the picture on show are separate states; latest request wins; hover/focus preview on wide screens; panel stays pinned on phones.
+- **Submission**: default, validation error, submitting, network failure, server failure, duplicate, accepted. Preview build sends nothing.
+- **Not supplied**: A15 cardiovascular (Heart health uses A03).
+- **Status**: development preview. Not a live waitlist.
