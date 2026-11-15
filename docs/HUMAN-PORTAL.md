@@ -12,7 +12,7 @@ Status on 2026-11-15: **development preview.** The portal is fully built at `/wa
 | Supplied originals (never edited) | `src/assets/portal/originals/` |
 | Tests `HP-01` … `HP-17` | `tests/e2e.mjs` |
 
-Built with the site's existing Astro + TypeScript stack. Transitions use the browser's Web Animations API and CSS; there is no React, GSAP or WebGL. Fonts (Manrope, Bodoni Moda Italic) are self-hosted from npm packages and load on this page only.
+Built with the site's existing Astro + TypeScript stack. Transitions use the browser's Web Animations API and CSS; there is no React, GSAP or WebGL. Typography is the main site's: Hanken Grotesk and Instrument Serif italic through the site's own `--sans` / `--serif` variables, type-scale tokens and text colours. The portal declares no fonts of its own (the Manrope and Bodoni Moda packages from the first build were removed on 2026-11-15); test `HP-18` compares the portal's computed typography against a main-site page.
 
 ## Asset use
 

@@ -356,3 +356,7 @@ Replaces the previous `/waitlist` flow (rollback tag `v13-before-portal`). Full 
 - **Submission**: default, validation error, submitting, network failure, server failure, duplicate, accepted. Preview build sends nothing.
 - **Not supplied**: A15 cardiovascular (Heart health uses A03).
 - **Status**: development preview. Not a live waitlist.
+
+### Portal typography aligned with the main site (2026-11-15)
+
+The portal's own Manrope / Bodoni Moda pairing was replaced with the site's Hanken Grotesk / Instrument Serif italic, taken from the site's variables rather than re-declared. Headlines follow the site's `.display` rule (700, −0.025em, 0.98 line height; italic at 1.1×, −0.01em); wordmark, button text, lede, notes, labels and text colours use the site's values and tokens. Form controls now inherit the typeface (a test found some falling back to Arial). Chapter 04 spacing was tightened to fit the larger supporting text. Nothing else in the portal changed. e2e 65/65 in Chromium. Evidence: `docs/reviews/v15-portal-typography/`.
