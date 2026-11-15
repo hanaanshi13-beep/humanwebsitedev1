@@ -1012,9 +1012,16 @@ await test('HIM-02', 'HUMAN for Him and for Her: same structure and hierarchy, s
   // entrance motion still runs with motion allowed
   const q = await ctx();
   await go(q, '/men');
-  await q.evaluate(() => document.querySelector('.sg-areas').scrollIntoView());
-  await q.waitForTimeout(1400);
-  assert(await q.evaluate(() => [...document.querySelectorAll('.sg-areas [data-reveal]')].every((e) => Number(getComputedStyle(e).opacity) > 0.95)), 'scroll reveals did not complete');
+  // reveals fire as each element enters the viewport, so walk the section the way a reader would
+  const hiddenBefore = await q.evaluate(() => [...document.querySelectorAll('.sg-areas__list [data-reveal]')].filter((e) => Number(getComputedStyle(e).opacity) < 0.5).length);
+  assert(hiddenBefore > 0, 'entrance motion is not armed (nothing waits to be revealed)');
+  for (let i = 0; i < 6; i++) {
+    await q.evaluate((i) => document.querySelectorAll('.sg-areas__list li')[i].scrollIntoView({ block: 'center' }), i);
+    await q.waitForTimeout(350);
+  }
+  await q.waitForTimeout(1200);
+  const left = await q.evaluate(() => [...document.querySelectorAll('.sg-areas [data-reveal]')].filter((e) => Number(getComputedStyle(e).opacity) < 0.95).length);
+  assert(left === 0, left + ' elements in the areas section never finished revealing');
   await q.context().close();
   await p.context().close();
 });
