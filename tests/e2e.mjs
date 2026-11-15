@@ -356,13 +356,13 @@ await test('IH-05', 'INSIDE HUMAN opening at eleven viewport sizes: no overflow,
   }
 });
 
-await test('E2E-03', 'Header waitlist CTA (back after the opening film) opens /waitlist on the Welcome chapter', async () => {
+await test('E2E-03', 'Header waitlist CTA (back after the opening film) opens /waitlist on the opening chapter', async () => {
   const p = await ctx();
   await go(p, '/');
   await pastHero(p);
   await p.locator('.site-header .nav a.btn[href="/waitlist"]').click();
   await p.waitForURL('**/waitlist');
-  assert(await p.locator('#wl-h-welcome').isVisible(), 'welcome not shown');
+  assert(await p.locator('#hp-h-1').isVisible(), 'opening chapter not shown');
   await p.context().close();
 });
 
@@ -1076,269 +1076,491 @@ await test('NO-TRACKERS', 'No third-party requests on any route (no analytics, p
   await p.context().close();
 });
 
-// ---------- waitlist ----------
-const fillYou = async (p, name = 'Test Person', email = 'test.person@example.com') => {
-  await p.fill('#wl-name', name);
-  await p.fill('#wl-email', email);
+// ---------- HUMAN Portal (/waitlist) ----------
+const FIX = '/__test_fixture__/waitlist';
+const ch = (p) => p.locator('[data-hp]').getAttribute('data-chapter');
+const visibleChapters = (p) => p.evaluate(() => [...document.querySelectorAll('[data-ch]')].filter((c) => !c.hidden).map((c) => c.dataset.ch).join());
+const settleTo = async (p, n, ms = 6000) => {
+  await p.waitForFunction((n) => document.querySelector('[data-hp]').dataset.chapter === String(n) && document.querySelector('[data-fx]').hidden, n, { timeout: ms });
+  await p.waitForTimeout(150);
 };
-const next = (p) => p.locator('[data-next]').click();
-const chapter = (p) => p.locator('[data-wl]').getAttribute('data-chapter');
-const toConsent = async (p) => {
-  await go(p, '/waitlist');
-  await next(p);
-  await fillYou(p);
-  await next(p);
-  await p.fill('#wl-city', 'Jaipur');
-  await p.selectOption('#wl-state', 'Rajasthan');
-  await next(p);
-};
+const begin = async (p) => { await p.locator('[data-begin]').click(); await settleTo(p, 2); };
+const toCh3 = async (p, name = 'Asha') => { await begin(p); await p.fill('[name=firstName]', name); await p.locator('[data-form="2"] .hp-btn').click(); await settleTo(p, 3); };
+const toCh4 = async (p, name = 'Asha') => { await toCh3(p, name); await p.locator('[data-form="3"] .hp-btn').click(); await settleTo(p, 4); };
+const fillCh4 = async (p) => { await p.fill('[name=email]', 'asha@example.com'); await p.check('#hp-consent', { force: true }); };
+const useFixture = (p) => p.evaluate((f) => (document.querySelector('[data-hp]').dataset.endpoint = f), FIX);
 
-await test('E2E-19', 'Welcome → Begin moves to You, labelled Step 1 of 3; five chapters, three data steps', async () => {
-  const p = await ctx();
+await test('HP-01', 'Portal: five approved two-line headlines, unchanged; one chapter visible at a time; counter and five-segment progress', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/waitlist');
-  assert((await p.locator('[data-ch]').count()) === 5, 'five chapters');
-  assert((await p.locator('form[data-ch]').count()) === 3, 'three data steps');
-  assert(!(await p.locator('[data-back]').isVisible()), 'Back visible on Welcome');
-  await next(p);
-  assert((await chapter(p)) === 'you', 'not on you');
-  assert((await p.locator('[data-progress-label]').innerText()).toUpperCase() === 'STEP 1 OF 3', 'progress label');
-  assert(await p.evaluate(() => document.activeElement.id === 'wl-h-you'), 'focus not moved to heading');
+  const heads = await p.evaluate(() => [...document.querySelectorAll('[data-ch] h1')].map((h) => [h.querySelector('.hp__l1').textContent, h.querySelector('.hp__l2').textContent, getComputedStyle(h.querySelector('.hp__l1')).textTransform, getComputedStyle(h.querySelector('.hp__l2')).fontStyle, getComputedStyle(h.querySelector('.hp__l1')).fontFamily, getComputedStyle(h.querySelector('.hp__l2')).fontFamily]));
+  const want = [['Welcome', 'to HUMAN.'], ['Let’s get to', 'know you.'], ['What matters', 'to you?'], ['Be among', 'the first.'], ['You’re on', 'the list.']];
+  assert(heads.length === 5, 'chapters: ' + heads.length);
+  heads.forEach((h, i) => {
+    assert(h[0] === want[i][0] && h[1] === want[i][1], `chapter ${i + 1} headline: ${h[0]} / ${h[1]}`);
+    assert(h[2] === 'uppercase' && h[3] === 'italic' && /Manrope/.test(h[4]) && /Bodoni/.test(h[5]), `chapter ${i + 1} type: ${h.slice(2)}`);
+  });
+  assert((await visibleChapters(p)) === '1', 'visible at start: ' + (await visibleChapters(p)));
+  assert((await p.locator('[data-count]').innerText()) === '01' && (await p.locator('[data-seg]').count()) === 5 && (await p.locator('[data-seg].is-done').count()) === 1, 'progress at start');
+  for (const t of ['A deeper understanding of your health begins here.', 'Begin your journey', 'A little about you. A new perspective on health.']) assert((await p.locator('.hp1').innerText()).includes(t), 'missing: ' + t);
+  await begin(p);
+  assert((await visibleChapters(p)) === '2' && (await p.locator('[data-count]').innerText()) === '02' && (await p.locator('[data-seg].is-done').count()) === 2, 'chapter 2 state');
+  assert(await p.evaluate(() => document.activeElement.id === 'hp-h-2'), 'focus not moved to the new chapter heading');
+  assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
   await p.context().close();
 });
 
-await test('E2E-20', 'You: Continue with blank fields shows two errors, focuses the first, does not advance', async () => {
-  const p = await ctx();
+await test('HP-02', 'Portal assets: every image comes from the supplied library; nothing is enlarged past its source; all load', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  const failed = [];
+  p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
   await go(p, '/waitlist');
-  await next(p);
-  await next(p);
-  assert((await chapter(p)) === 'you', 'advanced');
-  assert((await p.locator('#wl-name-err').innerText()) !== '' && (await p.locator('#wl-email-err').innerText()) !== '', 'errors missing');
-  assert((await p.locator('#wl-name').getAttribute('aria-invalid')) === 'true', 'aria-invalid');
-  assert(await p.evaluate(() => document.activeElement.id === 'wl-name'), 'focus');
-  assert((await p.locator('[data-announce]').innerText()).length > 0, 'not announced');
+  const m = await p.evaluate(() => JSON.parse(document.querySelector('[data-hp]').dataset.manifest));
+  assert(Object.keys(m.images).length === 14, 'library size ' + Object.keys(m.images).length);
+  const srcs = await p.evaluate(() => [...document.querySelectorAll('.hp img[src]')].map((i) => i.getAttribute('src')));
+  const known = Object.values(m.images).map((i) => i.src);
+  const base = (u) => u.split('/').pop().split('.')[0].split('_')[0];
+  for (const s of srcs) assert(known.some((k) => base(k) === base(s)), 'image outside the library: ' + s);
+  for (const [id, i] of Object.entries(m.images)) {
+    const r = await p.evaluate((src) => new Promise((res) => { const im = new Image(); im.onload = () => res(im.naturalWidth); im.onerror = () => res(0); im.src = src; }), i.src);
+    assert(r > 0 && r <= i.w, `${id} served at ${r}px from a ${i.w}px source`);
+  }
+  assert(failed.length === 0, 'failed requests: ' + failed.join(', '));
   await p.context().close();
 });
 
-await test('E2E-21', 'You: invalid email shows an inline error and focuses the email field', async () => {
+await test('HP-03', 'Portal signature transition: tube → macro → cells play in order over the page, then hand over to Chapter 02; controls are never trapped', async () => {
   const p = await ctx();
   await go(p, '/waitlist');
-  await next(p);
-  await fillYou(p, 'A', 'not-an-email');
-  await next(p);
-  assert((await chapter(p)) === 'you', 'advanced');
-  assert(await p.evaluate(() => document.activeElement.id === 'wl-email'), 'focus');
+  await p.waitForTimeout(900);
+  await p.locator('[data-begin]').click();
+  const seen = [];
+  for (let i = 0; i < 26; i++) {
+    seen.push(await p.evaluate(() => {
+      const fx = document.querySelector('[data-fx]');
+      const o = (k) => { const e = fx.querySelector(`[data-fx-img="${k}"]`); const c = getComputedStyle(e); return c.visibility === 'hidden' ? 0 : Number(c.opacity); };
+      return { fx: !fx.hidden, a: o('a'), b: o('b'), c: o('c'), ch: document.querySelector('[data-hp]').dataset.chapter, src: ['a', 'b', 'c'].map((k) => (fx.querySelector(`[data-fx-img="${k}"]`).getAttribute('src') || '').split('/').pop().slice(0, 3)).join() };
+    }));
+    await p.waitForTimeout(90);
+  }
+  const first = (f) => seen.findIndex(f);
+  const [ia, ib, ic, i2] = [first((s) => s.fx && s.a > 0.9), first((s) => s.b > 0.5), first((s) => s.c > 0.5), first((s) => s.ch === '2')];
+  assert(ia >= 0 && ib > ia && ic > ib && i2 >= ic, `order tube/macro/cells/chapter: ${ia}/${ib}/${ic}/${i2}`);
+  assert(seen[ia].src === 'A01,A02,A03', 'layers are not A01, A02, A03: ' + seen[ia].src);
+  await settleTo(p, 2);
+  assert((await visibleChapters(p)) === '2', 'after the film: ' + (await visibleChapters(p)));
+  assert(await p.locator('[name=firstName]').isEditable(), 'form not usable after the film');
+  // reduced motion: no film layer at all
+  const q = await ctx({ reducedMotion: 'reduce' });
+  await go(q, '/waitlist');
+  await q.locator('[data-begin]').click();
+  await q.waitForTimeout(120);
+  assert((await ch(q)) === '2' && (await q.evaluate(() => document.querySelector('[data-fx]').hidden)), 'reduced motion should switch at once with no film');
+  await q.context().close();
   await p.context().close();
 });
 
-await test('E2E-22', 'You: valid fields (Enter key) move to Location, Step 2 of 3; single-word name accepted', async () => {
-  const p = await ctx();
+await test('HP-04', 'Chapter 02: first name required (error, focus, no advance); age and gender optional; self-describe field appears only on request', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/waitlist');
-  await next(p);
-  await fillYou(p, 'Madonna', 'm@example.co.in');
-  await p.press('#wl-email', 'Enter');
-  assert((await chapter(p)) === 'location', 'not on location');
-  assert((await p.locator('[data-progress-label]').innerText()).toUpperCase() === 'STEP 2 OF 3', 'label');
+  await begin(p);
+  await p.locator('[data-form="2"] .hp-btn').click();
+  assert((await ch(p)) === '2', 'advanced without a name');
+  assert((await p.locator('#hp-first-err').innerText()) === 'Enter your first name.', 'error text');
+  assert(await p.evaluate(() => document.activeElement.id === 'hp-first' && document.activeElement.getAttribute('aria-invalid') === 'true'), 'focus/invalid state');
+  assert(!(await p.locator('[data-self-field]').isVisible()), 'self-describe shown by default');
+  assert((await p.locator('[name=ageGroup]').count()) === 6 && (await p.locator('[name=gender]').count()) === 4, 'option counts');
+  assert((await p.locator('[name=ageGroup]:checked, [name=gender]:checked').count()) === 0, 'something preselected');
+  await p.check('#hp-gen-2', { force: true });
+  assert(await p.locator('[data-self-field]').isVisible(), 'self-describe not shown');
+  await p.check('#hp-gen-0', { force: true });
+  assert(!(await p.locator('[data-self-field]').isVisible()), 'self-describe still shown');
+  await p.fill('[name=firstName]', 'Asha');
+  assert((await p.locator('#hp-first-err').innerText()) === '', 'error not cleared');
+  await p.locator('[name=firstName]').press('Enter');
+  await settleTo(p, 3);
   await p.context().close();
 });
 
-await test('E2E-23/24/25', 'Location: blank required fields error; blank WhatsApp allowed; invalid WhatsApp rejected', async () => {
-  const p = await ctx();
+await test('HP-05', 'Chapter 03: ten optional interests, none preselected, independent multi-select; picture follows the active topic; deselecting keeps the rest', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/waitlist');
-  await next(p);
-  await fillYou(p);
-  await next(p);
-  await next(p);
-  assert((await chapter(p)) === 'location', 'advanced with blanks');
-  assert((await p.locator('#wl-city-err').innerText()) !== '' && (await p.locator('#wl-state-err').innerText()) !== '', 'errors');
-  assert((await p.locator('#wl-state option').count()) === 37, 'expected 36 states/UTs + placeholder');
-  await p.fill('#wl-city', 'Pune');
-  await p.selectOption('#wl-state', 'Maharashtra');
-  await p.fill('#wl-phone', '12345');
-  await next(p);
-  assert((await chapter(p)) === 'location', 'advanced with bad phone');
-  assert((await p.locator('#wl-phone-err').innerText()) !== '', 'phone error');
-  await p.fill('#wl-phone', '');
-  await next(p);
-  assert((await chapter(p)) === 'consent', 'blank phone blocked');
-  assert(/No WhatsApp number given/.test(await p.locator('[data-sum="phone"]').innerText()), 'summary phone');
+  await toCh3(p);
+  const boxes = p.locator('[name=interests]');
+  assert((await boxes.count()) === 10 && (await p.locator('[name=interests]:checked').count()) === 0, 'interests / preselection');
+  const labels = await p.locator('.hp3 .hp-chip span').allInnerTexts();
+  assert(labels.join('|') === 'Preventive health|Fitness & performance|Hormonal health|Heart health|Energy & metabolism|Women’s health|Men’s health|Longevity|Sleep & recovery|Overall wellbeing', labels.join('|'));
+  assert((await p.locator('.hp3').innerText()).includes('Select as many as you like.'), 'microcopy');
+  const now = () => p.evaluate(() => { const s = document.querySelector('.hp3__slot.is-on .hp3__pic'); return { img: (s.getAttribute('src') || '').split('/').pop().slice(0, 3), label: document.querySelector('[data-topic-label]').textContent, alt: s.alt }; });
+  await p.waitForTimeout(500);
+  assert((await now()).img === 'A02', 'neutral default: ' + JSON.stringify(await now()));
+  const expect = { preventive: 'A01', hormonal: 'A09', heart: 'A03', energy: 'A12', womens: 'A06', mens: 'A10', longevity: 'A11', sleep: 'A07', wellbeing: 'A04' };
+  for (const [k, id] of Object.entries(expect)) {
+    await p.check('#hp-int-' + k, { force: true });
+    await p.mouse.move(2, 2);
+    await p.waitForTimeout(450);
+    const n = await now();
+    assert(n.img === id && n.alt.length > 10, `${k} shows ${n.img}, wanted ${id}`);
+  }
+  await p.check('#hp-int-fitness', { force: true });
+  await p.mouse.move(2, 2);
+  await p.waitForTimeout(450);
+  assert((await now()).img === 'A05', 'fitness starts on the runners: ' + (await now()).img);
+  await p.waitForTimeout(2300);
+  assert((await now()).img === 'A08', 'fitness did not move on to the anatomy: ' + (await now()).img);
+  assert((await p.locator('[name=interests]:checked').count()) === 10, 'selections lost while pictures changed');
+  await p.uncheck('#hp-int-fitness', { force: true });
+  await p.uncheck('#hp-int-heart', { force: true });
+  assert((await p.locator('[name=interests]:checked').count()) === 8, 'deselecting removed more than one');
+  await p.waitForTimeout(450);
+  assert((await now()).img === 'A04', 'after deselecting the active topic the picture should fall back to the last chosen: ' + (await now()).img);
+  const txt = await p.locator('.hp3__panel').innerText();
+  assert(/Illustrative visuals\. Not a personal health assessment\./.test(txt), 'disclaimer missing');
+  assert(!/\d+\s?(%|bpm|mg|mmol|ng|score)/i.test(txt), 'a number that looks like a measurement: ' + txt);
+  // hover previews without selecting
+  await p.uncheck('#hp-int-longevity', { force: true });
+  await p.mouse.move(2, 2);
+  await p.waitForTimeout(300);
+  await p.locator('[data-topic="longevity"]').hover();
+  await p.waitForTimeout(450);
+  assert((await now()).img === 'A11' && !(await p.locator('#hp-int-longevity').isChecked()), 'hover should preview without selecting');
   await p.context().close();
 });
 
-await test('E2E-26/27', 'Back and Edit preserve every value; Edit returns to the summary; phone is masked there', async () => {
+await test('HP-06', 'Chapter 03 under rapid changes: the last request wins, no errors; continuing with nothing selected is allowed', async () => {
   const p = await ctx();
   await go(p, '/waitlist');
-  await next(p);
-  await fillYou(p);
-  await next(p);
-  await p.fill('#wl-city', 'Jaipur');
-  await p.selectOption('#wl-state', 'Rajasthan');
-  await p.fill('#wl-phone', '98765 43210');
-  await next(p);
-  assert((await p.locator('[data-sum="phone"]').innerText()).includes('•') && !(await p.locator('[data-sum="phone"]').innerText()).includes('98765'), 'phone not masked');
-  await p.locator('[data-back]').click();
-  assert((await p.inputValue('#wl-city')) === 'Jaipur' && (await p.inputValue('#wl-state')) === 'Rajasthan', 'location lost');
-  await p.locator('[data-back]').click();
-  assert((await p.inputValue('#wl-name')) === 'Test Person', 'name lost');
-  await next(p);
-  await next(p);
-  await p.locator('[data-edit="you"]').click();
-  assert((await chapter(p)) === 'you', 'edit did not go to you');
-  await p.fill('#wl-name', 'Edited Person');
-  await next(p);
-  assert((await chapter(p)) === 'consent', 'edit did not return to summary');
-  assert((await p.locator('[data-sum="fullName"]').innerText()) === 'Edited Person', 'summary not updated');
+  await toCh3(p);
+  for (const k of ['heart', 'longevity', 'energy', 'wellbeing', 'hormonal', 'mens']) await p.check('#hp-int-' + k, { force: true });
+  await p.mouse.move(2, 2);
+  await p.waitForTimeout(1300);
+  const img = await p.evaluate(() => (document.querySelector('.hp3__slot.is-on .hp3__pic').getAttribute('src') || '').split('/').pop().slice(0, 3));
+  assert(img === 'A10' && (await p.locator('.hp3__slot.is-on').count()) === 1, 'after rapid changes: ' + img);
+  assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
+  const q = await ctx({ reducedMotion: 'reduce' });
+  await go(q, '/waitlist');
+  await toCh4(q);
+  assert((await ch(q)) === '4', 'could not continue with no interests');
+  await q.context().close();
+  await p.context().close();
+});
+
+await test('HP-07', 'Back keeps everything: name, age, gender, interests and contact details survive going back and forward; browser Back works too', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  await go(p, '/waitlist');
+  await begin(p);
+  await p.fill('[name=firstName]', 'Asha');
+  await p.check('#hp-age-1', { force: true });
+  await p.check('#hp-gen-2', { force: true });
+  await p.fill('[name=genderSelf]', 'non-binary');
+  await p.locator('[data-form="2"] .hp-btn').click();
+  await settleTo(p, 3);
+  await p.check('#hp-int-heart', { force: true });
+  await p.check('#hp-int-sleep', { force: true });
+  await p.locator('[data-form="3"] .hp-btn').click();
+  await settleTo(p, 4);
+  await p.fill('[name=email]', 'asha@example.com');
+  await p.fill('[name=mobile]', '98765 43210');
+  await p.fill('[name=city]', 'Jaipur');
+  await p.check('#hp-consent', { force: true });
+  await p.locator('.hp4 [data-back]').click();
+  await settleTo(p, 3);
+  assert((await p.locator('[name=interests]:checked').count()) === 2, 'interests lost');
+  await p.locator('.hp3 [data-back]').click();
+  await settleTo(p, 2);
+  assert((await p.inputValue('[name=firstName]')) === 'Asha' && (await p.isChecked('#hp-age-1')) && (await p.isChecked('#hp-gen-2')) && (await p.inputValue('[name=genderSelf]')) === 'non-binary', 'chapter 2 values lost');
+  assert((await p.locator('.hp2 [data-back]').count()) === 1 && (await p.locator('.hp1 [data-back]').count()) === 0 && (await p.locator('.hp5 [data-back]').count()) === 0, 'Back should exist on chapters 2–4 only');
+  await p.locator('[data-form="2"] .hp-btn').click();
+  await settleTo(p, 3);
+  await p.locator('[data-form="3"] .hp-btn').click();
+  await settleTo(p, 4);
+  assert((await p.inputValue('[name=email]')) === 'asha@example.com' && (await p.inputValue('[name=mobile]')) === '98765 43210' && (await p.inputValue('[name=city]')) === 'Jaipur' && (await p.isChecked('#hp-consent')), 'chapter 4 values lost');
   await p.goBack();
-  assert((await chapter(p)) === 'you', 'browser Back');
+  await settleTo(p, 3);
+  await p.goForward();
+  await settleTo(p, 4);
+  assert((await p.inputValue('[name=email]')) === 'asha@example.com', 'history navigation lost the draft');
   await p.context().close();
 });
 
-await test('E2E-28', 'Consent: neither box pre-checked; submitting without required consent errors and stays', async () => {
-  const p = await ctx();
-  await toConsent(p);
-  assert(!(await p.isChecked('#wl-c1')) && !(await p.isChecked('#wl-c2')), 'a box is pre-checked');
-  await next(p);
-  assert((await chapter(p)) === 'consent', 'left consent');
-  assert((await p.locator('#wl-c1-err').innerText()) !== '', 'error missing');
-  assert(await p.evaluate(() => document.activeElement.id === 'wl-c1'), 'focus');
+await test('HP-08', 'Chapter 04 validation: email required and checked; mobile and city optional; international numbers accepted; consent required and unchecked by default', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  await go(p, '/waitlist');
+  await toCh4(p);
+  assert(!(await p.isChecked('#hp-consent')), 'consent pre-checked');
+  assert((await p.inputValue('[name=countryCode]')) === '+91', 'default country code');
+  await p.locator('[data-submit]').click();
+  assert((await p.locator('#hp-email-err').innerText()) === 'Enter your email address.', 'blank email error');
+  assert(/please agree/i.test(await p.locator('#hp-consent-err').innerText()), 'consent error');
+  assert(await p.evaluate(() => document.activeElement.id === 'hp-email'), 'focus on first invalid field');
+  await p.fill('[name=email]', 'not-an-email');
+  await p.locator('[data-submit]').click();
+  assert(/like you@example\.com/.test(await p.locator('#hp-email-err').innerText()), 'invalid email error');
+  await p.fill('[name=email]', 'asha@example.com');
+  await p.check('#hp-consent', { force: true });
+  await p.fill('[name=mobile]', '12');
+  await p.locator('[data-submit]').click();
+  assert(/country code, or leave this blank/.test(await p.locator('#hp-phone-err').innerText()), 'short number accepted');
+  for (const [cc, n] of [['+91', '98765 43210'], ['+971', '50 123 4567'], ['+44', '7700 900123'], ['+91', '+1 415 555 0132']]) {
+    await p.fill('[name=countryCode]', cc);
+    await p.fill('[name=mobile]', n);
+    await p.locator('[data-submit]').click();
+    assert((await p.locator('#hp-phone-err').innerText()) === '', `rejected a valid number ${cc} ${n}`);
+  }
+  await p.fill('[name=mobile]', '');
+  await p.locator('[data-submit]').click();
+  assert((await p.locator('#hp-phone-err').innerText()) === '' && (await p.locator('#hp-email-err').innerText()) === '', 'optional fields blocked the form');
+  assert((await p.locator('.hp4 a[href="/privacy"]').count()) === 1, 'privacy link');
+  assert((await ch(p)) === '4', 'left chapter 4 without a backend');
   await p.context().close();
 });
 
-await test('E2E-30', 'Preview mode: valid submit shows "not accepting registrations", never Success, and sends NOTHING', async () => {
-  const p = await ctx();
-  await toConsent(p);
-  await p.check('#wl-c1');
+await test('HP-09', 'Preview mode: a valid submit says registrations are not being accepted, sends NOTHING, and the closing chapter is reachable only as a labelled preview', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  await go(p, '/waitlist');
+  assert(/Preview — registrations are not being accepted yet/i.test(await p.locator('.hp__mode').innerText()), 'preview label');
+  assert(await p.locator('.hp__mode').isVisible(), 'preview label hidden');
+  await toCh4(p);
+  await fillCh4(p);
   const before = p.requests.length;
-  await next(p);
-  await next(p); // double click
+  await p.locator('[data-submit]').click();
   await p.waitForTimeout(400);
-  assert((await chapter(p)) === 'consent', 'left consent');
-  assert(/not accepting registrations yet/i.test(await p.locator('[data-notice]').innerText()), 'notice missing');
-  assert(!(await p.locator('[data-ch="success"]').isVisible()), 'Success visible');
-  assert(p.requests.length === before, 'a network request was made');
+  const n = await p.locator('[data-notice]').innerText();
+  assert(/not accepting registrations yet/i.test(n) && /Nothing has been sent or saved/.test(n), 'notice: ' + n);
+  assert((await ch(p)) === '4', 'moved on in preview');
+  assert(p.requests.slice(before).filter((r) => r.method !== 'GET').length === 0, 'a non-GET request was made');
+  await p.locator('[data-demo]').click();
+  await settleTo(p, 5);
+  assert(await p.locator('[data-preview-flag]').isVisible(), 'closing chapter shown without its preview label');
+  assert(/No registration was made/.test(await p.locator('.hp5').innerText()), 'preview wording');
   await p.context().close();
 });
 
-await test('PII', 'No form value reaches the URL, localStorage, sessionStorage, cookies or the console (V3-QA-19, E2E-45)', async () => {
-  const p = await ctx();
+await test('HP-10', 'No form value reaches the URL, localStorage, sessionStorage, cookies or the console', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
   const logs = [];
   p.on('console', (m) => logs.push(m.text()));
-  await toConsent(p);
-  await p.check('#wl-c1');
-  await next(p);
-  const dump = await p.evaluate(() => JSON.stringify([location.href, { ...localStorage }, { ...sessionStorage }, document.cookie, history.state]));
-  const all = dump + logs.join(' ');
-  assert(!/Test Person|test\.person|Jaipur|Rajasthan/.test(all), 'PII found: ' + all.slice(0, 200));
-  await p.context().close();
-});
-
-await test('E2E-34', 'Reload or forged URL (#success, ?success=true) never shows Success; draft is not retained (WL4-06)', async () => {
-  const p = await ctx();
-  for (const u of ['/waitlist#success', '/waitlist?success=true', '/waitlist#consent']) {
-    await go(p, u);
-    assert((await chapter(p)) === 'welcome', u + ' → ' + (await chapter(p)));
-    assert(!(await p.locator('[data-ch="success"]').isVisible()), u + ' shows success');
-  }
-  await toConsent(p);
-  await p.reload({ waitUntil: 'networkidle' });
-  assert((await chapter(p)) === 'welcome', 'reload kept chapter');
-  await next(p);
-  assert((await p.inputValue('#wl-name')) === '', 'draft retained after reload');
-  await p.context().close();
-});
-
-// Fixture tests: a clearly-labelled TEST endpoint is injected into this browser only. No real backend exists.
-const withFixture = async (handler) => {
-  const p = await ctx();
-  let calls = 0;
-  await p.route('**/__test_fixture__/waitlist', async (route) => {
-    calls++;
-    await handler(route, calls);
-  });
-  await toConsent(p);
-  await p.evaluate(() => (document.querySelector('[data-wl]').dataset.endpoint = '/__test_fixture__/waitlist'));
-  return { p, calls: () => calls };
-};
-
-await test('E2E-31/33/29', '[TEST FIXTURE] Accepted response → Success; double-click sends once; optional consent off does not block', async () => {
-  const { p, calls } = await withFixture(async (route) => {
-    await new Promise((r) => setTimeout(r, 300));
-    const body = JSON.parse(route.request().postData());
-    if (body.marketingConsent !== false || body.operationalConsent !== true) return route.fulfill({ status: 400, body: '{}' });
-    if (!route.request().headers()['idempotency-key']) return route.fulfill({ status: 400, body: '{}' });
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'accepted', registrationId: 'test-fixture' }) });
-  });
-  await p.check('#wl-c1');
-  await p.locator('[data-next]').dblclick();
-  await p.waitForSelector('[data-ch="success"]:not([hidden])');
-  assert(calls() === 1, `backend called ${calls()} times`);
-  assert(/Your registration has been received/.test(await p.locator('[data-ch="success"]').innerText()), 'confirmation');
-  assert(!(await p.locator('.wl__bar').isVisible()), 'action bar still visible');
-  await p.reload({ waitUntil: 'networkidle' });
-  assert((await chapter(p)) === 'welcome', 'Success survived a refresh');
-  await p.context().close();
-});
-
-await test('E2E-32', '[TEST FIXTURE] 500 and network failure → recoverable error, values and consent preserved, no Success (V3-QA-14)', async () => {
-  const { p } = await withFixture(async (route, n) => (n === 1 ? route.fulfill({ status: 500, body: 'oops' }) : route.abort()));
-  await p.check('#wl-c1');
-  await p.check('#wl-c2');
-  await next(p);
-  await p.waitForFunction(() => /couldn’t complete/.test(document.querySelector('[data-notice]').textContent));
-  assert((await chapter(p)) === 'consent', 'left consent');
-  await next(p);
-  await p.waitForFunction(() => /couldn’t reach/.test(document.querySelector('[data-notice]').textContent));
-  assert((await p.isChecked('#wl-c1')) && (await p.isChecked('#wl-c2')), 'consent lost');
-  assert((await p.locator('[data-sum="email"]').innerText()) === 'test.person@example.com', 'values lost');
-  assert(!(await p.locator('[data-next]').isDisabled()), 'cannot retry');
-  await p.context().close();
-});
-
-await test('V3-QA-15', '[TEST FIXTURE] Duplicate response shows neutral wording, no Success, no account enumeration', async () => {
-  const { p } = await withFixture((route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'duplicate', userFacingMessage: 'If this is a new registration, it has been recorded.' }) }),
-  );
-  await p.check('#wl-c1');
-  await next(p);
-  await p.waitForFunction(() => !document.querySelector('[data-notice]').hidden && /Thank you/.test(document.querySelector('[data-notice]').textContent));
-  assert(!/already/i.test(await p.locator('[data-notice]').innerText()), 'reveals existing registration');
-  assert((await chapter(p)) === 'consent', 'left consent');
-  await p.context().close();
-});
-
-await test('E2E-35', 'Waitlist at 360x640 (keyboard-height proxy): fields, Back and Continue reachable by scrolling; bar not fixed', async () => {
-  const p = await ctx({ viewport: { width: 360, height: 640 }, hasTouch: true, isMobile: true });
   await go(p, '/waitlist');
-  await next(p);
-  await fillYou(p);
-  await next(p);
-  await p.setViewportSize({ width: 360, height: 360 });
-  assert((await p.locator('.wl__bar').evaluate((e) => getComputedStyle(e).position)) === 'static', 'bar is fixed/sticky on mobile');
-  await p.locator('#wl-phone').scrollIntoViewIfNeeded();
-  assert(await p.locator('#wl-phone').isVisible(), 'phone field unreachable');
-  await p.locator('[data-next]').scrollIntoViewIfNeeded();
-  const b = await p.locator('[data-next]').boundingBox();
-  assert(b.y >= 0 && b.y + b.height <= 360, 'Continue not reachable');
-  const fs = await p.locator('#wl-city').evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
-  assert(fs >= 16, 'input font-size under 16px (iOS zoom)');
+  await toCh4(p, 'Zephyrine');
+  await p.fill('[name=email]', 'zephyrine.q@example.com');
+  await p.fill('[name=city]', 'Udaipur');
+  await p.check('#hp-consent', { force: true });
+  await p.locator('[data-submit]').click();
+  await p.waitForTimeout(300);
+  const dump = await p.evaluate(() => JSON.stringify([location.href, { ...localStorage }, { ...sessionStorage }, document.cookie, history.state]));
+  for (const v of ['Zephyrine', 'zephyrine.q', 'Udaipur']) assert(!dump.includes(v) && !logs.join(' ').includes(v), 'leaked: ' + v);
   await p.context().close();
 });
 
-await test('A11Y-FORM', 'Every input has a label, autocomplete purpose and error hook; touch targets ≥ 44px (V3-QA-17)', async () => {
-  const p = await ctx({ viewport: { width: 390, height: 844 } });
-  await toConsent(p);
+await test('HP-11', 'Reload or a forged URL never shows the closing chapter, and the draft is not retained', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  for (const u of ['/waitlist#5', '/waitlist?chapter=5', '/waitlist?success=true', '/waitlist#finale']) {
+    await go(p, u);
+    assert((await visibleChapters(p)) === '1', u + ' shows chapter ' + (await visibleChapters(p)));
+  }
+  await go(p, '/waitlist');
+  await toCh4(p);
+  await p.evaluate(() => history.pushState({ hp: 5 }, '', location.pathname));
+  await p.goBack();
+  await p.goForward();
+  await p.waitForTimeout(500);
+  assert((await ch(p)) !== '5', 'history state alone reached the closing chapter');
+  await p.reload({ waitUntil: 'networkidle' });
+  assert((await visibleChapters(p)) === '1', 'after reload');
+  await p.locator('[data-begin]').click();
+  await settleTo(p, 2);
+  assert((await p.inputValue('[name=firstName]')) === '', 'draft retained across reload');
+  await p.context().close();
+});
+
+await test('HP-12', '[TEST FIXTURE] Accepted response → closing chapter with the first name; double press sends once; payload carries consent time and notice version', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  let hits = 0;
+  let body = null;
+  let key = '';
+  await p.route('**' + FIX, async (route) => {
+    hits++;
+    body = JSON.parse(route.request().postData());
+    key = route.request().headers()['idempotency-key'];
+    await new Promise((r) => setTimeout(r, 350));
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'accepted' }) });
+  });
+  await go(p, '/waitlist');
+  await begin(p);
+  await p.fill('[name=firstName]', 'Asha');
+  await p.check('#hp-age-1', { force: true });
+  await p.locator('[data-form="2"] .hp-btn').click();
+  await settleTo(p, 3);
+  await p.check('#hp-int-heart', { force: true });
+  await p.locator('[data-form="3"] .hp-btn').click();
+  await settleTo(p, 4);
+  await useFixture(p);
+  await fillCh4(p);
+  await p.locator('[data-submit]').dblclick();
+  await p.waitForTimeout(120);
+  assert((await ch(p)) === '4' && (await p.locator('[data-submit]').isDisabled()), 'should wait for the server before moving on');
+  await settleTo(p, 5);
+  assert(hits === 1, 'requests sent: ' + hits);
+  assert(body.firstName === 'Asha' && body.ageGroup === '25–34' && body.gender === null && body.interests.join() === 'heart' && body.email === 'asha@example.com' && body.mobile === null && body.city === null && body.waitlistConsent === true, 'payload ' + JSON.stringify(body));
+  assert(!Number.isNaN(Date.parse(body.consentAt)) && body.privacyNoticeVersion && key.length > 20, 'consent metadata / idempotency key');
+  const t = await p.locator('.hp5').innerText();
+  assert(/Thank you, Asha\./.test(t) && /We’ll be in touch as HUMAN takes shape\./.test(t) && /More life\.\s+More moments that matter\./.test(t), 'closing copy: ' + t);
+  assert(!(await p.locator('[data-preview-flag]').isVisible()), 'preview label on a real confirmation');
+  assert(await p.locator('.hp5 a[href="/"]').isVisible(), 'Return to HUMAN');
+  assert((await p.inputValue('[name=email]')) === '', 'details kept in the page after acceptance');
+  await p.goBack();
+  await p.waitForTimeout(400);
+  assert((await ch(p)) === '5', 'Back left the confirmation');
+  await p.context().close();
+});
+
+await test('HP-13', '[TEST FIXTURE] Server error and network failure → recoverable message, every value kept, retry possible, no closing chapter', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  let mode = '500';
+  await p.route('**' + FIX, (route) => (mode === '500' ? route.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : mode === 'net' ? route.abort() : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'accepted' }) })));
+  await go(p, '/waitlist');
+  await toCh4(p);
+  await useFixture(p);
+  await fillCh4(p);
+  await p.fill('[name=city]', 'Jaipur');
+  for (const [m, rx] of [['500', /couldn’t complete your registration/i], ['net', /couldn’t reach the server/i]]) {
+    mode = m;
+    await p.locator('[data-submit]').click();
+    await p.waitForTimeout(500);
+    assert(rx.test(await p.locator('[data-notice]').innerText()), m + ' notice: ' + (await p.locator('[data-notice]').innerText()));
+    assert((await ch(p)) === '4', m + ' left chapter 4');
+    assert((await p.inputValue('[name=email]')) === 'asha@example.com' && (await p.inputValue('[name=city]')) === 'Jaipur' && (await p.isChecked('#hp-consent')), m + ' lost values');
+    assert(!(await p.locator('[data-submit]').isDisabled()), m + ' cannot retry');
+  }
+  mode = 'ok';
+  await p.locator('[data-submit]').click();
+  await settleTo(p, 5);
+  await p.context().close();
+});
+
+await test('HP-14', '[TEST FIXTURE] Duplicate response shows neutral wording, no closing chapter, no account enumeration', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  await p.route('**' + FIX, (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'duplicate' }) }));
+  await go(p, '/waitlist');
+  await toCh4(p);
+  await useFixture(p);
+  await fillCh4(p);
+  await p.locator('[data-submit]').click();
+  await p.waitForTimeout(500);
+  const n = await p.locator('[data-notice]').innerText();
+  assert(/If this is a new registration, it has been recorded/.test(n) && !/already|exists|registered before/i.test(n), 'duplicate wording: ' + n);
+  assert((await ch(p)) === '4', 'duplicate reached the closing chapter');
+  await p.context().close();
+});
+
+await test('HP-15', 'Portal layout at 360, 390, 768, 1024, 1440 and 1920: no horizontal overflow on any chapter; primary action reachable; picture change keeps scroll position', async () => {
+  for (const [w, h] of [[360, 640], [390, 844], [768, 1024], [1024, 768], [1440, 900], [1920, 1080]]) {
+    const p = await ctx({ viewport: { width: w, height: h }, reducedMotion: 'reduce' });
+    await go(p, '/waitlist');
+    const check = async (n, sel) => {
+      const over = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      assert(over <= 0, `${w}px chapter ${n} overflows by ${over}px`);
+      if (sel) {
+        await p.locator(sel).scrollIntoViewIfNeeded();
+        const b = await p.locator(sel).boundingBox();
+        assert(b && b.x >= 0 && b.x + b.width <= w + 0.5 && b.y >= 0 && b.y + b.height <= h + 0.5 && b.height >= 44, `${w}px chapter ${n}: primary action not reachable`);
+      }
+      const h1 = await p.locator(`[data-ch="${n}"] h1`).evaluate((e) => e.scrollWidth > e.clientWidth + 1);
+      assert(!h1, `${w}px chapter ${n}: headline clipped`);
+    };
+    await check(1, '[data-begin]');
+    if (w >= 900) { const b = await p.locator('[data-begin]').boundingBox(); assert(b.y + b.height <= h, `${w}px: Begin below the fold`); }
+    await begin(p);
+    await p.fill('[name=firstName]', 'Asha');
+    await check(2, '[data-form="2"] .hp-btn');
+    await p.locator('[data-form="2"] .hp-btn').click();
+    await settleTo(p, 3);
+    await check(3, '[data-form="3"] .hp-btn');
+    if (w < 900) {
+      await p.locator('#hp-int-wellbeing').scrollIntoViewIfNeeded();
+      const y0 = await p.evaluate(() => scrollY);
+      await p.check('#hp-int-wellbeing', { force: true });
+      await p.waitForTimeout(500);
+      assert(Math.abs((await p.evaluate(() => scrollY)) - y0) < 2, `${w}px: choosing an interest moved the page`);
+      const panel = await p.locator('.hp3__panel').boundingBox();
+      assert(panel.y >= 0 && panel.y < h * 0.4, `${w}px: the picture is not in view while choosing`);
+    }
+    await p.locator('[data-form="3"] .hp-btn').click();
+    await settleTo(p, 4);
+    await check(4, '[data-submit]');
+    assert((await p.locator('.hp__acts').first().evaluate((e) => getComputedStyle(e).position)) === 'static', 'action row is fixed (would cover the keyboard)');
+    await fillCh4(p);
+    await p.locator('[data-submit]').click();
+    await p.locator('[data-demo]').click();
+    await settleTo(p, 5);
+    await check(5, '.hp5__return');
+    await p.context().close();
+  }
+});
+
+await test('HP-16', 'Portal accessibility: every input labelled with an autocomplete purpose; targets ≥ 44px; focus ring; status regions; meaningful alt text', async () => {
+  const p = await ctx({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+  await go(p, '/waitlist');
   const issues = await p.evaluate(() => {
     const out = [];
-    document.querySelectorAll('.wl input, .wl select').forEach((el) => {
-      if (!el.labels || !el.labels.length) out.push('no label: ' + el.id);
-      if (el.type !== 'checkbox' && !el.autocomplete) out.push('no autocomplete: ' + el.id);
+    document.querySelectorAll('.hp input').forEach((el) => {
+      const named = (el.labels && el.labels.length) || el.getAttribute('aria-label');
+      if (!named) out.push('no label: ' + (el.id || el.name));
+      if (!['checkbox', 'radio'].includes(el.type) && !el.autocomplete) out.push('no autocomplete: ' + el.id);
     });
-    document.querySelectorAll('.wl [data-ch]:not([hidden]) button, .wl__bar button:not([hidden]), .wl__top a').forEach((el) => {
-      const r = el.getBoundingClientRect();
-      if (r.height < 44) out.push(`small target ${Math.round(r.height)}px: ${el.textContent.trim().slice(0, 20)}`);
-    });
+    document.querySelectorAll('.hp fieldset').forEach((f) => !f.querySelector('legend') && out.push('fieldset without legend'));
+    document.querySelectorAll('.hp [data-ch] img, .hp3__pic').forEach((i) => { if (!i.hasAttribute('alt')) out.push('img without alt'); });
+    ['A01', 'A06', 'A10', 'A14', 'A13'].forEach(() => 0);
+    document.querySelectorAll('.hp1 img, .hp2 img, .hp4 img, .hp5 img').forEach((i) => i.alt.length < 20 && out.push('thin alt: ' + i.alt));
+    if (!document.querySelector('[data-announce][aria-live]') || !document.querySelector('[data-notice][aria-live]')) out.push('live regions missing');
+    if (document.querySelectorAll('.hp [tabindex]:not([tabindex="-1"])').length) out.push('positive tabindex');
     return out;
   });
   assert(issues.length === 0, issues.join('; '));
+  const small = [];
+  const measure = async (n) => small.push(...(await p.evaluate((n) => [...document.querySelectorAll(`[data-ch="${n}"] button, [data-ch="${n}"] .hp-chip span, .hp__top a, [data-ch="${n}"] .hp5__return, [data-ch="${n}"] .hp-check`)].filter((e) => e.offsetParent !== null && e.getBoundingClientRect().height < 44).map((e) => `ch${n} ${Math.round(e.getBoundingClientRect().height)}px ${e.textContent.trim().slice(0, 18)}`), n)));
+  await measure(1);
+  await begin(p);
+  await measure(2);
+  await p.fill('[name=firstName]', 'Asha');
+  await p.locator('[name=firstName]').focus();
+  const ring = await p.evaluate(() => getComputedStyle(document.activeElement).boxShadow);
+  assert(ring !== 'none', 'no focus indication on a text field');
+  await p.locator('[data-form="2"] .hp-btn').click();
+  await settleTo(p, 3);
+  await measure(3);
+  await p.locator('[data-form="3"] .hp-btn').click();
+  await settleTo(p, 4);
+  await measure(4);
+  assert(small.length === 0, 'small targets: ' + small.join('; '));
+  // keyboard only, start to submit
+  const k = await ctx({ reducedMotion: 'reduce' });
+  await go(k, '/waitlist');
+  await k.locator('[data-begin]').focus();
+  await k.keyboard.press('Enter');
+  await settleTo(k, 2);
+  await k.locator('[name=firstName]').focus();
+  await k.keyboard.type('Asha');
+  await k.keyboard.press('Enter');
+  await settleTo(k, 3);
+  await k.locator('#hp-int-heart').focus();
+  await k.keyboard.press('Space');
+  assert(await k.isChecked('#hp-int-heart'), 'Space did not select an interest');
+  await k.locator('[data-form="3"] .hp-btn').focus();
+  await k.keyboard.press('Enter');
+  await settleTo(k, 4);
+  await k.context().close();
+  await p.context().close();
+});
+
+await test('HP-17', 'Portal honesty: no fabricated claims, measurements, testimonials or patient framing anywhere in the five chapters', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  await go(p, '/waitlist');
+  const text = await p.evaluate(() => [...document.querySelectorAll('[data-ch]')].map((c) => c.textContent).join(' ').replace(/\s+/g, ' '));
+  for (const rx of [/\d[\d,]*\+?\s*(members|people|users|patients|customers|doctors|labs)/i, /₹|\$\s?\d|per month|free trial/i, /our (doctors|clinicians|patients|customers|members)/i, /diagnos|your (results|score|risk)|biomarker/i, /book (a|your) (test|appointment)/i, /“[^”]{20,}”\s*—/]) {
+    assert(!rx.test(text), 'claim-like text: ' + (text.match(rx) || [''])[0]);
+  }
+  assert(/Illustrative visuals\. Not a personal health assessment\./.test(text), 'illustrative disclaimer');
   await p.context().close();
 });
 
