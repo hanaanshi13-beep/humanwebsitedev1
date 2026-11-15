@@ -76,8 +76,8 @@ const ch = (n: number) => CHAPTERS[n - 1];
     <!-- 02 — THE INDIVIDUAL -->
     <section class="hp__ch hp2" data-ch="2" aria-labelledby="hp-h-2" hidden>
       <div class="hp2__art" data-portraits>
-        <div class="hp2__a hp__reveal"><img {...pic('A06')} sizes="(max-width: 899px) 60vw, 40vw" alt={img.A06.alt} decoding="async" /></div>
-        <div class="hp2__b hp__reveal" style="--d:260ms"><img {...pic('A10')} sizes="(max-width: 899px) 44vw, 22vw" alt={img.A10.alt} decoding="async" /></div>
+        <div class="hp2__a hp__reveal"><img {...pic('A04')} sizes="(max-width: 899px) 78vw, 46vw" alt={img.A04.alt} decoding="async" /></div>
+        <div class="hp2__b hp__reveal" style="--d:260ms"><img {...pic('A06')} sizes="(max-width: 899px) 44vw, 22vw" alt={img.A06.alt} decoding="async" /></div>
       </div>
       <form class="hp__form" novalidate data-form="2">
         <h1 class="hp__h" id="hp-h-2" tabindex="-1">
@@ -896,13 +896,14 @@ const ch = (n: number) => CHAPTERS[n - 1];
     border-radius: 4px;
     background: var(--hp-champagne);
   }
+  /* the large frame is close to square so the landscape group photograph keeps all six faces */
   .hp2__a {
-    inset: 0 26% 9% 0;
+    inset: 0 12% 16% 0;
   }
   .hp2__b {
-    right: 4%;
+    right: 0;
     bottom: 0;
-    width: 36%;
+    width: 34%;
     aspect-ratio: 4 / 5;
     box-shadow: 0 0 0 10px var(--hp-ivory);
   }
@@ -914,10 +915,10 @@ const ch = (n: number) => CHAPTERS[n - 1];
     object-fit: cover;
   }
   .hp2__a img {
-    object-position: 50% 20%;
+    object-position: 50% 40%;
   }
   .hp2__b img {
-    object-position: 50% 18%;
+    object-position: 42% 16%;
   }
 
   /* ---- 03 discovery ---- */
@@ -1311,16 +1312,16 @@ const ch = (n: number) => CHAPTERS[n - 1];
       margin: 18px var(--hp-pad) 0;
     }
     .hp2__a {
-      inset: 0 34% 0 0;
+      inset: 0 20% 8% 0;
     }
     .hp2__b {
       right: 0;
-      top: 12%;
-      bottom: auto;
-      width: 31%;
-      height: 76%;
+      top: auto;
+      bottom: 0;
+      width: 30%;
+      height: 64%;
       aspect-ratio: auto;
-      box-shadow: none;
+      box-shadow: 0 0 0 6px var(--hp-ivory);
     }
 
     /* the picture stays in view while interests are chosen below it */

@@ -21,12 +21,12 @@ Built with the site's existing Astro + TypeScript stack. Transitions use the bro
 | A01 | Chapter 01; transition layer 1; Preventive health | |
 | A02 | Transition layer 2; Chapter 03 neutral default | |
 | A03 | Transition layer 3; Heart health | Stands in for A15 |
-| A04 | Overall wellbeing | Shown whole, framed, so nobody is cropped |
+| A04 | Chapter 02 (large frame); Overall wellbeing | Shown whole, framed, so nobody is cropped |
 | A05 → A08 | Fitness & performance | Runners first, anatomy after about two seconds |
-| A06 | Chapter 02; Women's health | Same file as the homepage "U" photograph |
+| A06 | Chapter 02 (small frame); Women's health | Same file as the homepage "U" photograph |
 | A07 | Sleep & recovery | Cropped tighter to keep a car badge out of frame |
 | A09 | Hormonal health | 320px source: shown at no more than 1.25× over a blurred copy of itself |
-| A10 | Chapter 02; Men's health | |
+| A10 | Men's health | |
 | A11 | Longevity | Conceptual only; no genetic testing is implied |
 | A12 | Energy & metabolism | |
 | A13 | Chapter 05 | Kept whole; copy sits beside it (desktop) or below it (phones) |

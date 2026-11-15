@@ -167,7 +167,7 @@ export function createPortal(root: HTMLElement) {
    */
   async function bloodwork() {
     const t = M.motion.bloodwork;
-    const ok = !reduce.matches && (await ready(['A01', 'A02', 'A03', 'A06'], 250));
+    const ok = !reduce.matches && (await ready(['A01', 'A02', 'A03', 'A04'], 250));
     if (!ok) return plain(2); // images not decoded in time, or motion not wanted: a simple dissolve
     const tube = $<HTMLImageElement>('[data-tube]');
     const r = tube.getBoundingClientRect();
@@ -242,7 +242,7 @@ export function createPortal(root: HTMLElement) {
 
   function onEnter(n: number) {
     // prepare what the next step will need, a little at a time
-    if (n === 1) ['A02', 'A03', 'A06', 'A10'].forEach(warm);
+    if (n === 1) ['A02', 'A03', 'A04', 'A06'].forEach(warm);
     if (n === 2) [M.fallback.asset, 'A14'].forEach(warm);
     if (n === 3) {
       showVisual(activeTopic);
