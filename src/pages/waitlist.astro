@@ -293,6 +293,13 @@ const ch = (n: number) => CHAPTERS[n - 1];
     overflow-x: clip;
     transition: background-color 700ms var(--hp-ease);
   }
+  /* form controls do not inherit type by default; here they always use the site's */
+  .hp input,
+  .hp button,
+  .hp select,
+  .hp textarea {
+    font-family: inherit;
+  }
   .hp :focus-visible {
     outline: 2px solid var(--hp-espresso);
     outline-offset: 3px;
@@ -1060,6 +1067,18 @@ const ch = (n: number) => CHAPTERS[n - 1];
   /* ---- 04 invitation ---- */
   .hp4 {
     grid-template-columns: 46fr 54fr;
+  }
+  /* the longest form: slightly closer spacing so the whole of it, with its action, fits a laptop screen */
+  .hp4 .hp__field,
+  .hp4 .hp__consent {
+    margin-top: clamp(12px, 1.8vh, 22px);
+  }
+  .hp4 .hp__acts {
+    margin-top: clamp(16px, 2.2vh, 30px);
+  }
+  .hp4 .hp__form {
+    padding-top: clamp(12px, 2vh, 40px);
+    padding-bottom: clamp(20px, 3vh, 48px);
   }
   .hp4__art {
     margin: clamp(12px, 2.4vh, 28px) var(--hp-pad) clamp(20px, 4vh, 44px) 0;
