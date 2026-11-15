@@ -360,3 +360,11 @@ Replaces the previous `/waitlist` flow (rollback tag `v13-before-portal`). Full 
 ### Portal typography aligned with the main site (2026-11-15)
 
 The portal's own Manrope / Bodoni Moda pairing was replaced with the site's Hanken Grotesk / Instrument Serif italic, taken from the site's variables rather than re-declared. Headlines follow the site's `.display` rule (700, −0.025em, 0.98 line height; italic at 1.1×, −0.01em); wordmark, button text, lede, notes, labels and text colours use the site's values and tokens. Form controls now inherit the typeface (a test found some falling back to Arial). Chapter 04 spacing was tightened to fit the larger supporting text. Nothing else in the portal changed. e2e 65/65 in Chromium. Evidence: `docs/reviews/v15-portal-typography/`.
+
+---
+
+## HUMAN for Her — copy and structure revision (2026-11-15)
+
+Rollback tag `v16-before-her-copy`. `/women` now has six sections with founder-supplied copy: hero; women's bodies work differently; six planned areas of focus (ruled two-column index); our approach (five points); the six-step journey with new descriptions; waitlist invitation with one consolidated development and medical notice. Removed: the previous hero headline, "one-size-fits-all", the three themes, the design-intentions note and the "where it stands" section. Typography reuses the site's `.display`, `.lede`, `.eyebrow` and tokens. `/men` is unchanged and no longer mirrors `/women`; the old PARITY test was replaced by HER-01 and HER-02. e2e 66/66 in Chromium. Evidence: `docs/reviews/v16-for-her-copy/`.
+
+Open copy points for the founders: "often overlooked in routine health checkups" is an unsourced claim; "Understand potential health risks" and "with professional guidance" describe capabilities that do not exist yet.
