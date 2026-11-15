@@ -1095,7 +1095,7 @@ await test('HP-01', 'Portal: five approved two-line headlines, unchanged; one ch
   const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/waitlist');
   const heads = await p.evaluate(() => [...document.querySelectorAll('[data-ch] h1')].map((h) => [h.querySelector('.hp__l1').textContent, h.querySelector('.hp__l2').textContent, getComputedStyle(h.querySelector('.hp__l1')).textTransform, getComputedStyle(h.querySelector('.hp__l2')).fontStyle, getComputedStyle(h.querySelector('.hp__l1')).fontFamily, getComputedStyle(h.querySelector('.hp__l2')).fontFamily]));
-  const want = [['Welcome', 'to HUMAN.'], ['Let’s get to', 'know you.'], ['What matters', 'to you?'], ['Be among', 'the first.'], ['You’re on', 'the list.']];
+  const want = [['Welcome', 'to Human.'], ['Let’s get to', 'know you.'], ['What matters', 'to you?'], ['Be among', 'the first.'], ['You’re on', 'the list.']];
   assert(heads.length === 5, 'chapters: ' + heads.length);
   heads.forEach((h, i) => {
     assert(h[0] === want[i][0] && h[1] === want[i][1], `chapter ${i + 1} headline: ${h[0]} / ${h[1]}`);

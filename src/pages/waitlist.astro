@@ -54,7 +54,7 @@ const ch = (n: number) => CHAPTERS[n - 1];
       <div class="hp1__copy">
         <h1 class="hp__h" id="hp-h-1" tabindex="-1">
           <span class="hp__mask"><span class="hp__l1" style="--d:700ms">{ch(1).l1}</span></span>
-          <span class="hp__mask"><span class="hp__l2" style="--d:1000ms" set:html={ch(1).l2.replace('HUMAN', '<span class="hp__caps">HUMAN</span>')} /></span>
+          <span class="hp__mask"><span class="hp__l2" style="--d:1000ms">{ch(1).l2}</span></span>
         </h1>
         <p class="hp__lede" data-r style="--d:1300ms">A deeper understanding of your health begins here.</p>
         <p class="hp1__go" data-r style="--d:1300ms">
@@ -448,12 +448,6 @@ const ch = (n: number) => CHAPTERS[n - 1];
     line-height: 0.98;
     letter-spacing: -0.01em;
     padding-bottom: 0.1em;
-  }
-  /* Capitals in the italic serif are narrow and tall next to its lowercase; set a touch smaller and more open,
-     they keep the rhythm the lowercase italic has everywhere else on the site. */
-  .hp__caps {
-    font-size: 0.9em;
-    letter-spacing: 0.035em;
   }
   .hp__lede {
     margin: clamp(16px, 2.2vh, 26px) 0 0;

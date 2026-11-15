@@ -2,7 +2,7 @@
 // Headlines are approved copy: do not edit them here without a founder decision.
 
 export const CHAPTERS = [
-  { n: 1, key: 'opening', l1: 'Welcome', l2: 'to HUMAN.' },
+  { n: 1, key: 'opening', l1: 'Welcome', l2: 'to Human.' },
   { n: 2, key: 'individual', l1: 'Let’s get to', l2: 'know you.' },
   { n: 3, key: 'discovery', l1: 'What matters', l2: 'to you?' },
   { n: 4, key: 'invitation', l1: 'Be among', l2: 'the first.' },
