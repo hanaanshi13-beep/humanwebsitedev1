@@ -1099,7 +1099,7 @@ await test('HP-01', 'Portal: five approved two-line headlines, unchanged; one ch
   assert(heads.length === 5, 'chapters: ' + heads.length);
   heads.forEach((h, i) => {
     assert(h[0] === want[i][0] && h[1] === want[i][1], `chapter ${i + 1} headline: ${h[0]} / ${h[1]}`);
-    assert(h[2] === 'uppercase' && h[3] === 'italic' && /Manrope/.test(h[4]) && /Bodoni/.test(h[5]), `chapter ${i + 1} type: ${h.slice(2)}`);
+    assert(h[2] === 'uppercase' && h[3] === 'italic' && /Hanken Grotesk/.test(h[4]) && /Instrument Serif/.test(h[5]), `chapter ${i + 1} type: ${h.slice(2)}`);
   });
   assert((await visibleChapters(p)) === '1', 'visible at start: ' + (await visibleChapters(p)));
   assert((await p.locator('[data-count]').innerText()) === '01' && (await p.locator('[data-seg]').count()) === 5 && (await p.locator('[data-seg].is-done').count()) === 1, 'progress at start');
@@ -1562,6 +1562,41 @@ await test('HP-17', 'Portal honesty: no fabricated claims, measurements, testimo
     assert(!rx.test(text), 'claim-like text: ' + (text.match(rx) || [''])[0]);
   }
   assert(/Illustrative visuals\. Not a personal health assessment\./.test(text), 'illustrative disclaimer');
+  await p.context().close();
+});
+
+await test('HP-18', 'Portal typography is the main site’s: same families, weights, tracking, proportions, colours, wordmark and button text as the site’s own headings', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  const pick = (sel, props) => p.evaluate(([sel, props]) => { const e = document.querySelector(sel); const c = getComputedStyle(e); const fs = parseFloat(c.fontSize); return Object.fromEntries(props.map((k) => [k, k === 'letterSpacing' ? (parseFloat(c.letterSpacing) / fs).toFixed(3) : k === 'lineHeight' ? (parseFloat(c.lineHeight) / fs).toFixed(2) : c[k]])); }, [sel, props]);
+  const T = ['fontFamily', 'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight', 'textTransform', 'color'];
+  await go(p, '/faq');
+  const site = {
+    h: await pick('main .display', T), em: await pick('main .display em', T), emRatio: await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('main .display em')).fontSize) / parseFloat(getComputedStyle(document.querySelector('main .display')).fontSize)),
+    mark: await pick('.site-header .wordmark', ['fontFamily', 'fontWeight', 'letterSpacing', 'fontSize']), btn: await pick('main a.btn', ['fontFamily', 'fontWeight', 'letterSpacing', 'fontSize']),
+    body: await pick('body', ['fontFamily', 'fontSize']), light: await p.evaluate(() => { const c = getComputedStyle(document.documentElement); return [c.getPropertyValue('--text-on-light').trim(), c.getPropertyValue('--muted-on-light').trim()]; }),
+  };
+  await go(p, '/waitlist');
+  const fonts = await p.evaluate(() => [...document.fonts].map((f) => f.family.replace(/"/g, '')).filter((v, i, a) => a.indexOf(v) === i));
+  assert(!fonts.some((f) => /Manrope|Bodoni/i.test(f)), 'portal still declares its own fonts: ' + fonts.join(', '));
+  const used = await p.evaluate(() => [...new Set([...document.querySelectorAll('.hp *')].map((e) => getComputedStyle(e).fontFamily.split(',')[0].replace(/"/g, '').trim()))]);
+  assert(used.every((f) => /Hanken Grotesk Variable|Instrument Serif/.test(f)), 'families in use: ' + used.join(' | '));
+  const hex = (c) => '#' + c.match(/\d+/g).slice(0, 3).map((v) => Number(v).toString(16).padStart(2, '0')).join('');
+  for (let n = 1; n <= 5; n++) {
+    const l1 = await pick(`[data-ch="${n}"] .hp__l1`, T);
+    const l2 = await pick(`[data-ch="${n}"] .hp__l2`, T);
+    for (const k of ['fontFamily', 'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight', 'textTransform']) assert(l1[k] === site.h[k], `chapter ${n} line 1 ${k}: ${l1[k]} vs site ${site.h[k]}`);
+    for (const k of ['fontFamily', 'fontWeight', 'fontStyle', 'letterSpacing', 'textTransform']) assert(l2[k] === site.em[k], `chapter ${n} line 2 ${k}: ${l2[k]} vs site ${site.em[k]}`);
+    const ratio = await p.evaluate((n) => parseFloat(getComputedStyle(document.querySelector(`[data-ch="${n}"] .hp__l2`)).fontSize) / parseFloat(getComputedStyle(document.querySelector(`[data-ch="${n}"] .hp__l1`)).fontSize), n);
+    assert(Math.abs(ratio - site.emRatio) < 0.01, `chapter ${n} italic/uppercase ratio ${ratio.toFixed(3)} vs site ${site.emRatio.toFixed(3)}`);
+    if (n < 5) assert(hex(l1.color) === site.light[0], `chapter ${n} headline colour ${hex(l1.color)}`);
+  }
+  const mark = await pick('.hp__mark', ['fontFamily', 'fontWeight', 'letterSpacing', 'fontSize']);
+  assert(JSON.stringify(mark) === JSON.stringify(site.mark), 'wordmark ' + JSON.stringify(mark) + ' vs ' + JSON.stringify(site.mark));
+  const btn = await pick('.hp-btn', ['fontFamily', 'fontWeight', 'letterSpacing', 'fontSize']);
+  assert(JSON.stringify(btn) === JSON.stringify(site.btn), 'button text ' + JSON.stringify(btn) + ' vs ' + JSON.stringify(site.btn));
+  const body = await pick('.hp', ['fontFamily', 'fontSize']);
+  assert(JSON.stringify(body) === JSON.stringify(site.body), 'body text ' + JSON.stringify(body));
+  assert(hex((await pick('.hp1 .hp__lede', ['color'])).color) === site.light[1], 'supporting copy colour');
   await p.context().close();
 });
 
