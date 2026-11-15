@@ -905,9 +905,9 @@ await test('HER-01', 'HUMAN for Her: six sections with the approved copy word fo
     'We’re building HUMAN for Her to make preventive healthcare more relevant and accessible to women in India.',
     'Currently in development. Testing and medical services are not yet available.',
   ]) assert(text.includes(t), 'missing copy: ' + t);
-  const areas = await p.locator('.her-areas__list h3').allTextContents();
+  const areas = await p.locator('.sg-areas__list h3').allTextContents();
   assert(areas.join('|') === 'Hormonal health|Thyroid health|Nutritional health|Metabolic health|Reproductive health|Fitness and wellbeing', areas.join('|'));
-  const steps = await p.locator('.her-journey .seg__stages h3').allTextContents();
+  const steps = await p.locator('.sg-journey .seg__stages h3').allTextContents();
   assert(steps.join('|') === 'Test|Understand|Act|Track|Retest|Improve', steps.join('|'));
   for (const gone of ['A more thoughtful way', 'one-size-fits-all', 'Three themes', 'design intentions', 'We’re developing', 'India’s first', 'India\'s first']) assert(!text.includes(gone), 'obsolete or unverified copy still present: ' + gone);
   assert(/planned areas of focus/i.test(text), 'areas not labelled as planned');
@@ -916,7 +916,7 @@ await test('HER-01', 'HUMAN for Her: six sections with the approved copy word fo
   await p.context().close();
 });
 
-await test('HER-02', 'HUMAN for Her: site typography reused, links work, mobile layout holds; /men is untouched', async () => {
+await test('HER-02', 'HUMAN for Her: site typography reused, links work, mobile layout holds', async () => {
   const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/faq');
   const ref = await p.evaluate(() => { const h = getComputedStyle(document.querySelector('main .display')); const e = getComputedStyle(document.querySelector('main .display em')); return [h.fontFamily, h.fontWeight, h.textTransform, e.fontFamily, e.fontStyle].join('|'); });
@@ -938,9 +938,84 @@ await test('HER-02', 'HUMAN for Her: site typography reused, links work, mobile 
     assert(!(await m.evaluate(() => [...document.querySelectorAll('main h1, main h2')].some((h) => h.scrollWidth > h.clientWidth + 1))), w + 'px headline clipped');
     await m.context().close();
   }
+  await p.context().close();
+});
+
+await test('HIM-01', 'HUMAN for Him: six sections with the approved copy word for word; indicators, numbering and microcopy as specified; old sections gone', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
   await go(p, '/men');
-  const men = await p.evaluate(() => [document.querySelectorAll('main > section').length, document.querySelector('h1').textContent.replace(/\s+/g, ' ').trim(), !!document.querySelector('#themes-title'), document.querySelectorAll('.her-areas, .her-notice').length].join('|'));
-  assert(men === '6|Go beyond what you can see.|true|0', '/men changed: ' + men);
+  const heads = await p.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => [...h.querySelectorAll('.mask > span')].map((s) => s.textContent.trim()).join(' / ')));
+  const want = ['Preventive health. / Designed for men.', 'Feeling healthy / isn’t the whole picture.', 'The health issues / that matter to men.', 'More than / a routine blood test.', 'Know your health. / Stay informed.', 'Be among / the first.'];
+  assert(JSON.stringify(heads) === JSON.stringify(want), 'headlines: ' + JSON.stringify(heads));
+  assert((await p.locator('main > section').count()) === 6, 'section count');
+  const text = (await p.locator('main').evaluate((e) => e.textContent)).replace(/\s+/g, ' ');
+  for (const t of [
+    'HUMAN for Him',
+    'HUMAN is building a preventive health platform in India with a focus on men’s hormones, health markers, physical wellbeing and common health risks.',
+    'High cholesterol, high blood pressure and diabetes can develop without noticeable symptoms.',
+    'Regular health checkups can help you identify potential health risks early and make more informed decisions about your health.',
+    'Testosterone levels and hormonal imbalances.', 'Cholesterol, blood pressure and heart disease risk.', 'Blood sugar, diabetes and weight management.', 'Vitamin deficiencies, iron levels and nutrition.', 'Fertility, sexual health and prostate health.', 'Muscle health, strength, energy and recovery.',
+    'Our planned areas of focus.',
+    'We’re building an experience that helps men understand their health beyond a standard blood test report.',
+    'Know which health tests are relevant to you.', 'Understand your hormones and blood test results.', 'Identify potential health risks early.', 'Make informed decisions about your health.', 'Track your health and physical wellbeing over time.',
+    'Our goal is to make health information easier to understand and act on.',
+    'Get relevant health tests.', 'Make sense of your results.', 'Take informed steps with professional guidance.', 'Follow changes in your health over time.', 'Check relevant health markers when needed.', 'Use what you learn to make better health decisions.',
+    'Explore the complete HUMAN approach', 'Our planned approach to preventive healthcare.',
+    'We’re building HUMAN for Him to make preventive healthcare more relevant, accessible and easier to understand for men in India.',
+    'Open to people across India. First pilot planned for Delhi NCR.',
+    'Currently in development. Testing and medical services are not yet available.',
+    'does not provide medical advice', 'qualified healthcare professional',
+  ]) assert(text.includes(t), 'missing copy: ' + t);
+  const labels = await p.evaluate(() => [...document.querySelectorAll('main > section:not(.seg__hero) .eyebrow')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  assert(labels.join('|') === '01Understanding men’s health|02What we’re focusing on|03Our approach|04The HUMAN approach|05Join HUMAN', 'section indicators: ' + labels.join('|'));
+  assert((await p.locator('.sg-areas__list h3').allTextContents()).join('|') === 'Hormonal health|Heart health|Metabolic health|Nutritional health|Reproductive health|Fitness and recovery', 'areas order');
+  assert((await p.locator('.sg-areas__list li.is-lead h3').allTextContents()).join('|') === 'Hormonal health|Heart health|Fitness and recovery', 'emphasised areas');
+  assert((await p.locator('.sg-approach__list--num li').count()) === 5 && (await p.locator('.sg-approach__n').allTextContents()).join() === '01,02,03,04,05', 'numbered points');
+  assert((await p.locator('.sg-journey .seg__stages h3').allTextContents()).join('|') === 'Test|Understand|Act|Track|Retest|Improve' && (await p.locator('.seg__stage-n').allTextContents()).join() === '01,02,03,04,05,06', 'journey steps');
+  for (const gone of ['Go beyond', 'what you can see', 'than how you feel', 'Three themes', 'design intentions', 'We’re developing', 'India’s first', 'scare tactics']) assert(!text.includes(gone), 'obsolete or unverified copy still present: ' + gone);
+  assert((await p.locator('main .status-pill').count()) === 1 && (text.match(/in development/gi) || []).length <= 3, 'development notice should appear once');
+  await p.context().close();
+});
+
+await test('HIM-02', 'HUMAN for Him and for Her: same structure and hierarchy, site typography, working links, layouts hold at phone, tablet and desktop', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  const shape = async (r) => { await go(p, r); return p.evaluate(() => [...document.querySelectorAll('main > section')].map((s) => [s.className.replace(/\s+/g, ' '), s.querySelectorAll('h1, h2').length, s.querySelectorAll('h3').length, s.querySelectorAll('a.btn').length].join(':')).join(' | ')); };
+  const [a, b] = [await shape('/women'), await shape('/men')];
+  assert(a === b, `structure differs:\n${a}\n${b}`);
+  await go(p, '/faq');
+  const ref = await p.evaluate(() => { const h = getComputedStyle(document.querySelector('main .display')); const e = getComputedStyle(document.querySelector('main .display em')); return [h.fontFamily, h.fontWeight, h.letterSpacing === 'normal' ? 0 : (parseFloat(h.letterSpacing) / parseFloat(h.fontSize)).toFixed(3), h.textTransform, e.fontFamily, e.fontStyle, e.fontWeight].join('|'); });
+  await go(p, '/men');
+  const all = await p.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => { const c = getComputedStyle(h); const e = getComputedStyle(h.querySelector('em')); return [c.fontFamily, c.fontWeight, (parseFloat(c.letterSpacing) / parseFloat(c.fontSize)).toFixed(3), c.textTransform, e.fontFamily, e.fontStyle, e.fontWeight].join('|'); }));
+  assert(all.every((v) => v === ref), 'heading typography differs from the site: ' + all.find((v) => v !== ref) + ' vs ' + ref);
+  const fams = await p.evaluate(() => [...new Set([...document.querySelectorAll('main *')].map((e) => getComputedStyle(e).fontFamily.split(',')[0].replace(/"/g, '').trim()))]);
+  assert(fams.every((f) => /Hanken Grotesk Variable|Instrument Serif/.test(f)), 'font families: ' + fams.join(', '));
+  assert(await p.evaluate(() => document.fonts.check('700 20px "Hanken Grotesk Variable"') && document.fonts.check('italic 400 20px "Instrument Serif"')), 'site fonts not actually loaded');
+  const links = await p.evaluate(() => [...document.querySelectorAll('main a')].map((a) => a.getAttribute('href')));
+  assert(links.filter((h) => h === '/waitlist').length === 2 && links.includes('#understanding') && links.includes('/#scene-06') && links.includes('/faq') && links.includes('/women'), 'links: ' + links.join(', '));
+  assert(await p.locator('.seg__hero-photo img').first().evaluate((i) => i.complete && i.naturalWidth > 0), 'hero photograph missing');
+  await p.locator('main .sg-journey a.link').click();
+  await p.waitForURL('**/#scene-06');
+  await go(p, '/men');
+  await p.locator('main .sg-micro a').click();
+  await p.waitForURL('**/faq');
+  await go(p, '/men');
+  await p.locator('main .seg__hero a.btn').click();
+  await p.waitForURL('**/waitlist');
+  assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
+  for (const [w, h] of [[360, 640], [390, 844], [768, 1024], [1440, 900]]) {
+    const m = await ctx({ viewport: { width: w, height: h }, reducedMotion: 'reduce' });
+    await go(m, '/men');
+    assert((await m.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0, w + 'px overflow');
+    assert(!(await m.evaluate(() => [...document.querySelectorAll('main h1, main h2')].some((x) => x.scrollWidth > x.clientWidth + 1))), w + 'px headline clipped');
+    await m.context().close();
+  }
+  // entrance motion still runs with motion allowed
+  const q = await ctx();
+  await go(q, '/men');
+  await q.evaluate(() => document.querySelector('.sg-areas').scrollIntoView());
+  await q.waitForTimeout(1400);
+  assert(await q.evaluate(() => [...document.querySelectorAll('.sg-areas [data-reveal]')].every((e) => Number(getComputedStyle(e).opacity) > 0.95)), 'scroll reveals did not complete');
+  await q.context().close();
   await p.context().close();
 });
 

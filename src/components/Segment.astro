@@ -1,10 +1,9 @@
 ---
-// Shared skeleton for /women and /men so the two routes stay at parity (F01/F02), with deliberately different
-// colour worlds, hero composition, theme layout and journey layout. No people photography yet (asset pending).
+// Shared page for /women and /men: one structure and one set of styles, two colour worlds and two sets of copy.
+// The copy below is founder-approved (2026-11). Plain language; planned areas of focus, not services on offer.
 import Base from '../layouts/Base.astro';
 import Slot from './Slot.astro';
 import Material from './Material.astro';
-import { STAGES } from '../data/site';
 
 interface Props {
   variant: 'her' | 'him';
@@ -12,74 +11,139 @@ interface Props {
 const { variant } = Astro.props;
 const her = variant === 'her';
 
+const JOURNEY_HEAD = ['Know your health.', 'Stay informed.'];
 const c = her
   ? {
       title: 'HUMAN for Her — preventive health, designed for women',
       desc: 'HUMAN is building a preventive health platform in India with a focus on women’s hormones, health markers and conditions. In development; testing and medical services are not yet available.',
       eyebrow: 'HUMAN for Her',
-      h1a: 'Preventive health.',
-      h1b: 'Designed for women.',
+      h1: ['Preventive health.', 'Designed for women.'],
       support:
         'HUMAN is building a preventive health platform in India that focuses on women’s hormones, health markers and conditions that are often overlooked in routine health checkups.',
-      oneTitleA: '',
-      oneTitleB: '',
-      one: [] as string[],
-      themes: [] as { t: string; d: string }[],
-      journeyTitleA: '',
-      journeyTitleB: '',
-      ctaA: 'Be among',
-      ctaB: 'the first.',
+      one: {
+        label: 'Understanding women’s health',
+        head: ['Women’s bodies', 'work differently.'],
+        body: [
+          'From periods and hormonal changes to energy levels and metabolism, women have different health needs.',
+          'We believe health checkups should take these differences into account.',
+        ],
+      },
+      areas: {
+        label: 'Planned areas of focus',
+        head: ['The health issues', 'that matter to women.'],
+        note: '',
+        items: [
+          { t: 'Hormonal health', d: 'Hormonal imbalances, PCOS and irregular periods.', lead: false },
+          { t: 'Thyroid health', d: 'Thyroid-related changes in energy, mood and weight.', lead: false },
+          { t: 'Nutritional health', d: 'Iron deficiency, vitamin deficiencies and anaemia.', lead: false },
+          { t: 'Metabolic health', d: 'Blood sugar, cholesterol and weight management.', lead: false },
+          { t: 'Reproductive health', d: 'Menstrual health, fertility and menopause.', lead: false },
+          { t: 'Fitness and wellbeing', d: 'Energy levels, physical performance and recovery.', lead: false },
+        ],
+      },
+      approach: {
+        label: 'Our approach',
+        head: ['More than', 'a routine blood test.'],
+        lede: 'We are designing an experience that helps women:',
+        numbered: false,
+        points: [
+          'Understand which health tests are relevant to them.',
+          'Make sense of their blood test results.',
+          'Understand potential health risks.',
+          'Take informed steps towards better health.',
+          'Track changes in their health over time.',
+        ],
+        close: 'The aim is to make health information easier to understand and act on.',
+      },
+      journey: {
+        label: 'The HUMAN approach',
+        numbered: false,
+        steps: [
+          { t: 'Test', d: 'Understand what’s happening inside your body.' },
+          { t: 'Understand', d: 'Make sense of your results.' },
+          { t: 'Act', d: 'Take informed steps with professional guidance.' },
+          { t: 'Track', d: 'Follow changes in your health.' },
+          { t: 'Retest', d: 'Check relevant health markers when needed.' },
+          { t: 'Improve', d: 'Use what you learn to make better health decisions.' },
+        ],
+        link: 'See the journey in full',
+        note: '',
+      },
+      cta: {
+        label: '',
+        head: ['Be among', 'the first.'],
+        lede: 'We’re building HUMAN for Her to make preventive healthcare more relevant and accessible to women in India.',
+        micro: 'The waitlist is open to women across India. The first pilot is planned for Delhi NCR. Joining registers interest only.',
+        disclaimer: 'Nothing on this page is medical advice. For a personal health concern, please speak to a licensed professional.',
+      },
       tone: 'garnet' as const,
     }
   : {
-      title: 'HUMAN for Him — go beyond what you can see',
-      desc: 'HUMAN for Him is part of a preventive-health membership being built in India. In development; nothing is available yet.',
-      eyebrow: 'Human for him',
-      h1a: 'Go beyond',
-      h1b: 'what you can see.',
+      title: 'HUMAN for Him — preventive health, designed for men',
+      desc: 'HUMAN is building a preventive health platform in India with a focus on men’s hormones, health markers, physical wellbeing and common health risks. In development; testing and medical services are not yet available.',
+      eyebrow: 'HUMAN for Him',
+      h1: ['Preventive health.', 'Designed for men.'],
       support:
-        'HUMAN is being built for the part of your health that doesn’t show up in the mirror, at the gym or on a watch.',
-      oneTitleA: 'There’s more to your health',
-      oneTitleB: 'than how you feel.',
-      one: [
-        'Plenty of us only think about health when something goes wrong. Feeling fine is good — it just isn’t the whole picture.',
-        'HUMAN for Him is about knowing a little more, a little earlier, without the drama. No scare tactics. No performance targets.',
-      ],
-      themes: [
-        { t: 'Relevant context', d: 'Your age, work, family history and habits shape what’s worth looking at. The starting point should reflect that.' },
-        { t: 'Understandable information', d: 'Plain explanations, with appropriate professional context, instead of a page of numbers.' },
-        { t: 'Meaningful follow-up', d: 'A way to keep going after the first look — so it isn’t a one-off.' },
-      ],
-      journeyTitleA: 'Six stages,',
-      journeyTitleB: 'joined up.',
-      ctaA: 'Start with',
-      ctaB: 'your interest.',
+        'HUMAN is building a preventive health platform in India with a focus on men’s hormones, health markers, physical wellbeing and common health risks.',
+      one: {
+        label: 'Understanding men’s health',
+        head: ['Feeling healthy', 'isn’t the whole picture.'],
+        body: [
+          'High cholesterol, high blood pressure and diabetes can develop without noticeable symptoms.',
+          'Regular health checkups can help you identify potential health risks early and make more informed decisions about your health.',
+        ],
+      },
+      areas: {
+        label: 'What we’re focusing on',
+        head: ['The health issues', 'that matter to men.'],
+        note: 'Our planned areas of focus.',
+        items: [
+          { t: 'Hormonal health', d: 'Testosterone levels and hormonal imbalances.', lead: true },
+          { t: 'Heart health', d: 'Cholesterol, blood pressure and heart disease risk.', lead: true },
+          { t: 'Metabolic health', d: 'Blood sugar, diabetes and weight management.', lead: false },
+          { t: 'Nutritional health', d: 'Vitamin deficiencies, iron levels and nutrition.', lead: false },
+          { t: 'Reproductive health', d: 'Fertility, sexual health and prostate health.', lead: false },
+          { t: 'Fitness and recovery', d: 'Muscle health, strength, energy and recovery.', lead: true },
+        ],
+      },
+      approach: {
+        label: 'Our approach',
+        head: ['More than', 'a routine blood test.'],
+        lede: 'We’re building an experience that helps men understand their health beyond a standard blood test report.',
+        numbered: true,
+        points: [
+          'Know which health tests are relevant to you.',
+          'Understand your hormones and blood test results.',
+          'Identify potential health risks early.',
+          'Make informed decisions about your health.',
+          'Track your health and physical wellbeing over time.',
+        ],
+        close: 'Our goal is to make health information easier to understand and act on.',
+      },
+      journey: {
+        label: 'The HUMAN approach',
+        numbered: true,
+        steps: [
+          { t: 'Test', d: 'Get relevant health tests.' },
+          { t: 'Understand', d: 'Make sense of your results.' },
+          { t: 'Act', d: 'Take informed steps with professional guidance.' },
+          { t: 'Track', d: 'Follow changes in your health over time.' },
+          { t: 'Retest', d: 'Check relevant health markers when needed.' },
+          { t: 'Improve', d: 'Use what you learn to make better health decisions.' },
+        ],
+        link: 'Explore the complete HUMAN approach',
+        note: 'Our planned approach to preventive healthcare.',
+      },
+      cta: {
+        label: 'Join HUMAN',
+        head: ['Be among', 'the first.'],
+        lede: 'We’re building HUMAN for Him to make preventive healthcare more relevant, accessible and easier to understand for men in India.',
+        micro: 'Open to people across India. First pilot planned for Delhi NCR.',
+        disclaimer: 'This website does not provide medical advice. Please discuss any personal health concern with a qualified healthcare professional.',
+      },
       tone: 'teal' as const,
     };
-// HUMAN for Her — approved copy (2026-11). Plain language; planned areas of focus, not services on offer.
-const herAreas = [
-  { t: 'Hormonal health', d: 'Hormonal imbalances, PCOS and irregular periods.' },
-  { t: 'Thyroid health', d: 'Thyroid-related changes in energy, mood and weight.' },
-  { t: 'Nutritional health', d: 'Iron deficiency, vitamin deficiencies and anaemia.' },
-  { t: 'Metabolic health', d: 'Blood sugar, cholesterol and weight management.' },
-  { t: 'Reproductive health', d: 'Menstrual health, fertility and menopause.' },
-  { t: 'Fitness and wellbeing', d: 'Energy levels, physical performance and recovery.' },
-];
-const herHelps = [
-  'Understand which health tests are relevant to them.',
-  'Make sense of their blood test results.',
-  'Understand potential health risks.',
-  'Take informed steps towards better health.',
-  'Track changes in their health over time.',
-];
-const herSteps = [
-  { t: 'Test', d: 'Understand what’s happening inside your body.' },
-  { t: 'Understand', d: 'Make sense of your results.' },
-  { t: 'Act', d: 'Take informed steps with professional guidance.' },
-  { t: 'Track', d: 'Follow changes in your health.' },
-  { t: 'Retest', d: 'Check relevant health markers when needed.' },
-  { t: 'Improve', d: 'Use what you learn to make better health decisions.' },
-];
+const nn = (i: number) => String(i + 1).padStart(2, '0');
 // The portal photograph doubles as this page's hero once it exists in src/assets/human/.
 const photo = variant === 'her' ? 'portal-her' : 'portal-him';
 const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,webp,avif}')).some((f) => f.split('/').pop()!.replace(/\.[^.]+$/, '') === photo);
@@ -93,234 +157,129 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     <div class="wrap seg__hero-inner">
       <p class="eyebrow" data-reveal><span>{c.eyebrow}</span></p>
       <h1 class="display" id="seg-title" data-reveal="mask" style="--d:80ms">
-        <span class="mask"><span>{c.h1a}</span></span>
-        <span class="mask" style="--i:1"><span><em>{c.h1b}</em></span></span>
+        <span class="mask"><span>{c.h1[0]}</span></span>
+        <span class="mask" style="--i:1"><span><em>{c.h1[1]}</em></span></span>
       </h1>
       <p class="lede" data-reveal style="--d:300ms">{c.support}</p>
       <div class="actions" data-reveal="fade" style="--d:420ms">
         <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
-        <a class="link" href={her ? '#understanding' : '#context'}>{her ? 'Explore further' : 'Read on'} <span class="arr arr--down" aria-hidden="true">↓</span></a>
-        {!her && <span class="status-pill">In development</span>}
+        <a class="link" href="#understanding">Explore further <span class="arr arr--down" aria-hidden="true">↓</span></a>
       </div>
     </div>
   </section>
 
-  {
-    her ? (
-      <>
-        <section class="section seg__one" id="understanding" aria-labelledby="her-2">
-          <div class="wrap split">
-            <div class="a">
-              <p class="eyebrow" data-reveal><span class="num">01</span><span>Understanding women’s health</span></p>
-              <h2 class="display" id="her-2" data-reveal="mask">
-                <span class="mask"><span>Women’s bodies</span></span>
-                <span class="mask" style="--i:1"><span><em>work differently.</em></span></span>
-              </h2>
-            </div>
-            <div class="b prose seg__one-prose" data-reveal style="--d:120ms">
-              <p>From periods and hormonal changes to energy levels and metabolism, women have different health needs.</p>
-              <p>We believe health checkups should take these differences into account.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="section on-light her-areas" aria-labelledby="her-3">
-          <div class="wrap">
-            <p class="eyebrow" data-reveal><span class="num">02</span><span>Planned areas of focus</span></p>
-            <h2 class="display" id="her-3" data-reveal="mask">
-              <span class="mask"><span>The health issues</span></span>
-              <span class="mask" style="--i:1"><span><em>that matter to women.</em></span></span>
-            </h2>
-            <ol class="her-areas__list">
-              {herAreas.map((a, i) => (
-                <li data-reveal style={`--d:${(i % 2) * 90}ms`}>
-                  <span class="her-areas__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                  <h3>{a.t}</h3>
-                  <p>{a.d}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section class="section her-approach" aria-labelledby="her-4">
-          <div class="wrap split">
-            <div class="a">
-              <p class="eyebrow" data-reveal><span class="num">03</span><span>Our approach</span></p>
-              <h2 class="display" id="her-4" data-reveal="mask">
-                <span class="mask"><span>More than</span></span>
-                <span class="mask" style="--i:1"><span><em>a routine blood test.</em></span></span>
-              </h2>
-            </div>
-            <div class="b her-approach__body" data-reveal style="--d:120ms">
-              <p class="lede">We are designing an experience that helps women:</p>
-              <ul class="her-approach__list">
-                {herHelps.map((h) => <li>{h}</li>)}
-              </ul>
-              <p class="her-approach__close">The aim is to make health information easier to understand and act on.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="section on-light seg__journey her-journey" aria-labelledby="her-5">
-          <div class="wrap">
-            <p class="eyebrow" data-reveal><span class="num">04</span><span>The HUMAN approach</span></p>
-            <h2 class="display" id="her-5" data-reveal="mask">
-              <span class="mask"><span>Know your health.</span></span>
-              <span class="mask" style="--i:1"><span><em>Stay informed.</em></span></span>
-            </h2>
-            <ol class="seg__stages seg__stages--her" data-reveal="fade">
-              {herSteps.map((st, i) => (
-                <li style={`--i:${i}`}>
-                  <span class="seg__dot" aria-hidden="true" />
-                  <h3>{st.t}</h3>
-                  <p>{st.d}</p>
-                </li>
-              ))}
-            </ol>
-            <p data-reveal="fade">
-              <a class="link" href="/#scene-06">See the journey in full <span class="arr" aria-hidden="true">→</span></a>
-            </p>
-          </div>
-        </section>
-
-        <section class="section cta-band seg__cta" aria-labelledby="segcta-title">
-          <Material tone={c.tone} shape="b" opacity={0.7} />
-          <div class="wrap">
-            <h2 class="display" id="segcta-title" data-reveal="mask">
-              <span class="mask"><span>{c.ctaA}</span></span>
-              <span class="mask" style="--i:1"><span><em>{c.ctaB}</em></span></span>
-            </h2>
-            <p class="lede" data-reveal style="--d:120ms">
-              We’re building HUMAN for Her to make preventive healthcare more relevant and accessible to women in India.
-            </p>
-            <div class="actions" data-reveal="fade">
-              <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
-              <a class="link" href="/men">HUMAN for Him <span class="arr" aria-hidden="true">→</span></a>
-            </div>
-            <div class="her-notice" data-reveal="fade" role="note">
-              <span class="status-pill">In development</span>
-              <p>
-                <strong>Currently in development. Testing and medical services are not yet available.</strong>
-                Nothing on this page is medical advice. For a personal health concern, please speak to a licensed professional.
-              </p>
-            </div>
-            <p class="note her-micro" data-reveal="fade">
-              The waitlist is open to women across India. The first pilot is planned for Delhi NCR. Joining registers interest only.
-              <a class="text-link" href="/faq">Read the FAQ</a>
-            </p>
-          </div>
-        </section>
-      </>
-    ) : (
-      <>
-  <section class="section seg__one" id="context" aria-labelledby="one-title">
+  <section class="section seg__one" id="understanding" aria-labelledby="sg-2">
     <div class="wrap split">
       <div class="a">
-        <p class="eyebrow" data-reveal><span class="num">01</span><span>Context</span></p>
-        <h2 class="display" id="one-title" data-reveal="mask">
-          <span class="mask"><span>{c.oneTitleA}</span></span>
-          <span class="mask" style="--i:1"><span><em>{c.oneTitleB}</em></span></span>
+        <p class="eyebrow" data-reveal><span class="num">01</span><span>{c.one.label}</span></p>
+        <h2 class="display" id="sg-2" data-reveal="mask">
+          <span class="mask"><span>{c.one.head[0]}</span></span>
+          <span class="mask" style="--i:1"><span><em>{c.one.head[1]}</em></span></span>
         </h2>
       </div>
       <div class="b prose seg__one-prose" data-reveal style="--d:120ms">
-        {c.one.map((p) => <p>{p}</p>)}
+        {c.one.body.map((t) => <p>{t}</p>)}
       </div>
     </div>
   </section>
 
-  <section class="section seg__themes on-light" aria-labelledby="themes-title">
+  <section class="section on-light sg-areas" aria-labelledby="sg-3">
     <div class="wrap">
-      <p class="eyebrow" data-reveal><span class="num">02</span><span>What we’re designing for</span></p>
-      <h2 class="vh" id="themes-title">Three themes</h2>
-      <ol class={`seg__theme-list seg__theme-list--${variant}`}>
-        {
-          c.themes.map((t, i) => (
-            <li data-reveal style={`--d:${i * 110}ms`}>
-              <span class="seg__theme-n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-              <h3>{t.t}</h3>
-              <p>{t.d}</p>
-            </li>
-          ))
-        }
-      </ol>
-      <p class="note" data-reveal="fade">
-        These are design intentions, not confirmed features. No tests, panels or consultations are on offer.
-      </p>
-    </div>
-  </section>
-
-  <section class="section seg__journey" aria-labelledby="journey-title">
-    <div class="wrap">
-      <p class="eyebrow" data-reveal><span class="num">03</span><span>The planned HUMAN journey</span></p>
-      <h2 class="display" id="journey-title" data-reveal="mask">
-        <span class="mask"><span>{c.journeyTitleA}</span></span>
-        <span class="mask" style="--i:1"><span><em>{c.journeyTitleB}</em></span></span>
+      <p class="eyebrow" data-reveal><span class="num">02</span><span>{c.areas.label}</span></p>
+      <h2 class="display" id="sg-3" data-reveal="mask">
+        <span class="mask"><span>{c.areas.head[0]}</span></span>
+        <span class="mask" style="--i:1"><span><em>{c.areas.head[1]}</em></span></span>
       </h2>
-      <ol class={`seg__stages seg__stages--${variant}`} data-reveal="fade">
-        {
-          STAGES.map((s, i) => (
-            <li style={`--i:${i}`}>
-              <span class="seg__dot" aria-hidden="true" />
-              <h3>{s.name}</h3>
-              <p>{s.line}</p>
-            </li>
-          ))
-        }
+      <ol class="sg-areas__list">
+        {c.areas.items.map((a, i) => (
+          <li class:list={{ 'is-lead': a.lead }} data-reveal style={`--d:${(i % 2) * 90}ms`}>
+            <span class="sg-areas__n" aria-hidden="true">{nn(i)}</span>
+            <h3>{a.t}</h3>
+            <p>{a.d}</p>
+          </li>
+        ))}
       </ol>
-      <p data-reveal="fade">
-        <a class="link" href="/#scene-06">See the journey in full <span class="arr" aria-hidden="true">→</span></a>
-      </p>
+      {c.areas.note && <p class="note sg-note" data-reveal="fade">{c.areas.note}</p>}
     </div>
   </section>
 
-  <section class="section seg__app on-light" aria-labelledby="segapp-title">
+  <section class="section sg-approach" aria-labelledby="sg-4">
     <div class="wrap split">
       <div class="a">
-        <p class="eyebrow" data-reveal><span class="num">04</span><span>Where it stands</span></p>
-        <h2 class="display" id="segapp-title" data-reveal="mask">
-          <span class="mask"><span>We’re developing</span></span>
-          <span class="mask" style="--i:1"><span><em>this experience.</em></span></span>
+        <p class="eyebrow" data-reveal><span class="num">03</span><span>{c.approach.label}</span></p>
+        <h2 class="display" id="sg-4" data-reveal="mask">
+          <span class="mask"><span>{c.approach.head[0]}</span></span>
+          <span class="mask" style="--i:1"><span><em>{c.approach.head[1]}</em></span></span>
         </h2>
       </div>
-      <div class="b prose" data-reveal style="--d:120ms">
-        <p>
-          An app prototype is in development. We’ll share real screens when they’re ready, rather than illustrations of
-          things that don’t exist yet.
-        </p>
-        <p>
-          <strong>Today, HUMAN is not a medical service.</strong> There is nothing to book or buy, and nothing on this
-          page is medical advice. For personal health concerns, please speak to a licensed professional.
-        </p>
-        <p><a class="text-link" href="/faq">Availability, pricing and other straight answers</a></p>
+      <div class="b sg-approach__body" data-reveal style="--d:120ms">
+        <p class="lede">{c.approach.lede}</p>
+        {c.approach.numbered ? (
+          <ol class="sg-approach__list sg-approach__list--num">
+            {c.approach.points.map((h, i) => <li><span class="sg-approach__n" aria-hidden="true">{nn(i)}</span>{h}</li>)}
+          </ol>
+        ) : (
+          <ul class="sg-approach__list">
+            {c.approach.points.map((h) => <li>{h}</li>)}
+          </ul>
+        )}
+        <p class="sg-approach__close">{c.approach.close}</p>
       </div>
+    </div>
+  </section>
+
+  <section class="section on-light seg__journey sg-journey" aria-labelledby="sg-5">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal><span class="num">04</span><span>{c.journey.label}</span></p>
+      <h2 class="display" id="sg-5" data-reveal="mask">
+        <span class="mask"><span>{JOURNEY_HEAD[0]}</span></span>
+        <span class="mask" style="--i:1"><span><em>{JOURNEY_HEAD[1]}</em></span></span>
+      </h2>
+      <ol class={`seg__stages seg__stages--${variant}`} data-reveal="fade">
+        {c.journey.steps.map((st, i) => (
+          <li style={`--i:${i}`}>
+            <span class="seg__dot" aria-hidden="true" />
+            {c.journey.numbered && <span class="seg__stage-n" aria-hidden="true">{nn(i)}</span>}
+            <h3>{st.t}</h3>
+            <p>{st.d}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="sg-journey__foot" data-reveal="fade">
+        <a class="link" href="/#scene-06">{c.journey.link} <span class="arr" aria-hidden="true">→</span></a>
+        {c.journey.note && <span class="note">{c.journey.note}</span>}
+      </p>
     </div>
   </section>
 
   <section class="section cta-band seg__cta" aria-labelledby="segcta-title">
     <Material tone={c.tone} shape="b" opacity={0.7} />
     <div class="wrap">
+      {c.cta.label && <p class="eyebrow" data-reveal><span class="num">05</span><span>{c.cta.label}</span></p>}
       <h2 class="display" id="segcta-title" data-reveal="mask">
-        <span class="mask"><span>{c.ctaA}</span></span>
-        <span class="mask" style="--i:1"><span><em>{c.ctaB}</em></span></span>
+        <span class="mask"><span>{c.cta.head[0]}</span></span>
+        <span class="mask" style="--i:1"><span><em>{c.cta.head[1]}</em></span></span>
       </h2>
-      <p class="lede" data-reveal style="--d:120ms">
-        Register your interest and, if you opt in, hear about HUMAN as it develops.
-      </p>
-      <p class="note" data-reveal="fade" style="margin-top:12px;max-width:36em">
-        Open to people across India. First pilot planned for Delhi NCR. Joining registers interest only.
-      </p>
+      <p class="lede" data-reveal style="--d:120ms">{c.cta.lede}</p>
       <div class="actions" data-reveal="fade">
         <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
         <a class="link" href={her ? '/men' : '/women'}>
           {her ? 'HUMAN for Him' : 'HUMAN for Her'} <span class="arr" aria-hidden="true">→</span>
         </a>
       </div>
+      <div class="sg-notice" data-reveal="fade" role="note">
+        <span class="status-pill">In development</span>
+        <p>
+          <strong>Currently in development. Testing and medical services are not yet available.</strong>
+          {c.cta.disclaimer}
+        </p>
+      </div>
+      <p class="note sg-micro" data-reveal="fade">
+        {c.cta.micro}
+        <a class="text-link" href="/faq">Read the FAQ</a>
+      </p>
     </div>
   </section>
-      </>
-    )
-  }
 </Base>
 
 <style is:global>
@@ -409,65 +368,12 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     justify-content: flex-end;
   }
   .seg__one h2,
-  .seg__journey h2,
-  .seg__app h2 {
+  .seg__journey h2 {
     margin: 22px 0 0;
   }
   .seg__one-prose {
     font-size: 1.125rem;
     padding-top: clamp(0px, 3.4vw, 46px);
-  }
-
-  /* themes — Her: stacked editorial rows. Him: three offset columns. */
-  .seg__theme-list {
-    margin: clamp(32px, 4vw, 56px) 0 28px;
-  }
-  .seg__theme-list h3 {
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: clamp(1.7rem, 3vw, 2.7rem);
-    line-height: 1.08;
-    letter-spacing: -0.01em;
-  }
-  .seg__theme-list p {
-    color: var(--muted);
-    max-width: 30em;
-  }
-  .seg__theme-n {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    color: var(--accent);
-  }
-  .seg__theme-list--her li {
-    display: grid;
-    grid-template-columns: 60px 5fr 6fr;
-    gap: 12px clamp(20px, 3vw, 48px);
-    align-items: baseline;
-    padding: clamp(22px, 3vw, 40px) 0;
-    border-top: 1px solid var(--rule);
-  }
-  .seg__theme-list--her li:last-child {
-    border-bottom: 1px solid var(--rule);
-  }
-  .seg__theme-list--him {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(20px, 3vw, 48px);
-  }
-  .seg__theme-list--him li {
-    border-top: 1px solid var(--text);
-    padding-top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .seg__theme-list--him li:nth-child(2) {
-    margin-top: clamp(0px, 5vw, 72px);
-  }
-  .seg__theme-list--him li:nth-child(3) {
-    margin-top: clamp(0px, 10vw, 144px);
   }
 
   /* journey — Her: two-column numbered ledger. Him: one horizontal line with six nodes. */
@@ -545,19 +451,19 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
   }
 
   /* ---- HUMAN for Her: areas of focus, approach, notice ---- */
-  .her-areas h2,
-  .her-approach h2 {
+  .sg-areas h2,
+  .sg-approach h2 {
     margin: 22px 0 0;
   }
   /* an editorial index, not cards: two ruled columns, a serif numeral, a name and one plain line */
-  .her-areas__list {
+  .sg-areas__list {
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: clamp(28px, 6vw, 104px);
     margin-top: clamp(36px, 5vw, 72px);
     border-bottom: 1px solid var(--rule);
   }
-  .her-areas__list li {
+  .sg-areas__list li {
     display: grid;
     grid-template-columns: clamp(52px, 5.4vw, 84px) 1fr;
     column-gap: 8px;
@@ -565,7 +471,7 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     padding: clamp(22px, 2.6vw, 34px) 0;
     border-top: 1px solid var(--rule);
   }
-  .her-areas__n {
+  .sg-areas__n {
     grid-row: span 2;
     font-family: var(--serif);
     font-style: italic;
@@ -573,34 +479,34 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     line-height: 1;
     color: var(--accent);
   }
-  .her-areas__list h3 {
+  .sg-areas__list h3 {
     font-size: clamp(1.25rem, 1.9vw, 1.7rem);
     font-weight: 700;
     letter-spacing: -0.01em;
     line-height: 1.1;
     text-transform: uppercase;
   }
-  .her-areas__list p {
+  .sg-areas__list p {
     margin-top: 8px;
     max-width: 26em;
     color: var(--muted);
     text-wrap: pretty;
   }
-  .her-approach__body {
+  .sg-approach__body {
     padding-top: clamp(0px, 3.4vw, 46px);
   }
-  .her-approach__list {
+  .sg-approach__list {
     margin: clamp(18px, 2vw, 26px) 0 0;
     border-top: 1px solid var(--rule);
   }
-  .her-approach__list li {
+  .sg-approach__list li {
     position: relative;
     padding: 16px 0 16px 30px;
     border-bottom: 1px solid var(--rule);
     font-size: 1.125rem;
     line-height: 1.4;
   }
-  .her-approach__list li::before {
+  .sg-approach__list li::before {
     content: '';
     position: absolute;
     left: 2px;
@@ -609,7 +515,7 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     height: 1px;
     background: var(--accent);
   }
-  .her-approach__close {
+  .sg-approach__close {
     margin-top: clamp(20px, 2.4vw, 30px);
     max-width: 22em;
     font-family: var(--serif);
@@ -619,10 +525,59 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     letter-spacing: -0.01em;
     text-wrap: balance;
   }
-  .seg .her-journey .seg__dot {
+  .seg .sg-journey .seg__dot {
     background: var(--accent);
   }
-  .her-notice {
+  .seg__stage-n {
+    display: block;
+    margin-bottom: 6px;
+    font-size: var(--fs-eyebrow);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .sg-journey__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 24px;
+  }
+  .sg-note {
+    margin-top: 18px;
+  }
+  /* slight emphasis for the areas named as priorities: a heavier top rule and a larger name, same layout */
+  .sg-areas__list li.is-lead {
+    border-top-color: var(--accent);
+    box-shadow: inset 0 1px 0 var(--accent);
+  }
+  .sg-areas__list li.is-lead h3 {
+    font-size: clamp(1.375rem, 2.15vw, 1.95rem);
+  }
+  .sg-areas__list li.is-lead .sg-areas__n {
+    font-size: clamp(2rem, 3vw, 2.9rem);
+  }
+  /* numbered points: a serif numeral in place of the dash */
+  .sg-approach__list--num li {
+    padding-left: 52px;
+  }
+  .sg-approach__list--num li::before {
+    display: none;
+  }
+  .sg-approach__n {
+    position: absolute;
+    left: 0;
+    top: 12px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: var(--accent);
+  }
+  .seg__cta .eyebrow {
+    margin-bottom: 22px;
+  }
+  .sg-notice {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -635,19 +590,19 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     line-height: 1.5;
     color: var(--muted);
   }
-  .her-notice p {
+  .sg-notice p {
     flex: 1 1 22em;
   }
-  .her-notice strong {
+  .sg-notice strong {
     display: block;
     color: var(--text);
     font-weight: 600;
   }
-  .her-micro {
+  .sg-micro {
     margin-top: 14px;
     max-width: 46em;
   }
-  .her-micro .text-link {
+  .sg-micro .text-link {
     margin-left: 4px;
     white-space: nowrap;
   }
@@ -662,20 +617,11 @@ const hasPhoto = Object.keys(import.meta.glob('../assets/human/*.{png,jpg,jpeg,w
     .seg--him .seg__hero-inner .actions {
       justify-content: flex-start;
     }
-    .seg__theme-list--her li {
+    .sg-areas__list {
       grid-template-columns: 1fr;
     }
-    .her-areas__list {
-      grid-template-columns: 1fr;
-    }
-    .her-approach__list li {
+    .sg-approach__list li {
       font-size: 1.0625rem;
-    }
-    .seg__theme-list--him {
-      grid-template-columns: 1fr;
-    }
-    .seg__theme-list--him li:nth-child(n) {
-      margin-top: 0;
     }
     .seg__stages--her {
       grid-template-columns: 1fr;
