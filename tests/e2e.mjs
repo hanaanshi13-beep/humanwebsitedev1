@@ -885,17 +885,62 @@ await test('E2E-10/11', 'Portals navigate to /women and /men (mouse and keyboard
   await p.context().close();
 });
 
-await test('PARITY', '/women and /men have the same section count, headings count and CTA count', async () => {
+await test('HER-01', 'HUMAN for Her: six sections with the approved copy word for word, in plain language; old sections gone', async () => {
   const p = await ctx({ reducedMotion: 'reduce' });
-  const shape = async (r) => {
-    await go(p, r);
-    return p.evaluate(() =>
-      [document.querySelectorAll('main > section').length, document.querySelectorAll('main h2, main h3').length, document.querySelectorAll('main a.btn').length].join('/'),
-    );
-  };
-  const a = await shape('/women');
-  const b = await shape('/men');
-  assert(a === b, `${a} vs ${b}`);
+  await go(p, '/women');
+  const heads = await p.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => [...h.querySelectorAll('.mask > span')].map((s) => s.textContent.trim()).join(' / ')));
+  const want = ['Preventive health. / Designed for women.', 'Women’s bodies / work differently.', 'The health issues / that matter to women.', 'More than / a routine blood test.', 'Know your health. / Stay informed.', 'Be among / the first.'];
+  assert(JSON.stringify(heads) === JSON.stringify(want), 'headlines: ' + JSON.stringify(heads));
+  assert((await p.locator('main > section').count()) === 6, 'section count');
+  const text = (await p.locator('main').evaluate((e) => e.textContent)).replace(/\s+/g, ' ');
+  for (const t of [
+    'HUMAN for Her',
+    'HUMAN is building a preventive health platform in India that focuses on women’s hormones, health markers and conditions that are often overlooked in routine health checkups.',
+    'From periods and hormonal changes to energy levels and metabolism, women have different health needs.',
+    'We believe health checkups should take these differences into account.',
+    'Hormonal imbalances, PCOS and irregular periods.', 'Thyroid-related changes in energy, mood and weight.', 'Iron deficiency, vitamin deficiencies and anaemia.', 'Blood sugar, cholesterol and weight management.', 'Menstrual health, fertility and menopause.', 'Energy levels, physical performance and recovery.',
+    'We are designing an experience that helps women:', 'Understand which health tests are relevant to them.', 'Make sense of their blood test results.', 'Understand potential health risks.', 'Take informed steps towards better health.', 'Track changes in their health over time.',
+    'The aim is to make health information easier to understand and act on.',
+    'Understand what’s happening inside your body.', 'Make sense of your results.', 'Take informed steps with professional guidance.', 'Follow changes in your health.', 'Check relevant health markers when needed.', 'Use what you learn to make better health decisions.',
+    'We’re building HUMAN for Her to make preventive healthcare more relevant and accessible to women in India.',
+    'Currently in development. Testing and medical services are not yet available.',
+  ]) assert(text.includes(t), 'missing copy: ' + t);
+  const areas = await p.locator('.her-areas__list h3').allTextContents();
+  assert(areas.join('|') === 'Hormonal health|Thyroid health|Nutritional health|Metabolic health|Reproductive health|Fitness and wellbeing', areas.join('|'));
+  const steps = await p.locator('.her-journey .seg__stages h3').allTextContents();
+  assert(steps.join('|') === 'Test|Understand|Act|Track|Retest|Improve', steps.join('|'));
+  for (const gone of ['A more thoughtful way', 'one-size-fits-all', 'Three themes', 'design intentions', 'We’re developing', 'India’s first', 'India\'s first']) assert(!text.includes(gone), 'obsolete or unverified copy still present: ' + gone);
+  assert(/planned areas of focus/i.test(text), 'areas not labelled as planned');
+  assert(/Delhi NCR/.test(text) && /across India/.test(text) && /not medical advice|is medical advice/.test(text), 'eligibility, pilot or medical note missing');
+  assert((await p.locator('main .status-pill').count()) === 1 && (text.match(/in development/gi) || []).length <= 3, 'development notice should appear once, not throughout');
+  await p.context().close();
+});
+
+await test('HER-02', 'HUMAN for Her: site typography reused, links work, mobile layout holds; /men is untouched', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  await go(p, '/faq');
+  const ref = await p.evaluate(() => { const h = getComputedStyle(document.querySelector('main .display')); const e = getComputedStyle(document.querySelector('main .display em')); return [h.fontFamily, h.fontWeight, h.textTransform, e.fontFamily, e.fontStyle].join('|'); });
+  await go(p, '/women');
+  const all = await p.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => { const c = getComputedStyle(h); const e = getComputedStyle(h.querySelector('em')); return [c.fontFamily, c.fontWeight, c.textTransform, e.fontFamily, e.fontStyle].join('|'); }));
+  assert(all.every((v) => v === ref), 'heading typography differs from the site: ' + all.find((v) => v !== ref));
+  const fams = await p.evaluate(() => [...new Set([...document.querySelectorAll('main *')].map((e) => getComputedStyle(e).fontFamily.split(',')[0].replace(/"/g, '').trim()))]);
+  assert(fams.every((f) => /Hanken Grotesk Variable|Instrument Serif/.test(f)), 'font families: ' + fams.join(', '));
+  const links = await p.evaluate(() => [...document.querySelectorAll('main a')].map((a) => a.getAttribute('href')));
+  assert(links.filter((h) => h === '/waitlist').length === 2 && links.includes('#understanding') && links.includes('/#scene-06') && links.includes('/faq') && links.includes('/men'), 'links: ' + links.join(', '));
+  assert((await p.locator('#understanding').count()) === 1, 'Explore further target missing');
+  await p.locator('main .seg__cta a.btn').click();
+  await p.waitForURL('**/waitlist');
+  assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
+  for (const w of [360, 390, 768]) {
+    const m = await ctx({ viewport: { width: w, height: 800 }, reducedMotion: 'reduce' });
+    await go(m, '/women');
+    assert((await m.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 0, w + 'px overflow');
+    assert(!(await m.evaluate(() => [...document.querySelectorAll('main h1, main h2')].some((h) => h.scrollWidth > h.clientWidth + 1))), w + 'px headline clipped');
+    await m.context().close();
+  }
+  await go(p, '/men');
+  const men = await p.evaluate(() => [document.querySelectorAll('main > section').length, document.querySelector('h1').textContent.replace(/\s+/g, ' ').trim(), !!document.querySelector('#themes-title'), document.querySelectorAll('.her-areas, .her-notice').length].join('|'));
+  assert(men === '6|Go beyond what you can see.|true|0', '/men changed: ' + men);
   await p.context().close();
 });
 
