@@ -16,7 +16,7 @@
 //
 // The people shown are models in a brand campaign, not HUMAN members, and the eye is a picture, not a scan.
 import { getImage } from 'astro:assets';
-import pH from '../../assets/inside-human/inside-human-01-h-run-club.webp';
+import pH from '../../assets/portal/originals/A01-blood-tube.webp'; // the HUMAN blood tube: bloodwork from the first letter
 import pU from '../../assets/inside-human/inside-human-02-u-female.webp';
 import pM from '../../assets/inside-human/inside-human-03-m-eye.webp';
 import pA from '../../assets/inside-human/inside-human-04-a-couple.webp';
@@ -25,8 +25,11 @@ import pN from '../../assets/inside-human/inside-human-05-n-mature-man.jpg';
 const opt = (src: ImageMetadata, width: number, quality = 84) => getImage({ src, width: Math.min(width, src.width), format: 'webp', quality });
 // Letter geometry and photo placement from the approved composition (each letter is 100 × 150 units).
 // `focus` is the point the photograph's own slow move is centred on, in the letter's units.
-const letters = [
-  { k: 'h', x: 0, d: 'M0 0H34V58H66V0H100V150H66V91H34V150H0Z', img: await opt(pH, 1122), box: [-10, 0, 120, 150], focus: [50, 62] },
+// `rot` (optional) turns the photograph inside its letter: [degrees, centre x, centre y].
+// H: the tube runs corner to corner — cap in the upper-left stem, label across the crossbar, blood in the lower-right.
+type Letter = { k: string; x: number; d: string; img: Awaited<ReturnType<typeof opt>>; box: number[]; focus: number[]; rot?: number[] };
+const letters: Letter[] = [
+  { k: 'h', x: 0, d: 'M0 0H34V58H66V0H100V150H66V91H34V150H0Z', img: await opt(pH, 1086, 86), box: [-24.66, -18.65, 146.61, 195.48], focus: [50, 74.5], rot: [-4.5, 50, 74.5] },
   { k: 'u', x: 107.5, d: 'M0 0H36V103Q36 117 50 117Q64 117 64 103V0H100V104Q100 150 50 150Q0 150 0 104Z', img: await opt(pU, 1122), box: [-24, -8, 128, 160], focus: [20, 44] },
   { k: 'm', x: 215, d: 'M0 0H36L50 45L64 0H100V150H69V85L50 122L31 85V150H0Z', img: await opt(pM, 1122, 88), box: [-15, -4, 130, 162.5], focus: [55.6, 66.4] },
   { k: 'a', x: 322.5, d: 'M28 0H72L100 150H66L60 115H40L34 150H0Z M50 52L42 87H58Z', img: await opt(pA, 1122), box: [-11, 0, 122, 152.5], focus: [50, 55] },
@@ -68,7 +71,7 @@ const letters = [
                 <g transform={`translate(${l.x} 0)`} clip-path={`url(#ih-clip-${l.k})`} data-ih-letter={l.k}>
                   <rect x={l.box[0]} y={l.box[1]} width={l.box[2]} height={l.box[3]} fill="#2b2622" />
                   <g data-ih-photo={l.k} data-fx={l.focus[0]} data-fy={l.focus[1]}>
-                    <image href={l.img.src} x={l.box[0]} y={l.box[1]} width={l.box[2]} height={l.box[3]} preserveAspectRatio="xMidYMid slice" />
+                    <image href={l.img.src} x={l.box[0]} y={l.box[1]} width={l.box[2]} height={l.box[3]} preserveAspectRatio="xMidYMid slice" transform={l.rot ? `rotate(${l.rot.join(' ')})` : undefined} />
                   </g>
                 </g>
               ))
@@ -168,8 +171,8 @@ const letters = [
       // deep inside the M the screen shows about 52 units of height: the solid band of the letter around the pupil
       // (on a tall phone that would crop to the iris alone, so there the eye is framed by its width instead)
       const sIn = vw > vh ? Math.max(vh / 52, vw / 96) : vw / 42;
-      const s = key(p, [[0, u0], [0.32, u0], [0.48, u0 * 1.9], [0.64, sIn], [0.74, sIn * 1.06], [0.94, sIn * 1.7]]);
-      const toPupil = key(p, [[0.32, 0], [0.5, 0.6], [0.6, 1]]);
+      const s = key(p, [[0, u0], [0.3, u0], [0.46, u0 * 1.9], [0.6, sIn], [0.7, sIn * 1.06], [0.9, sIn * 1.7]]);
+      const toPupil = key(p, [[0.3, 0], [0.48, 0.6], [0.58, 1]]);
       const cx = lerp(cx0, PX, toPupil);
       const cy = lerp(cy0, PY, toPupil);
       const w = vw / s;
@@ -179,22 +182,22 @@ const letters = [
       // ---- ACT IV: the letter lets go of the photograph ----
       // The opening starts inside the solid letter (invisible), and only grows past the letter's edges once the
       // camera is close enough that what is left of them is a sliver at the top and bottom of the frame.
-      const opening = ease(ramp(p, 0.55, 0.67));
+      const opening = ease(ramp(p, 0.52, 0.66));
       const cover = Math.hypot(w, h) / 2 + 6;
-      open.setAttribute('r', p < 0.5 ? '0' : lerp(SAFE_R, Math.max(SAFE_R, cover), opening).toFixed(2));
+      open.setAttribute('r', p < 0.48 ? '0' : lerp(SAFE_R, Math.max(SAFE_R, cover), opening).toFixed(2));
 
       // ---- ACT V–VI: the pupil widens into the dark ground of the next section ----
       // The dark starts as the pupil's own size and shape, with a soft edge like the pupil's, and the rest of the
       // picture dims with it, so it reads as the eye's own darkness spreading rather than a disc laid on top.
-      const dk = ease(ramp(p, 0.78, 0.97));
+      const dk = ease(ramp(p, 0.74, 0.93));
       const r0 = PUPIL_R * 1.1 * s;
       const r = lerp(r0, Math.hypot(vw, vh) * 0.75, dk * dk);
       const around = Math.min(1, dk * 1.25);
-      dark.style.opacity = ramp(p, 0.76, 0.8).toFixed(3);
+      dark.style.opacity = ramp(p, 0.7, 0.78).toFixed(3);
       dark.style.background = `radial-gradient(circle at 50% 50%, #0b0d0f 0, #0b0d0f ${(r * 0.72).toFixed(1)}px, rgba(11,13,15,${(0.55 + 0.45 * around).toFixed(3)}) ${(r * 1.05).toFixed(1)}px, rgba(11,13,15,${(around * 0.9).toFixed(3)}) ${(r * 1.7 + 40).toFixed(1)}px, rgba(11,13,15,${around.toFixed(3)}) 100%)`;
 
       // ---- ACT III: the editorial layer leaves as the camera passes it ----
-      const out = ease(ramp(p, 0.22, 0.335));
+      const out = ease(ramp(p, 0.18, 0.36));
       fades.forEach((el) => {
         el.style.opacity = (1 - out).toFixed(3);
         el.style.transform = out ? `translate3d(0, ${(-out * 36).toFixed(1)}px, 0)` : '';
@@ -205,12 +208,12 @@ const letters = [
         fades.forEach((el) => (el.inert = hidden)); // nothing invisible stays in the tab order
       }
       // the arrow belongs to the opening screen only: it recedes as soon as the film begins and stops pulsing
-      const away = ease(ramp(p, 0.03, 0.14));
+      const away = ease(ramp(p, 0.02, 0.1));
       nextUi.style.opacity = (1 - away).toFixed(3);
       nextUi.style.transform = away ? `translate3d(0, ${(away * 10).toFixed(1)}px, 0)` : '';
       nextUi.inert = away > 0.95;
       nextUi.classList.toggle('is-quiet', p > 0.015);
-      sec.dataset.ihAct = String(p < 0.12 ? 1 : p < 0.32 ? 2 : p < 0.48 ? 3 : p < 0.7 ? 4 : p < 0.9 ? 5 : 6);
+      sec.dataset.ihAct = String(p < 0.1 ? 1 : p < 0.3 ? 2 : p < 0.46 ? 3 : p < 0.66 ? 4 : p < 0.86 ? 5 : 6);
     };
 
     let film = false;
@@ -261,6 +264,7 @@ const letters = [
     };
     const start = () => {
       film = !reduce.matches;
+      sec.classList.toggle('is-static', !film);
       if (!film) {
         sec.classList.remove('is-film');
         still();
@@ -336,11 +340,13 @@ const letters = [
         arrive();
         return;
       }
-      const dur = 3200;
+      // A sine curve, with the duration chosen so the peak speed stays near 1500 px/s: the film still plays,
+      // and the travel slows well before it settles on the introduction.
+      const dur = Math.min(4600, Math.max(3200, ((Math.PI / 2) * Math.abs(target() - from)) / 1.5));
       const t0 = performance.now();
       const step = (now: number) => {
         const t = clamp((now - t0) / dur);
-        const k = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        const k = (1 - Math.cos(Math.PI * t)) / 2;
         window.scrollTo({ top: lerp(from, target(), k), behavior: 'instant' });
         if (t < 1) travel = requestAnimationFrame(step);
         else {
@@ -560,11 +566,19 @@ const letters = [
     display: none;
   }
 
-  /* ---- the film: a bounded scroll track with one sticky stage. Applied only once the script is running. ---- */
-  .ih:global(.is-film) .ih__track {
-    height: 380vh;
-    height: 380svh;
+  /* ---- the film: a bounded scroll track with one sticky stage ----
+     The track's height and the sticky stage are set from the very first layout (html.js-motion is written in
+     <head> before the body is parsed), not when the script starts. If the page grew only once the script ran,
+     the browser's scroll restoration (reload, Back) and scroll anchoring would push the reader forward by the
+     whole film — straight past the introduction. The script's .is-film class only moves the artwork. */
+  :global(html.js-motion) .ih__track {
+    height: 440vh;
+    height: 440svh;
   }
+  :global(html.js-motion) .ih__stage {
+    overflow-anchor: none;
+  }
+  :global(html.js-motion) .ih__stage,
   .ih:global(.is-film) .ih__stage,
   .ih:global(.is-measuring) .ih__stage {
     position: sticky;
@@ -660,9 +674,18 @@ const letters = [
     .hero__l2 {
       font-size: calc(var(--ih-l1) * 1.42);
     }
-    .ih:global(.is-film) .ih__track {
-      height: 300vh;
-      height: 300svh;
+    :global(html.js-motion) .ih__track {
+      height: 380vh;
+      height: 380svh;
     }
+  }
+  /* reduced motion switched on after load: the still composition in normal flow */
+  :global(html.js-motion) .ih:global(.is-static) .ih__track {
+    height: auto;
+  }
+  :global(html.js-motion) .ih:global(.is-static) .ih__stage {
+    position: relative;
+    height: auto;
+    overflow: visible;
   }
 </style>

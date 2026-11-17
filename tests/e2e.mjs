@@ -162,7 +162,7 @@ await test('IH-01', 'INSIDE HUMAN: five letters H-U-M-A-N, each clipped to its o
   );
   assert(d.map((l) => l.k).join('') === 'human', 'letters: ' + d.map((l) => l.k).join(''));
   // the portal's A06 is the same file as the U photograph, so the build may serve it under either name
-  const want = { h: 'h-run-club', u: /u-female|A06-womens-portrait/, m: 'm-eye', a: 'a-couple', n: 'n-mature-man' };
+  const want = { h: 'A01-blood-tube', u: /u-female|A06-womens-portrait/, m: 'm-eye', a: 'a-couple', n: 'n-mature-man' };
   for (const l of d) {
     assert(l.clip === `url(#ih-clip-${l.k})`, l.k + ' clip ' + l.clip);
     assert(l.imgs.length === 1 && (want[l.k] instanceof RegExp ? want[l.k].test(l.imgs[0]) : l.imgs[0].includes(want[l.k])), l.k + ' photo ' + l.imgs);
@@ -224,7 +224,7 @@ await test('IH-03', 'INSIDE HUMAN arrow: targets the real next section, plays th
   await p.waitForTimeout(1500);
   const mid = await p.evaluate(() => ({ y: scrollY, act: document.querySelector('[data-ih]').dataset.ihAct }));
   assert(mid.y > 300 && Number(mid.act) >= 3, 'film not playing during travel: ' + JSON.stringify(mid));
-  await p.waitForTimeout(2600);
+  await p.waitForTimeout(3800); // the travel now takes up to 4.6 s so the film is never rushed
   const end = await p.evaluate(() => {
     const n = document.querySelector('#what-is-human');
     const hd = document.querySelector('[data-header]');
@@ -1796,6 +1796,141 @@ await test('GLASS-03', 'Clear glass: visible keyboard focus on buttons and capsu
   await go(q, '/');
   const a = await q.evaluate(() => Number(getComputedStyle(document.querySelector('.site-header__shell')).backgroundColor.match(/[\d.]+/g)[3] ?? 1));
   assert(a >= 0.8, 'no-JS capsule too clear to guarantee legibility: ' + a);
+  await q.context().close();
+});
+
+// ---------- V1.1: the company introduction, the 3D tube, the pathway, scroll restoration ----------
+await test('V11-01', 'Opening H holds the HUMAN blood tube photograph, turned inside the letter; the other four letters keep their photographs', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  const d = await p.evaluate(() => [...document.querySelectorAll('[data-ih-letter] image')].map((i) => [i.closest('[data-ih-letter]').dataset.ihLetter, i.getAttribute('href').split('/').pop().split('.')[0], i.getAttribute('transform')]));
+  assert(d[0][0] === 'h' && /^A01-blood-tube/.test(d[0][1]) && /^rotate\(/.test(d[0][2] || ''), 'H: ' + JSON.stringify(d[0]));
+  assert(/u-female|A06/.test(d[1][1]) && /m-eye/.test(d[2][1]) && /a-couple/.test(d[3][1]) && /n-mature-man/.test(d[4][1]), 'other letters changed: ' + JSON.stringify(d));
+  const ok = await p.evaluate(() => new Promise((res) => { const im = new Image(); im.onload = () => res(im.naturalWidth); im.onerror = () => res(0); im.src = document.querySelector('[data-ih-letter="h"] image').getAttribute('href'); }));
+  assert(ok > 0, 'H image did not load');
+  await p.context().close();
+});
+
+await test('V11-02', 'Company introduction: approved copy, headline far larger than before, full-viewport black chapter, 3D tube mounted, nothing overlaps at eight sizes', async () => {
+  for (const [w, h] of [[1920, 1080], [1440, 900], [1366, 768], [1280, 720], [1024, 768], [768, 1024], [390, 844], [360, 640]]) {
+    const p = await ctx({ viewport: { width: w, height: h } });
+    await go(p, '/');
+    await p.evaluate(() => { const n = document.querySelector('#what-is-human'); scrollTo({ top: n.getBoundingClientRect().top + scrollY, behavior: 'instant' }); });
+    await p.waitForFunction(() => document.querySelector('[data-tube-host]').classList.contains('is-3d'), null, { timeout: 20000 }).catch(() => {});
+    const d = await p.evaluate(() => {
+      const sec = document.querySelector('#what-is-human');
+      const box = (q) => { const r = document.querySelector(q).getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+      const text = sec.innerText.replace(/\s+/g, ' ');
+      return {
+        text, h: sec.offsetHeight, bg: getComputedStyle(sec).backgroundColor, fs: parseFloat(getComputedStyle(document.querySelector('#brief-title')).fontSize),
+        copy: box('.brief__copy'), tube: box('[data-tube-host]'), path: box('[data-pathway]'), is3d: document.querySelector('[data-tube-host]').classList.contains('is-3d'),
+        canvas: !!document.querySelector('[data-tube-stage] canvas'), over: document.documentElement.scrollWidth - innerWidth,
+        clipped: [...sec.querySelectorAll('h2, p')].some((e) => e.scrollWidth > e.clientWidth + 1),
+      };
+    });
+    for (const t of ['What HUMAN is', 'A preventive healthcare company.', 'Being built in India.', 'HUMAN is building a preventive health membership designed to help you better understand your health through relevant bloodwork, clear health insights and tracking over time.', 'first pilot is planned for Delhi NCR', 'See how it is designed to work']) assert(d.text.toLowerCase().includes(t.toLowerCase()), `${w}: missing "${t}"`);
+    assert(d.bg === 'rgb(11, 13, 15)', `${w}: background ${d.bg}`);
+    assert(d.h >= h - 1, `${w}: introduction ${d.h}px is shorter than the viewport`);
+    assert(d.fs >= (w >= 1024 ? 56 : 33), `${w}: headline only ${d.fs}px`);
+    assert(d.is3d && d.canvas, `${w}: 3D tube not mounted`);
+    assert(d.over <= 0 && !d.clipped, `${w}: overflow or clipped text`);
+    const apart = (a, b) => a.r <= b.l + 1 || b.r <= a.l + 1 || a.b <= b.t + 1 || b.b <= a.t + 1;
+    assert(apart(d.copy, d.tube) && apart(d.copy, d.path) && apart(d.tube, d.path), `${w}: copy, tube and pathway overlap ${JSON.stringify([d.copy, d.tube, d.path])}`);
+    if (w >= 1280 && h >= 900) assert(d.path.b <= h + 1, `${w}x${h}: pathway below the fold`);
+    assert(p.consoleErrors.length === 0, `${w}: console ${p.consoleErrors.join(' | ')}`);
+    await p.context().close();
+  }
+});
+
+await test('V11-03', 'Living Amber Pathway: six stages in order, one accessible list, drifts right-to-left at ~15–25 px/s, seamless loop distance, pulse runs, pause and keyboard focus stop it', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  await p.evaluate(() => { const n = document.querySelector('[data-pathway]'); scrollTo({ top: n.getBoundingClientRect().top + scrollY - 200, behavior: 'instant' }); });
+  await p.waitForTimeout(800);
+  const a11y = await p.evaluate(() => {
+    const pw = document.querySelector('[data-pathway]');
+    const visible = [...pw.querySelectorAll('ol')].filter((o) => !o.closest('[aria-hidden="true"]'));
+    return { lists: visible.length, names: visible[0] ? [...visible[0].querySelectorAll('li')].map((li) => li.textContent.replace(/\s+/g, ' ').trim()) : [], echoFocusable: [...pw.querySelectorAll('[aria-hidden="true"] a, [aria-hidden="true"] button')].length };
+  });
+  assert(a11y.lists === 1 && a11y.names.length === 6, 'accessible list: ' + JSON.stringify(a11y));
+  ['TEST', 'UNDERSTAND', 'ACT', 'TRACK', 'RETEST', 'IMPROVE'].forEach((n, i) => assert(a11y.names[i].toUpperCase().includes(n) && a11y.names[i].includes(String(i + 1).padStart(2, '0')), `stage ${i + 1}: ${a11y.names[i]}`));
+  const x = () => p.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector('.pathway__track')).transform).m41);
+  const x0 = await x(); await p.waitForTimeout(2000); const x1 = await x();
+  const speed = (x0 - x1) / 2;
+  assert(speed >= 12 && speed <= 28, 'drift speed ' + speed.toFixed(1) + ' px/s (must move right-to-left)');
+  const loop = await p.evaluate(() => { const c = document.querySelectorAll('.pathway__copy'); return [c.length, c[0].getBoundingClientRect().width, c[1].getBoundingClientRect().width, c[1].getBoundingClientRect().left - c[0].getBoundingClientRect().left, innerWidth]; });
+  assert(loop[0] === 2 && Math.abs(loop[1] - loop[2]) < 0.5 && Math.abs(loop[3] - loop[1]) < 0.5 && loop[1] >= loop[4] - 1, 'loop copies: ' + JSON.stringify(loop));
+  await p.locator('.pathway__toggle').click();
+  const y0 = await x(); await p.waitForTimeout(1200); const y1 = await x();
+  assert(Math.abs(y1 - y0) < 0.5 && (await p.locator('.pathway__toggle').getAttribute('aria-pressed')) === 'true', 'pause button did not stop the drift');
+  await p.locator('.pathway__toggle').click();
+  const z0 = await x(); await p.waitForTimeout(1000); assert((await x()) < z0 - 5, 'play did not resume');
+  assert(p.consoleErrors.length === 0, 'console: ' + p.consoleErrors.join(' | '));
+  await p.context().close();
+  const q = await ctx({ reducedMotion: 'reduce' });
+  await go(q, '/');
+  const t0 = await q.evaluate(() => getComputedStyle(document.querySelector('.pathway__track')).transform);
+  await q.waitForTimeout(1200);
+  assert(t0 === (await q.evaluate(() => getComputedStyle(document.querySelector('.pathway__track')).transform)), 'pathway moves under reduced motion');
+  await q.context().close();
+});
+
+await test('V11-04', 'Scroll restoration: reload and a window resize mid-page never push the reader forward (the old 2520px jump past the introduction)', async () => {
+  for (const vp of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    const p = await ctx({ viewport: vp });
+    await go(p, '/');
+    for (const y of [1200, 2400]) {
+      await p.evaluate((y) => scrollTo({ top: y, behavior: 'instant' }), y);
+      await p.waitForTimeout(300);
+      await p.reload({ waitUntil: 'networkidle' });
+      await p.waitForTimeout(800);
+      const after = await p.evaluate(() => scrollY);
+      assert(Math.abs(after - y) < 40, `${vp.width}: reload at ${y} came back at ${after}`);
+    }
+    await p.evaluate(() => scrollTo({ top: 6000, behavior: 'instant' }));
+    await p.waitForTimeout(300);
+    await p.setViewportSize({ width: vp.width - 1, height: vp.height });
+    await p.waitForTimeout(600);
+    const r = await p.evaluate(() => scrollY);
+    assert(Math.abs(r - 6000) < 60, `${vp.width}: resize moved the page from 6000 to ${r}`);
+    await p.context().close();
+  }
+});
+
+await test('V11-05', 'Opening arrow: travels through the film without rushing, settles on the introduction with the headline in view, and then nothing scrolls on its own', async () => {
+  const p = await ctx();
+  await go(p, '/');
+  await p.locator('[data-ih-go]').click();
+  const ys = [];
+  for (let i = 0; i < 110; i++) { ys.push(await p.evaluate(() => scrollY)); await p.waitForTimeout(50); }
+  const steps = ys.slice(1).map((y, i) => y - ys[i]);
+  const peak = Math.max(...steps) / 0.05;
+  assert(peak < 2600, 'peak travel speed ' + Math.round(peak) + ' px/s');
+  const d = await p.evaluate(() => { const s = document.querySelector('#what-is-human'); const t = document.querySelector('#brief-title').getBoundingClientRect(); return { top: s.getBoundingClientRect().top, tt: t.top, tb: t.bottom, op: getComputedStyle(document.querySelector('#brief-title .mask > span')).opacity }; });
+  assert(Math.abs(d.top) < 3, 'did not settle on the introduction: ' + d.top);
+  assert(d.tt >= 80 && d.tb <= 900 && Number(d.op) > 0.95, 'headline not in view on arrival ' + JSON.stringify(d));
+  const y0 = await p.evaluate(() => scrollY); await p.waitForTimeout(1500);
+  assert((await p.evaluate(() => scrollY)) === y0, 'page kept moving after arrival');
+  await p.context().close();
+});
+
+await test('V11-06', 'No WebGL: the introduction keeps a still of the same tube, no errors; no JavaScript: the still and the static pathway show', async () => {
+  const b2 = await chromium.launch({ args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] });
+  const c = await b2.newContext({ viewport: { width: 1440, height: 900 } });
+  const p = await c.newPage();
+  const errs = [];
+  p.on('pageerror', (e) => errs.push(String(e)));
+  await p.goto(BASE + '/', { waitUntil: 'networkidle' });
+  await p.evaluate(() => { const n = document.querySelector('#what-is-human'); scrollTo({ top: n.getBoundingClientRect().top + scrollY, behavior: 'instant' }); });
+  await p.waitForTimeout(2500);
+  const d = await p.evaluate(() => { const i = document.querySelector('.brief__still'); return { is3d: document.querySelector('[data-tube-host]').classList.contains('is-3d'), w: i.naturalWidth, op: getComputedStyle(i).opacity, vis: i.getBoundingClientRect().height }; });
+  assert(!d.is3d && d.w > 0 && d.op === '1' && d.vis > 200, 'fallback still: ' + JSON.stringify(d));
+  assert(errs.length === 0, 'errors: ' + errs.join(' | '));
+  await b2.close();
+  const q = await ctx({ javaScriptEnabled: false });
+  await go(q, '/');
+  assert(await q.locator('.brief__still').isVisible(), 'no-JS still hidden');
+  assert((await q.locator('[data-pathway] ol').first().locator('li').count()) === 6 && (await q.locator('[data-pathway] li').first().isVisible()), 'no-JS pathway');
   await q.context().close();
 });
 

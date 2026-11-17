@@ -1,0 +1,608 @@
+---
+// Living Amber Pathway: the six planned stages as one slowly drifting editorial strip.
+// One real <ol> carries the stages for assistive tech; a decorative, inert duplicate sits beside it so the
+// strip can loop seamlessly. Without JS, or with reduced motion, a single static copy fits the width.
+//
+// The pathway is a gentle wave defined in "cell units" (100 per stage, 600 per copy). Every term has an
+// integer number of periods per copy, so a copy starts and ends at the same height and slope: the IMPROVE -> TEST
+// join and the loop point are continuous by construction.
+import { STAGES } from '../../data/site';
+
+const UNITS = 100; // units per stage cell
+const COPY = UNITS * STAGES.length; // 600 units per copy
+const BAND = 72; // px height of the line band
+const MID = 36;
+// [amplitude px, periods per copy, phase rad]
+const TERMS: [number, number, number][] = [
+  [7, 3, 0.62],
+  [3.5, 1, 2.2],
+];
+const waveY = (u: number) => MID + TERMS.reduce((y, [a, k, p]) => y + a * Math.sin((2 * Math.PI * k * u) / COPY + p), 0);
+
+const pts: string[] = [];
+for (let u = 0; u <= COPY; u += 2) pts.push(`${u} ${waveY(u).toFixed(2)}`);
+const lineD = `M${pts.join(' L')}`;
+
+const stages = STAGES.map((s, i) => ({
+  n: String(i + 1).padStart(2, '0'),
+  name: s.name,
+  y: waveY(UNITS * i + UNITS / 2).toFixed(2),
+}));
+const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS });
+---
+
+<div class="pathway" data-pathway data-wave={wave} style={`--band:${BAND}px`}>
+  <div class="pathway__viewport">
+    <div class="pathway__track">
+      {
+        [0, 1].map((copy) => (
+          <div
+            class:list={['pathway__copy', copy === 1 && 'pathway__copy--echo']}
+            aria-hidden={copy === 1 ? 'true' : undefined}
+            inert={copy === 1}
+          >
+            <svg
+              class="pathway__line"
+              viewBox={`0 0 ${COPY} ${BAND}`}
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path class="pathway__halo" d={lineD} vector-effect="non-scaling-stroke" />
+              <path class="pathway__stroke" d={lineD} vector-effect="non-scaling-stroke" />
+            </svg>
+            <ol class="pathway__stages" aria-label={copy === 0 ? 'The six planned stages of HUMAN' : undefined}>
+              {stages.map((s) => (
+                <li class="pathway__stage" style={`--y:${s.y}px`}>
+                  <span class="pathway__node" aria-hidden="true" />
+                  <span class="pathway__n" aria-hidden="true">
+                    {s.n}
+                  </span>
+                  <span class="pathway__name">{s.name}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+      <svg class="pathway__pulse" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="pathway-glow" x="-20%" y="-200%" width="140%" height="500%">
+            <feGaussianBlur stdDeviation="3" />
+          </filter>
+        </defs>
+        <g class="pathway__pulse-g">
+          <path class="pathway__trail pathway__trail--long" />
+          <path class="pathway__trail pathway__trail--mid" />
+          <path class="pathway__trail pathway__trail--glow" filter="url(#pathway-glow)" />
+          <path class="pathway__trail pathway__trail--head" />
+          <circle class="pathway__spark-glow" r="9" filter="url(#pathway-glow)" />
+          <circle class="pathway__spark" r="2.2" />
+        </g>
+      </svg>
+    </div>
+  </div>
+  <button class="pathway__toggle" type="button" aria-pressed="false" hidden>
+    <span class="pathway__toggle-icon" aria-hidden="true"></span>
+    <span class="pathway__toggle-text">Pause motion</span>
+  </button>
+</div>
+
+<style>
+  .pathway {
+    /* drift speed in px per second (read by the script; tuned by eye between 15 and 25) */
+    --pathway-speed: 18;
+    --cell: clamp(220px, 24vw, 360px);
+    position: relative;
+    padding-block: clamp(8px, 1.6vh, 24px) 64px;
+    color: var(--text-on-dark);
+  }
+  .pathway__viewport {
+    position: relative;
+    padding-inline: var(--gutter);
+  }
+  .pathway__track {
+    position: relative;
+    display: flex;
+  }
+  .pathway__copy {
+    position: relative;
+    flex: none;
+    width: 100%;
+  }
+  .pathway__copy--echo,
+  .pathway__pulse {
+    display: none;
+  }
+
+  /* ---- the line ---- */
+  .pathway__line {
+    position: absolute;
+    inset: 0 0 auto 0;
+    width: 100%;
+    height: var(--band);
+    overflow: visible;
+    pointer-events: none;
+  }
+  .pathway__line path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .pathway__stroke {
+    stroke: rgba(232, 165, 35, 0.78);
+    stroke-width: 1.25px;
+  }
+  .pathway__halo {
+    stroke: rgba(232, 165, 35, 0.07);
+    stroke-width: 7px;
+  }
+
+  /* ---- stages ---- */
+  .pathway__stages {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .pathway__stage {
+    --lit: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: calc(var(--band) + 14px) 10px 0;
+    text-align: center;
+  }
+  .pathway__node {
+    position: absolute;
+    left: 50%;
+    top: var(--y);
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(calc(1 + var(--lit) * 0.22));
+    background: radial-gradient(circle at 50% 45%, #fff3d6 0 22%, #f6c35c 48%, var(--amber) 100%);
+    box-shadow:
+      0 0 0 4px rgba(11, 13, 15, 1),
+      0 0 0 5px rgba(232, 165, 35, calc(0.22 + var(--lit) * 0.35)),
+      0 0 calc(14px + var(--lit) * 16px) calc(3px + var(--lit) * 5px) rgba(232, 165, 35, calc(0.28 + var(--lit) * 0.4));
+  }
+  .pathway__n {
+    color: var(--amber);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    /* optical centring: tracking adds space after the last digit */
+    padding-left: 0.22em;
+  }
+  .pathway__name {
+    font-family: var(--sans);
+    font-size: clamp(1.25rem, 2.1vw, 2rem);
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--text-on-dark);
+    padding-left: 0.06em;
+    white-space: nowrap;
+  }
+
+  /* static (no JS or reduced motion): no control below, so no room reserved for it */
+  :global(html:not(.js-motion)) .pathway:not([data-motion='on']),
+  .pathway[data-motion='off'] {
+    padding-bottom: clamp(28px, 3vw, 44px);
+  }
+
+  /* ---- moving strip (JS on, motion allowed). html.js-motion is set before first paint by Base.astro ---- */
+  :global(html.js-motion) .pathway:not([data-motion='off']) .pathway__viewport,
+  .pathway[data-motion='on'] .pathway__viewport {
+    padding-inline: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  }
+  :global(html.js-motion) .pathway:not([data-motion='off']) .pathway__track,
+  .pathway[data-motion='on'] .pathway__track {
+    width: max-content;
+    will-change: transform;
+  }
+  :global(html.js-motion) .pathway:not([data-motion='off']) .pathway__copy,
+  .pathway[data-motion='on'] .pathway__copy {
+    display: block;
+    width: calc(6 * var(--cell));
+  }
+  .pathway[data-motion='on'] .pathway__pulse {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: var(--band);
+    overflow: visible;
+    pointer-events: none;
+  }
+  .pathway__trail {
+    fill: none;
+    stroke-linecap: round;
+  }
+  .pathway__trail--long {
+    stroke: rgba(232, 165, 35, 0.22);
+    stroke-width: 1.5px;
+  }
+  .pathway__trail--mid {
+    stroke: rgba(240, 186, 82, 0.5);
+    stroke-width: 1.6px;
+  }
+  .pathway__trail--glow {
+    stroke: rgba(246, 195, 92, 0.75);
+    stroke-width: 4px;
+  }
+  .pathway__trail--head {
+    stroke: #ffe2a3;
+    stroke-width: 1.8px;
+  }
+  .pathway__spark-glow {
+    fill: rgba(246, 190, 80, 0.55);
+  }
+  .pathway__spark {
+    fill: #fff1cf;
+  }
+  .pathway__pulse-g {
+    opacity: 0;
+  }
+
+  /* ---- pause control ---- */
+  .pathway__toggle {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 6px 16px 6px 13px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.24));
+    background: var(--glass-bg, rgba(255, 255, 255, 0.07));
+    color: var(--muted-on-dark);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition:
+      color var(--motion-micro, 160ms),
+      border-color var(--motion-micro, 160ms),
+      background-color var(--motion-micro, 160ms);
+  }
+  .pathway__toggle[hidden] {
+    display: none;
+  }
+  .pathway__toggle:hover {
+    color: var(--text-on-dark);
+    border-color: var(--glass-border-hover, rgba(255, 255, 255, 0.46));
+    background-color: var(--glass-bg-hover, rgba(255, 255, 255, 0.13));
+  }
+  .pathway__toggle-icon {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    /* pause: two bars */
+    background: linear-gradient(90deg, currentColor 0 3px, transparent 3px 7px, currentColor 7px 10px);
+  }
+  .pathway__toggle[aria-pressed='true'] .pathway__toggle-icon {
+    /* play: a triangle */
+    background: currentColor;
+    clip-path: polygon(10% 0, 100% 50%, 10% 100%);
+  }
+
+  /* ---- static, narrow: a vertical pathway (no JS or reduced motion on small screens) ---- */
+  @media (max-width: 719px) {
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__line,
+    .pathway[data-motion='off'] .pathway__line {
+      display: none;
+    }
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__stages,
+    .pathway[data-motion='off'] .pathway__stages {
+      grid-template-columns: 1fr;
+      row-gap: 22px;
+      padding-left: 34px;
+    }
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__stages::before,
+    .pathway[data-motion='off'] .pathway__stages::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 12px;
+      bottom: 12px;
+      width: 1.25px;
+      background: linear-gradient(rgba(232, 165, 35, 0.15), rgba(232, 165, 35, 0.78) 12%, rgba(232, 165, 35, 0.78) 88%, rgba(232, 165, 35, 0.15));
+    }
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__stage,
+    .pathway[data-motion='off'] .pathway__stage {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 16px;
+      padding: 0;
+      text-align: left;
+    }
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__node,
+    .pathway[data-motion='off'] .pathway__node {
+      left: -29px;
+      top: 50%;
+    }
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__n,
+    .pathway[data-motion='off'] .pathway__n {
+      padding-left: 0;
+      min-width: 2.4em;
+    }
+  }
+  @media (min-width: 720px) and (max-width: 1023px) {
+    /* static, medium: six columns would crowd the labels, so tighten the type a little */
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__name,
+    .pathway[data-motion='off'] .pathway__name {
+      font-size: clamp(1.0625rem, 2.1vw, 1.25rem);
+      letter-spacing: 0.04em;
+    }
+    :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__stage,
+    .pathway[data-motion='off'] .pathway__stage {
+      padding-inline: 4px;
+    }
+  }
+</style>
+
+<script>
+  type Wave = { units: number; band: number; mid: number; terms: [number, number, number][] };
+
+  const PULSE_PERIOD = 6000; // ms between pulse starts
+  const PULSE_TRAVEL = 4400; // ms a pulse takes to cross the visible strip
+  const PULSE_FIRST = 1400; // ms before the first pulse
+  const TRAILS: [string, number][] = [
+    ['.pathway__trail--long', 230],
+    ['.pathway__trail--mid', 110],
+    ['.pathway__trail--glow', 46],
+    ['.pathway__trail--head', 22],
+  ];
+
+  function initPathway(root: HTMLElement) {
+    const wave: Wave = JSON.parse(root.dataset.wave || '{}');
+    const viewport = root.querySelector<HTMLElement>('.pathway__viewport')!;
+    const track = root.querySelector<HTMLElement>('.pathway__track')!;
+    const pulseSvg = root.querySelector<SVGSVGElement>('.pathway__pulse')!;
+    const pulseG = root.querySelector<SVGGElement>('.pathway__pulse-g')!;
+    const trails = TRAILS.map(([sel, len]) => ({ el: root.querySelector<SVGPathElement>(sel)!, len }));
+    const spark = root.querySelector<SVGCircleElement>('.pathway__spark')!;
+    const sparkGlow = root.querySelector<SVGCircleElement>('.pathway__spark-glow')!;
+    const toggle = root.querySelector<HTMLButtonElement>('.pathway__toggle')!;
+    const toggleText = toggle.querySelector<HTMLElement>('.pathway__toggle-text')!;
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>('.pathway__stage'));
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const copyUnits = wave.units * 6;
+
+    let cell = 0;
+    let copyW = 0;
+    let stripW = 0;
+    let duration = 1;
+    let anim: Animation | null = null;
+    let raf = 0;
+    let last = 0;
+    let pulseClock = PULSE_FIRST > 0 ? PULSE_PERIOD - PULSE_FIRST : 0;
+    let arcX: Float64Array = new Float64Array(0); // x at each sample
+    let arcS: Float64Array = new Float64Array(0); // cumulative length at each sample
+    let totalLen = 0;
+    const lit = new Float64Array(6);
+    const state = { motion: false, user: false, focus: false, offscreen: false };
+
+    const y = (xPx: number) => {
+      const u = (xPx / cell) * wave.units;
+      let v = wave.mid;
+      for (const [a, k, p] of wave.terms) v += a * Math.sin((2 * Math.PI * k * u) / copyUnits + p);
+      return v;
+    };
+    const speed = () => parseFloat(getComputedStyle(root).getPropertyValue('--pathway-speed')) || 18;
+
+    function arcAt(x: number) {
+      // binary search the sampled polyline (same points as the drawn pulse path)
+      let lo = 0;
+      let hi = arcX.length - 1;
+      if (x <= 0) return 0;
+      if (x >= arcX[hi]) return totalLen;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (arcX[mid] <= x) lo = mid;
+        else hi = mid;
+      }
+      const t = (x - arcX[lo]) / (arcX[hi] - arcX[lo]);
+      return arcS[lo] + t * (arcS[hi] - arcS[lo]);
+    }
+
+    function layout() {
+      stripW = viewport.clientWidth;
+      const base = Math.min(360, Math.max(220, window.innerWidth * 0.24));
+      // a copy is always wider than the strip (plus room for the pulse's lead-in), so the loop never shows a gap
+      cell = Math.ceil(Math.max(base, (stripW + 240) / 6));
+      copyW = cell * 6;
+      root.style.setProperty('--cell', `${cell}px`);
+
+      const trackW = copyW * 2;
+      const step = 3;
+      const n = Math.ceil(trackW / step) + 1;
+      arcX = new Float64Array(n);
+      arcS = new Float64Array(n);
+      let d = '';
+      let px = 0;
+      let py = 0;
+      for (let i = 0; i < n; i++) {
+        const x = Math.min(i * step, trackW);
+        const yy = y(x);
+        arcX[i] = x;
+        arcS[i] = i === 0 ? 0 : arcS[i - 1] + Math.hypot(x - px, yy - py);
+        d += `${i === 0 ? 'M' : 'L'}${x.toFixed(1)} ${yy.toFixed(2)}`;
+        px = x;
+        py = yy;
+      }
+      totalLen = arcS[n - 1];
+      pulseSvg.setAttribute('width', String(trackW));
+      pulseSvg.setAttribute('height', String(wave.band));
+      pulseSvg.setAttribute('viewBox', `0 0 ${trackW} ${wave.band}`);
+      for (const t of trails) {
+        t.el.setAttribute('d', d);
+        t.el.style.strokeDasharray = `${t.len} ${totalLen + t.len}`;
+      }
+    }
+
+    function offset() {
+      if (!anim) return 0;
+      const t = Number(anim.currentTime ?? 0);
+      return ((t % duration) / duration) * copyW;
+    }
+
+    function buildAnimation() {
+      const progress = anim ? (Number(anim.currentTime ?? 0) % duration) / duration : 0;
+      duration = (copyW / speed()) * 1000;
+      const frames = [{ transform: 'translate3d(0,0,0)' }, { transform: `translate3d(${-copyW}px,0,0)` }];
+      if (anim) {
+        (anim.effect as KeyframeEffect).setKeyframes(frames);
+        anim.effect!.updateTiming({ duration });
+      } else {
+        anim = track.animate(frames, { duration, iterations: Infinity, easing: 'linear' });
+        anim.pause();
+      }
+      anim.currentTime = progress * duration;
+    }
+
+    function drawPulse(dt: number) {
+      const off = offset();
+      const phase = pulseClock % PULSE_PERIOD;
+      let headX = -1e9;
+      let alpha = 0;
+      if (phase < PULSE_TRAVEL) {
+        const p = phase / PULSE_TRAVEL;
+        // mostly linear, with a soft start and finish
+        const e = 0.72 * p + 0.28 * (0.5 - 0.5 * Math.cos(Math.PI * p));
+        const screenX = -80 + e * (stripW + 160);
+        headX = screenX + off;
+        if (headX > copyW * 2) headX -= copyW;
+        if (headX < 0) headX += copyW;
+        alpha = Math.min(1, Math.sin(Math.PI * p) * 2.2);
+        const s = arcAt(headX);
+        for (const t of trails) t.el.style.strokeDashoffset = String(-(s - t.len));
+        const yy = y(headX);
+        spark.setAttribute('cx', headX.toFixed(1));
+        spark.setAttribute('cy', yy.toFixed(2));
+        sparkGlow.setAttribute('cx', headX.toFixed(1));
+        sparkGlow.setAttribute('cy', yy.toFixed(2));
+      }
+      pulseG.style.opacity = alpha.toFixed(3);
+
+      // nodes brighten as the pulse reaches them and settle back afterwards. Glow is kept per stage (not per
+      // copy) and measured modulo the copy width, so both copies always match and the loop point stays invisible.
+      const decay = Math.exp(-dt / 520);
+      for (let i = 0; i < 6; i++) {
+        const nodeX = (i + 0.5) * cell;
+        let dx = (((headX - nodeX) % copyW) + copyW) % copyW; // 0..copyW, distance the pulse is past the node
+        if (dx > copyW / 2) dx -= copyW;
+        const near = dx > -40 && dx < 140 ? Math.exp(-(((dx - 10) / 55) ** 2)) * alpha : 0;
+        const v = Math.max(lit[i] * decay, near);
+        if (Math.abs(v - lit[i]) > 0.004 || (v < 0.004 && lit[i] !== 0)) {
+          lit[i] = v < 0.004 ? 0 : v;
+          const val = lit[i].toFixed(3);
+          nodes[i].style.setProperty('--lit', val);
+          nodes[i + 6]?.style.setProperty('--lit', val);
+        }
+      }
+    }
+
+    function frame(now: number) {
+      const dt = last ? Math.min(100, now - last) : 16;
+      last = now;
+      pulseClock += dt;
+      drawPulse(dt);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function update() {
+      const running = state.motion && !state.user && !state.focus && !state.offscreen && !document.hidden;
+      root.dataset.state = !state.motion ? 'static' : running ? 'running' : 'paused';
+      if (!anim) return;
+      if (running) {
+        if (anim.playState !== 'running') anim.play();
+        if (!raf) {
+          last = 0;
+          raf = requestAnimationFrame(frame);
+        }
+      } else {
+        anim.pause();
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    }
+
+    function setMotion(on: boolean) {
+      state.motion = on;
+      root.dataset.motion = on ? 'on' : 'off';
+      toggle.hidden = !on;
+      if (on) {
+        layout();
+        buildAnimation();
+      } else {
+        anim?.cancel();
+        anim = null;
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+        root.style.removeProperty('--cell');
+        nodes.forEach((n) => n.style.removeProperty('--lit'));
+        lit.fill(0);
+      }
+      update();
+    }
+
+    toggle.addEventListener('click', () => {
+      state.user = !state.user;
+      // an explicit "play" overrides the keyboard-focus pause until focus next enters
+      if (!state.user) state.focus = false;
+      toggle.setAttribute('aria-pressed', String(state.user));
+      toggleText.textContent = state.user ? 'Play motion' : 'Pause motion';
+      update();
+    });
+    root.addEventListener('focusin', (e) => {
+      const t = e.target as HTMLElement;
+      state.focus = t.matches(':focus-visible');
+      update();
+    });
+    root.addEventListener('focusout', (e) => {
+      if (!root.contains(e.relatedTarget as Node | null)) {
+        state.focus = false;
+        update();
+      }
+    });
+    document.addEventListener('visibilitychange', update);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) state.offscreen = !e.isIntersecting;
+          update();
+        },
+        { rootMargin: '80px 0px' },
+      ).observe(root);
+    }
+    let resizeTimer = 0;
+    new ResizeObserver(() => {
+      if (!state.motion) return;
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        const w = viewport.clientWidth;
+        if (w === stripW && cell) return;
+        layout();
+        buildAnimation();
+        update();
+      }, 80);
+    }).observe(viewport);
+    reduce.addEventListener('change', () => setMotion(!reduce.matches));
+
+    setMotion(!reduce.matches && typeof track.animate === 'function');
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-pathway]').forEach(initPathway);
+</script>

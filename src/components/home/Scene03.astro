@@ -348,24 +348,24 @@ const order = systems.map((s) => s.key);
       const ps = (0.94 + 0.06 * arrive) * (1 + zoom * 1.55);
       phone.style.transform = `translate3d(${zoom * 3.4}%, ${(1 - arrive) * 6 - zoom * 8}%, 0) scale(${ps.toFixed(4)})`;
       phone.style.opacity = p >= 0.415 ? '0' : String(clamp(arrive * 1.4));
-      const ui = 1 - ramp(p, 0.05, 0.13);
+      const ui = 1 - ramp(p, 0.04, 0.12);
       screenUi.style.opacity = ui.toFixed(3);
       screenUi.inert = ui < 0.5 || state === 'explore';
 
       // D. the luminous overview takes over, then E. leans toward the heart
-      const oIn = ramp(p, 0.36, 0.41);
-      const lean = ease(ramp(p, 0.57, 0.7));
-      const os = (1.06 - 0.06 * ease(ramp(p, 0.36, 0.47))) * (1 + lean * 0.56);
+      const oIn = ramp(p, 0.35, 0.43);
+      const lean = ease(ramp(p, 0.56, 0.68));
+      const os = (1.06 - 0.06 * ease(ramp(p, 0.35, 0.47))) * (1 + lean * 0.56);
       lOverview.style.opacity = p >= 0.705 ? '0' : oIn.toFixed(3);
       lOverview.style.transform = `translate3d(${-12 * lean}%, 0, 0) scale(${os.toFixed(4)})`;
       // a brief blush veil softens the two handovers where the stills differ
       const bump = (a: number, m: number, b: number) => (p <= a || p >= b ? 0 : p < m ? (p - a) / (m - a) : (b - p) / (b - m));
-      veil.style.opacity = (0.42 * bump(0.345, 0.385, 0.43) + 0.3 * bump(0.635, 0.67, 0.71)).toFixed(3);
+      veil.style.opacity = (0.42 * bump(0.34, 0.38, 0.43) + 0.3 * bump(0.61, 0.65, 0.69)).toFixed(3);
 
-      const hIn = ramp(p, 0.64, 0.7);
+      const hIn = ramp(p, 0.62, 0.7);
       lHeartLum.style.opacity = hIn.toFixed(3);
-      lHeartLum.style.transform = `scale(${(1.05 - 0.05 * ease(ramp(p, 0.64, 0.76))).toFixed(4)})`;
-      lHeart.style.opacity = ramp(p, 0.78, 0.88).toFixed(3);
+      lHeartLum.style.transform = `scale(${(1.05 - 0.05 * ease(ramp(p, 0.62, 0.74))).toFixed(4)})`;
+      lHeart.style.opacity = ramp(p, 0.72, 0.82).toFixed(3);
 
       sec.style.setProperty('--s3-blush', ramp(p, 0.22, 0.4).toFixed(3));
     };
@@ -451,12 +451,12 @@ const order = systems.map((s) => s.key);
       }
       sec.dataset.sel = sel;
       // the overview markers are live whenever the overview illustration is the settled view
-      const overviewUp = (state === 'overview' && p > 0.44 && p < 0.57) || (state === 'explore' && sel === 'overview');
+      const overviewUp = (state === 'overview' && p > 0.44 && p < 0.56) || (state === 'explore' && sel === 'overview');
       spots.classList.toggle('is-on', overviewUp);
       spots.inert = !overviewUp;
-      const dark = state === 'explore' ? items[sel].dark : ramp(p, 0.76, 0.88);
+      const dark = state === 'explore' ? items[sel].dark : ramp(p, 0.72, 0.82);
       sec.style.setProperty('--s3-dark', dark.toFixed(3));
-      setInfo(state === 'explore' ? sel : state === 'heart' && p >= 0.62 ? 'heart' : 'overview');
+      setInfo(state === 'explore' ? sel : state === 'heart' && p >= 0.6 ? 'heart' : 'overview');
     };
 
     // Choosing a system. From inside the guided sequence it also carries the visitor to the explorer.
@@ -519,7 +519,7 @@ const order = systems.map((s) => s.key);
       const top = pin.getBoundingClientRect().top;
       p = span > 8 ? clamp(-top / span) : 0;
       const approach = clamp(1 - top / (window.innerHeight * 0.9));
-      setState(p < 0.12 ? 'phone' : p < 0.42 ? 'enter' : p < 0.57 ? 'overview' : p < 0.9 ? 'heart' : 'explore');
+      setState(p < 0.1 ? 'phone' : p < 0.42 ? 'enter' : p < 0.56 ? 'overview' : p < 0.84 ? 'heart' : 'explore');
       render(approach);
       sec.style.setProperty('--p', p.toFixed(4));
       syncUi();
@@ -1173,8 +1173,8 @@ const order = systems.map((s) => s.key);
     opacity: 0;
   }
   :global(.js) .s3__pin {
-    height: 400vh;
-    height: 400svh;
+    height: 480vh;
+    height: 480svh;
   }
   :global(.js) .s3__stage {
     position: sticky;
@@ -1305,8 +1305,8 @@ const order = systems.map((s) => s.key);
       padding-top: 12px;
     }
     :global(.js) .s3__pin {
-      height: 360vh;
-      height: 360svh;
+      height: 440vh;
+      height: 440svh;
     }
     :global(.js) .s3__stage {
       gap: 10px;
