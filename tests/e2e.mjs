@@ -20,12 +20,15 @@ async function ctx(opts = {}) {
   return page;
 }
 async function test(id, name, fn) {
+  const t0 = Date.now();
   try {
     await fn();
     results.push({ id, name, status: 'PASS' });
   } catch (e) {
     results.push({ id, name, status: 'FAIL', note: String(e.message || e).split('\n')[0] });
   }
+  // live progress on stderr, so a long run can be followed (the summary still prints at the end on stdout)
+  if (process.env.E2E_PROGRESS) process.stderr.write(`${results.at(-1).status} ${id} ${((Date.now() - t0) / 1000).toFixed(1)}s\n`);
 }
 const assert = (cond, msg) => {
   if (!cond) throw new Error(msg);
