@@ -94,7 +94,7 @@ const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS }
     --pathway-speed: 18;
     --cell: clamp(220px, 24vw, 360px);
     position: relative;
-    padding-block: clamp(8px, 1.6vh, 24px) 64px;
+    padding-block: clamp(8px, 1.6vh, 24px) 74px;
     color: var(--text-on-dark);
   }
   .pathway__viewport {
@@ -126,7 +126,7 @@ const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS }
   }
   .pathway__line path {
     fill: none;
-    stroke-linecap: round;
+    stroke-linecap: butt; /* round caps doubled up into a bright bead where two copies meet */
     stroke-linejoin: round;
   }
   .pathway__stroke {
@@ -201,6 +201,9 @@ const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS }
   .pathway[data-motion='on'] .pathway__viewport {
     padding-inline: 0;
     overflow: hidden;
+    /* room above and below the line so the nodes' glow is never cut by the strip's edge */
+    padding-block: 30px;
+    margin-block: -30px;
     -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
     mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
   }
@@ -338,6 +341,14 @@ const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS }
       min-width: 2.4em;
     }
   }
+  /* phones, moving strip: narrower cells and slightly smaller names, so about three stages show at once */
+  @media (max-width: 599px) {
+    :global(html.js-motion) .pathway:not([data-motion='off']) .pathway__name,
+    .pathway[data-motion='on'] .pathway__name {
+      font-size: 1.0625rem;
+      letter-spacing: 0.04em;
+    }
+  }
   @media (min-width: 720px) and (max-width: 1023px) {
     /* static, medium: six columns would crowd the labels, so tighten the type a little */
     :global(html:not(.js-motion)) .pathway:not([data-motion='on']) .pathway__name,
@@ -419,7 +430,7 @@ const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS }
 
     function layout() {
       stripW = viewport.clientWidth;
-      const base = Math.min(360, Math.max(220, window.innerWidth * 0.24));
+      const base = Math.min(360, Math.max(window.innerWidth < 600 ? 150 : 220, window.innerWidth * 0.24));
       // a copy is always wider than the strip (plus room for the pulse's lead-in), so the loop never shows a gap
       cell = Math.ceil(Math.max(base, (stripW + 240) / 6));
       copyW = cell * 6;
@@ -568,7 +579,9 @@ const wave = JSON.stringify({ units: UNITS, band: BAND, mid: MID, terms: TERMS }
     });
     root.addEventListener('focusin', (e) => {
       const t = e.target as HTMLElement;
-      state.focus = t.matches(':focus-visible');
+      // keyboard focus pauses the drift so things hold still — except on the pause control itself, whose label
+      // would otherwise say "Pause" while already paused
+      state.focus = t.matches(':focus-visible') && t !== toggle;
       update();
     });
     root.addEventListener('focusout', (e) => {

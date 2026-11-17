@@ -507,7 +507,7 @@ export async function mountTube(
   host: HTMLElement,
   opts: { reducedMotion?: boolean; pixelRatioCap?: number; angle?: number } = {},
 ): Promise<TubeHandle | null> {
-  const reduced = opts.reducedMotion === true;
+  let reduced = opts.reducedMotion === true;
   const pixelRatioCap = opts.pixelRatioCap ?? 1.75;
 
   const canvas = document.createElement('canvas');
@@ -656,10 +656,10 @@ export async function mountTube(
       vertexColors: true,
       roughness: 0.5,
       metalness: 0,
-      specularIntensity: 0.45,
-      clearcoat: 0.2,
-      clearcoatRoughness: 0.35,
-      envMapIntensity: 0.45,
+      specularIntensity: 0.22,
+      clearcoat: 0.12,
+      clearcoatRoughness: 0.45,
+      envMapIntensity: 0.22,
     }),
   );
   model.add(cap);
@@ -793,6 +793,14 @@ export async function mountTube(
   };
   canvas.addEventListener('webglcontextlost', onContextLost);
 
+  // Compile every shader before the first frame without blocking the page where the browser allows it
+  // (KHR_parallel_shader_compile), so the tube's arrival never stalls scrolling.
+  try {
+    await renderer.compileAsync(scene, camera);
+  } catch {
+    /* falls back to compiling on the first render */
+  }
+  if (disposed) return null;
   resize();
   renderFrame();
   updateLoop();
@@ -805,6 +813,7 @@ export async function mountTube(
     },
     setPlaying(on: boolean) {
       playing = on;
+      if (on) reduced = false; // reduced motion switched off while the page is open
       updateLoop();
     },
     dispose() {

@@ -53,12 +53,13 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
   if (host && stage) {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     let started = false;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (started || !entries.some((e) => e.isIntersecting)) return;
-        started = true;
-        io.disconnect();
-        import('../../scripts/tube3d')
+    // Set the model up while the visitor is still on the opening screen (idle time after load), so its one-off
+    // preparation never lands in the middle of scrolling; failing that, as soon as the section approaches.
+    const begin = () => {
+      if (started) return;
+      started = true;
+      io.disconnect();
+      import('../../scripts/tube3d')
           .then((m) => m.mountTube(stage, { reducedMotion: reduce.matches }))
           .then((handle) => {
             if (!handle) return;
@@ -68,10 +69,12 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
           .catch(() => {
             /* the still remains */
           });
-      },
-      { rootMargin: '60% 0px 60% 0px' },
-    );
+    };
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && begin(), { rootMargin: '60% 0px 60% 0px' });
     io.observe(host);
+    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(begin, { timeout: 4000 }) : setTimeout(begin, 2500));
+    if (document.readyState === 'complete') idle();
+    else window.addEventListener('load', idle, { once: true });
   }
 </script>
 
@@ -88,8 +91,9 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
     gap: clamp(12px, 3vh, 44px);
     padding-block: calc(var(--header-h) + clamp(4px, 1.6vh, 28px)) clamp(0px, 1vh, 16px);
     background: var(--carbon);
-    /* its own top padding already clears the header, so a link or the opening arrow lands on its first line */
-    scroll-margin-top: 0;
+    /* its own top padding already clears the header: cancel the page's scroll-padding so a link lands flush */
+    scroll-margin-top: calc(-1 * (var(--header-h) + 12px));
+    outline: none; /* focused by the opening arrow so reading continues here; it is not a control */
   }
   /* restrained warm studio light behind the tube; the room stays black */
   .brief__light {
@@ -126,7 +130,8 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
   }
   .brief__status {
     margin-top: clamp(18px, 2.4vh, 28px);
-    max-width: 40em;
+    max-width: 44em;
+    font-size: var(--fs-small);
   }
   .brief__status .text-link {
     padding-block: 10px;
@@ -140,16 +145,20 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
     grid-column: 8 / span 5;
     position: relative;
     margin: 0;
-    height: min(58vh, 620px);
-    height: min(58svh, 620px);
+    height: min(58vh, 720px);
+    height: min(58svh, 720px);
     min-height: 360px;
   }
-  .brief__stage,
   .brief__still {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+  }
+  /* the 3D canvas reaches a little beyond its column so the tube itself is larger; only light and air spill over */
+  .brief__stage {
+    position: absolute;
+    inset: -7% -4%;
   }
   .brief__still {
     object-fit: contain;
@@ -164,6 +173,23 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
     height: 100% !important;
   }
 
+  /* short laptop screens: a little tighter so the pathway and its pause control stay on the first screen */
+  @media (min-width: 1024px) and (max-height: 780px) {
+    .brief {
+      gap: 8px;
+    }
+    .brief__title {
+      font-size: clamp(2.5rem, min(5.9vw, 7.4vh), 6rem);
+    }
+    .brief__lede {
+      margin-top: 18px;
+    }
+    .brief__tube {
+      height: 52vh;
+      height: 52svh;
+      min-height: 320px;
+    }
+  }
   @media (max-width: 1023px) {
     .brief__copy {
       grid-column: 1 / span 7;

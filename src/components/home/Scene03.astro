@@ -347,7 +347,7 @@ const order = systems.map((s) => s.key);
       const zoom = ease(ramp(p, 0.12, 0.4));
       const ps = (0.94 + 0.06 * arrive) * (1 + zoom * 1.55);
       phone.style.transform = `translate3d(${zoom * 3.4}%, ${(1 - arrive) * 6 - zoom * 8}%, 0) scale(${ps.toFixed(4)})`;
-      phone.style.opacity = p >= 0.415 ? '0' : String(clamp(arrive * 1.4));
+      phone.style.opacity = p >= 0.43 ? '0' : String(clamp(arrive * 1.4));
       const ui = 1 - ramp(p, 0.04, 0.12);
       screenUi.style.opacity = ui.toFixed(3);
       screenUi.inert = ui < 0.5 || state === 'explore';
