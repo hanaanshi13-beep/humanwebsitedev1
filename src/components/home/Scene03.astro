@@ -519,7 +519,7 @@ const order = systems.map((s) => s.key);
       const top = pin.getBoundingClientRect().top;
       p = span > 8 ? clamp(-top / span) : 0;
       const approach = clamp(1 - top / (window.innerHeight * 0.9));
-      setState(p < 0.1 ? 'phone' : p < 0.42 ? 'enter' : p < 0.56 ? 'overview' : p < 0.84 ? 'heart' : 'explore');
+      setState(p < 0.1 ? 'phone' : p < 0.43 ? 'enter' : p < 0.56 ? 'overview' : p < 0.84 ? 'heart' : 'explore');
       render(approach);
       sec.style.setProperty('--p', p.toFixed(4));
       syncUi();
