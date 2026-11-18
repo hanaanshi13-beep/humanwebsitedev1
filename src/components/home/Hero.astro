@@ -349,10 +349,8 @@ const letters: Letter[] = [
       if (!nextSection) return;
       e.preventDefault();
       if (travel) return; // a second click while travelling changes nothing
-      // Land with the section's first line clear of the returned header. The last frames of the film are the same
-      // dark as the next section, so stopping a few pixels short of its edge is seamless.
-      const clear = header ? Math.max(0, header.offsetHeight + 20 - parseFloat(getComputedStyle(nextSection).paddingTop)) : 0;
-      const target = () => Math.round(nextSection.getBoundingClientRect().top + window.scrollY - clear);
+      // Land exactly on the introduction, the same place a link to it lands: its own top padding clears the header.
+      const target = () => Math.round(nextSection.getBoundingClientRect().top + window.scrollY);
       const from = window.scrollY;
       if (!film || target() - from < window.innerHeight * 1.2) {
         window.scrollTo({ top: target(), behavior: 'instant' });
