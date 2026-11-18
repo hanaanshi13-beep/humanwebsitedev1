@@ -169,20 +169,56 @@ const srcset = shots.map((s, i) => `${s.src} ${sizes[i]}w`).join(', ');
   }
   /* the photograph keeps its own proportions at every size: never stretched, never cropped */
   .brief__float {
-    width: min(100cqw, 100cqh * 1122 / 1402);
+    position: relative;
+    pointer-events: none; /* a picture: its faded margins must never sit over the link above it */
+    /* a touch larger than its box (110%): the feathered edges are only dark air, so they may spill into the margins.
+       Sized in layout, not with a transform scale: a scaled layer resamples the mask and leaks a faint line at the
+       frame's bottom edge. */
+    flex: none;
+    width: min(110cqw, 110cqh * 1122 / 1402);
     aspect-ratio: 1122 / 1402;
-    /* a touch larger than its box: the feathered edges are only dark air, so they may spill into the margins */
-    transform: translate3d(0, var(--parallax, 0px), 0) scale(1.1);
+    transform: translate3d(0, var(--parallax, 0px), 0);
     will-change: transform;
   }
+  /* One continuous black room.
+     The photograph's studio backdrop is a deeper black (about rgb 3 2 2 at its edges) than the section
+     (#0b0d0f). Directly behind the photo sits a soft field in the photo's own edge colour, which fades out
+     to nothing well beyond the picture, so the section's black takes over without any visible step. */
+  .brief__float::before {
+    content: '';
+    position: absolute;
+    inset: -34% -46%;
+    pointer-events: none;
+    background: radial-gradient(closest-side, rgb(3 2 2) 62%, rgb(3 2 2 / 0.55) 78%, rgb(3 2 2 / 0) 100%);
+  }
   .brief__photo {
+    position: relative;
     display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
-    /* feather the studio backdrop into the section's black: a soft oval, fully opaque around the tube */
-    -webkit-mask-image: radial-gradient(56% 54% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.6) 80%, transparent 100%);
-    mask-image: radial-gradient(56% 54% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.6) 80%, transparent 100%);
+    /* Only the backdrop fades, never the tube. The fade follows a tilted capsule measured on the photograph: centred
+       on the tube (556, 689 of 1122 × 1402) and turned to its axis (75.3°), soft and wide across it so the amber
+       glow survives (the glow has fallen to the backdrop's black about 500px either side), tight along it because
+       the cap and the rounded bottom nearly touch the frame. The tube (±150px across, ±643px along) stays fully
+       opaque: a capsule (rounded ends at full width) rather than an ellipse, whose pointed ends would graze the cap and
+       the base. The blur is applied in screen axes, wide horizontally and tight vertically; the tube is within 15° of
+       vertical, so that matches its own axes. Thin bands at all four sides take the frame's own edges to zero
+       (the tube is at 23.5–70.4% of the width and 4.6–93.7% of the height, clear of every band). */
+    -webkit-mask-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1122 1402' preserveAspectRatio='none'%3E%3Cfilter id='f' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='80 16'/%3E%3C/filter%3E%3Cg filter='url%28%23f%29'%3E%3Crect x='-800' y='-340' width='1600' height='680' rx='340' fill='%23fff' transform='translate%28556 689%29 rotate%2875.28%29'/%3E%3C/g%3E%3C/svg%3E"),
+      linear-gradient(180deg, transparent 0, transparent 1.2%, rgb(0 0 0 / 0.15) 2.3%, rgb(0 0 0 / 0.6) 3.3%, #000 4.3%, #000 94.4%, rgb(0 0 0 / 0.6) 95.8%, rgb(0 0 0 / 0.15) 97.4%, transparent 98.8%),
+      linear-gradient(90deg, transparent 0, transparent 1.2%, rgb(0 0 0 / 0.2) 3.4%, #000 7%, #000 93%, rgb(0 0 0 / 0.2) 96.6%, transparent 98.8%);
+    -webkit-mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1122 1402' preserveAspectRatio='none'%3E%3Cfilter id='f' x='-50%25' y='-50%25' width='200%25' height='200%25'%3E%3CfeGaussianBlur stdDeviation='80 16'/%3E%3C/filter%3E%3Cg filter='url%28%23f%29'%3E%3Crect x='-800' y='-340' width='1600' height='680' rx='340' fill='%23fff' transform='translate%28556 689%29 rotate%2875.28%29'/%3E%3C/g%3E%3C/svg%3E"),
+      linear-gradient(180deg, transparent 0, transparent 1.2%, rgb(0 0 0 / 0.15) 2.3%, rgb(0 0 0 / 0.6) 3.3%, #000 4.3%, #000 94.4%, rgb(0 0 0 / 0.6) 95.8%, rgb(0 0 0 / 0.15) 97.4%, transparent 98.8%),
+      linear-gradient(90deg, transparent 0, transparent 1.2%, rgb(0 0 0 / 0.2) 3.4%, #000 7%, #000 93%, rgb(0 0 0 / 0.2) 96.6%, transparent 98.8%);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-composite: intersect;
   }
   @media (prefers-reduced-motion: no-preference) {
     .brief__photo {

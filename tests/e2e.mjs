@@ -2002,6 +2002,71 @@ await test('V11-06', 'Blood sample photograph: gentle float and slight parallax 
   await n.context().close();
 });
 
+await test('V11-07', 'Blood sample photograph blends into the section: the fade is zero all round the frame, the tube (cap to base) is fully opaque, and no colour step shows at the frame edges', async () => {
+  for (const [w, h] of [[1920, 1080], [1440, 900], [1024, 768], [768, 1024], [390, 844]]) {
+    const p = await ctx({ viewport: { width: w, height: h }, reducedMotion: 'reduce' });
+    await go(p, '/');
+    // 1) render the mask itself: the same element with a plain white picture, on pure black, colour field off
+    await p.evaluate(() => {
+      const im = document.querySelector('.brief__photo'); im.scrollIntoView({ block: 'center' });
+      const c = document.createElement('canvas'); c.width = 1122; c.height = 1402; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 1122, 1402);
+      im.removeAttribute('srcset'); im.src = c.toDataURL();
+      const st = document.createElement('style'); st.textContent = '#what-is-human{background:#000!important}.brief__float::before,.brief__light,.brief__copy,[data-pathway]{visibility:hidden!important}'; document.head.append(st);
+    });
+    await p.waitForTimeout(400);
+    const res = await p.evaluate(async () => {
+      const r = document.querySelector('.brief__photo').getBoundingClientRect();
+      return { x: r.x, y: r.y, w: r.width, h: r.height };
+    });
+    const shot = await p.screenshot({ clip: { x: Math.max(0, res.x), y: Math.max(0, res.y), width: Math.min(w - Math.max(0, res.x), res.w), height: res.h } });
+    const a = await p.evaluate(async (b64) => {
+      const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data; const at = (x, y) => d[(Math.round(y) * c.width + Math.round(x)) * 4];
+      const W = c.width, H = c.height; let edge = 0;
+      for (let x = 1; x < W - 1; x++) edge = Math.max(edge, at(x, 1), at(x, H - 2));
+      for (let y = 1; y < H - 1; y++) edge = Math.max(edge, at(1, y), at(W - 2, y));
+      // the tube's axis, measured on the photograph: centre (556, 689) of 1122 × 1402, 75.28°, ±600px along, ±60px across
+      const k = W / 1122, ux = Math.cos((75.28 * Math.PI) / 180), uy = Math.sin((75.28 * Math.PI) / 180);
+      let tube = 255;
+      for (let t = -600; t <= 600; t += 50) for (const s of [-60, 0, 60]) {
+        const px = (556 + t * ux - s * uy) * k, py = (689 + t * uy + s * ux) * k;
+        if (px >= 0 && px < W && py >= 0 && py < H) tube = Math.min(tube, at(px, py));
+      }
+      return { edge, tube };
+    }, shot.toString('base64'));
+    assert(a.edge <= 6, `${w}: the photograph is still visible at its frame edge (mask ${a.edge}/255)`);
+    assert(a.tube >= 250, `${w}: part of the tube is faded (mask ${a.tube}/255)`);
+    await p.context().close();
+    // 2) with the real picture: no colour step across the frame edges, away from the tube
+    const q = await ctx({ viewport: { width: w, height: h }, reducedMotion: 'reduce' });
+    await go(q, '/');
+    // the copy is hidden for this pass: on phones the photograph's faded top margin runs under the status line,
+    // and its text would read as a step that the picture did not make
+    await q.evaluate(() => {
+      document.querySelector('.brief__photo').scrollIntoView({ block: 'center' });
+      const st = document.createElement('style'); st.textContent = '.brief__copy,[data-pathway]{visibility:hidden!important}'; document.head.append(st);
+    });
+    await q.waitForFunction(() => { const i = document.querySelector('.brief__photo'); return i.complete && i.naturalWidth > 0; });
+    await q.waitForTimeout(400);
+    const r = await q.evaluate(() => { const r = document.querySelector('.brief__photo').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+    const full = await q.screenshot();
+    const step = await q.evaluate(async ([b64, r]) => {
+      const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+      const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data; const px = (x, y) => { const i = (Math.round(y) * c.width + Math.round(x)) * 4; return [d[i], d[i + 1], d[i + 2]]; };
+      const diff = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
+      const ok = (x, y) => x > 0 && y > 0 && x < c.width - 1 && y < c.height - 1 && (x < r.x + r.w * 0.2 || x > r.x + r.w * 0.75 || y < r.y + r.h * 0.03 || y > r.y + r.h * 0.95);
+      let m = 0;
+      for (let y = r.y + 4; y < r.y + r.h - 4; y += 3) for (const xe of [r.x, r.x + r.w]) if (ok(xe - 3, y) && ok(xe + 3, y)) { const a = px(xe - 3, y), b = px(xe + 3, y); if (a[0] + a[1] + a[2] < 90) m = Math.max(m, diff(a, b)); }
+      for (let x = r.x + 4; x < r.x + r.w - 4; x += 3) for (const ye of [r.y, r.y + r.h]) if (ok(x, ye - 3) && ok(x, ye + 3)) { const a = px(x, ye - 3), b = px(x, ye + 3); if (a[0] + a[1] + a[2] < 90) m = Math.max(m, diff(a, b)); }
+      return m;
+    }, [full.toString('base64'), r]);
+    assert(step <= 4, `${w}: a colour step of ${step}/255 shows across the photograph's edge`);
+    await q.context().close();
+  }
+});
+
 await test('ZOOM', '200% text size at 390px: hero and waitlist grow vertically, no clipping or overflow', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   for (const r of ['/', '/waitlist', '/faq']) {
