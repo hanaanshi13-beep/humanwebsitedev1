@@ -1,13 +1,17 @@
 ---
 // What HUMAN is — the company introduction, directly after the opening film. A full-viewport black chapter:
-// the statement on the left, the HUMAN blood tube turning in 3D on the right, the six-stage pathway along the foot.
-// The 3D model loads only when this section comes near the screen; until then (and with no WebGL or no JavaScript)
-// a still of the same model is shown. All copy is real HTML.
+// the statement on the left, the HUMAN blood sample photograph on the right, the six-stage pathway along the foot.
+// The photograph is shown as supplied (served sharp, never upscaled); its near-black studio backdrop is feathered
+// into the section's black so it reads as an object in the room, not a picture in a box. Motion is limited to a
+// slow float and a little scroll parallax, and stops entirely with reduced motion. All copy is real HTML.
 import { getImage } from 'astro:assets';
 import Pathway from './Pathway.astro';
-import still from '../../assets/brief/tube-still.png';
+import tube from '../../assets/brief/human-tube-premium.webp';
 
-const fallback = await getImage({ src: still, width: Math.min(still.width, 900), format: 'webp', quality: 86 });
+const w = tube.width;
+const sizes = [Math.min(560, w), Math.min(840, w), w];
+const shots = await Promise.all(sizes.map((width) => getImage({ src: tube, width, format: 'webp', quality: 90 })));
+const srcset = shots.map((s, i) => `${s.src} ${sizes[i]}w`).join(', ');
 ---
 
 <section class="brief on-dark" id="what-is-human" aria-labelledby="brief-title" data-brief>
@@ -29,17 +33,20 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
       </p>
     </div>
 
-    <figure class="brief__tube" data-tube-host>
-      <img
-        class="brief__still"
-        src={fallback.src}
-        width={fallback.attributes.width ?? 900}
-        height={fallback.attributes.height}
-        alt="A HUMAN blood collection tube with a burgundy cap and an ivory label reading HUMAN Bloodwork, lit in warm amber."
-        loading="lazy"
-        decoding="async"
-      />
-      <div class="brief__stage" data-tube-stage aria-hidden="true"></div>
+    <figure class="brief__tube" data-tube>
+      <div class="brief__float" data-tube-float>
+        <img
+          class="brief__photo"
+          src={shots[1].src}
+          srcset={srcset}
+          sizes="(max-width: 767px) 100vw, 46vw"
+          width={tube.width}
+          height={tube.height}
+          alt="A HUMAN blood collection tube with a burgundy ribbed cap and an ivory label reading HUMAN Bloodwork, EDTA K2, 4.0 mL, lit in warm amber."
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
     </figure>
   </div>
 
@@ -47,34 +54,40 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
 </section>
 
 <script>
-  // The 3D tube is fetched only when the section is about to be seen. If WebGL is unavailable the still stays.
-  const host = document.querySelector<HTMLElement>('[data-tube-host]');
-  const stage = host?.querySelector<HTMLElement>('[data-tube-stage]');
-  if (host && stage) {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let started = false;
-    // Set the model up while the visitor is still on the opening screen (idle time after load), so its one-off
-    // preparation never lands in the middle of scrolling; failing that, as soon as the section approaches.
-    const begin = () => {
-      if (started) return;
-      started = true;
-      io.disconnect();
-      import('../../scripts/tube3d')
-          .then((m) => m.mountTube(stage, { reducedMotion: reduce.matches }))
-          .then((handle) => {
-            if (!handle) return;
-            host.classList.add('is-3d');
-            reduce.addEventListener('change', () => handle.setPlaying(!reduce.matches));
-          })
-          .catch(() => {
-            /* the still remains */
-          });
+  // A little scroll parallax for the photograph: it moves a few pixels against the page while the section is on
+  // screen. Only while visible, never with reduced motion. (The slow float is CSS.)
+  const fig = document.querySelector<HTMLElement>('[data-tube]');
+  const section = fig?.closest<HTMLElement>('[data-brief]');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (fig && section) {
+    let queued = false;
+    let listening = false;
+    const apply = () => {
+      queued = false;
+      if (reduce.matches) return fig.style.removeProperty('--parallax');
+      const r = section.getBoundingClientRect();
+      // -1 as the section enters from below, 0 when it fills the screen, +1 as it leaves above
+      const t = Math.max(-1, Math.min(1, -r.top / Math.max(1, window.innerHeight)));
+      fig.style.setProperty('--parallax', `${(t * 22).toFixed(1)}px`);
     };
-    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && begin(), { rootMargin: '60% 0px 60% 0px' });
-    io.observe(host);
-    const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(begin, { timeout: 4000 }) : setTimeout(begin, 2500));
-    if (document.readyState === 'complete') idle();
-    else window.addEventListener('load', idle, { once: true });
+    const onScroll = () => {
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(apply);
+      }
+    };
+    new IntersectionObserver(([en]) => {
+      fig.classList.toggle('is-off', !en.isIntersecting);
+      if (en.isIntersecting && !listening) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        listening = true;
+        apply();
+      } else if (!en.isIntersecting && listening) {
+        window.removeEventListener('scroll', onScroll);
+        listening = false;
+      }
+    }).observe(section);
+    reduce.addEventListener('change', apply);
   }
 </script>
 
@@ -102,8 +115,8 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
     z-index: -1;
     pointer-events: none;
     background:
-      radial-gradient(38% 46% at 74% 44%, rgba(232, 165, 35, 0.16), rgba(232, 165, 35, 0) 70%),
-      radial-gradient(22% 30% at 76% 40%, rgba(196, 92, 40, 0.12), rgba(196, 92, 40, 0) 72%);
+      /* the photograph carries its own amber light; this only lifts the room around it */
+      radial-gradient(38% 46% at 74% 46%, rgba(232, 165, 35, 0.09), rgba(232, 165, 35, 0) 70%);
   }
   .brief__grid {
     display: grid;
@@ -148,29 +161,56 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
     height: min(58vh, 720px);
     height: min(58svh, 720px);
     min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* the photograph is sized from this box, so it keeps its own proportions in any column shape */
+    container-type: size;
   }
-  .brief__still {
-    position: absolute;
-    inset: 0;
+  /* the photograph keeps its own proportions at every size: never stretched, never cropped */
+  .brief__float {
+    width: min(100cqw, 100cqh * 1122 / 1402);
+    aspect-ratio: 1122 / 1402;
+    /* a touch larger than its box: the feathered edges are only dark air, so they may spill into the margins */
+    transform: translate3d(0, var(--parallax, 0px), 0) scale(1.1);
+    will-change: transform;
+  }
+  .brief__photo {
+    display: block;
     width: 100%;
     height: 100%;
-  }
-  /* the 3D canvas reaches a little beyond its column so the tube itself is larger; only light and air spill over */
-  .brief__stage {
-    position: absolute;
-    inset: -7% -4%;
-  }
-  .brief__still {
     object-fit: contain;
-    transition: opacity 600ms var(--ease-human);
+    /* feather the studio backdrop into the section's black: a soft oval, fully opaque around the tube */
+    -webkit-mask-image: radial-gradient(56% 54% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.6) 80%, transparent 100%);
+    mask-image: radial-gradient(56% 54% at 50% 50%, #000 62%, rgba(0, 0, 0, 0.6) 80%, transparent 100%);
   }
-  .brief__tube:global(.is-3d) .brief__still {
-    opacity: 0;
+  @media (prefers-reduced-motion: no-preference) {
+    .brief__photo {
+      animation: brief-float 8s ease-in-out infinite alternate;
+    }
+    .brief__light {
+      animation: brief-light 9s ease-in-out infinite alternate;
+    }
+    .brief__tube:global(.is-off) .brief__photo {
+      animation-play-state: paused;
+    }
   }
-  .brief__stage :global(canvas) {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
+  /* a slow rise of a few pixels with the faintest lean, like an object resting on air */
+  @keyframes brief-float {
+    from {
+      transform: translate3d(0, 5px, 0) rotate(0.25deg);
+    }
+    to {
+      transform: translate3d(0, -7px, 0) rotate(-0.15deg);
+    }
+  }
+  @keyframes brief-light {
+    from {
+      opacity: 0.8;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   /* short laptop screens: a little tighter so the pathway and its pause control stay on the first screen */
@@ -185,8 +225,8 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
       margin-top: 18px;
     }
     .brief__tube {
-      height: 52vh;
-      height: 52svh;
+      height: 54vh;
+      height: 54svh;
       min-height: 320px;
     }
   }
@@ -210,11 +250,13 @@ const fallback = await getImage({ src: still, width: Math.min(still.width, 900),
     .brief__title {
       font-size: clamp(2.125rem, 9.6vw, 3.25rem);
     }
+    /* phones: the whole photograph, centred under the copy, a little shorter than half the screen */
     .brief__tube {
-      height: 46vh;
-      height: 46svh;
-      min-height: 280px;
-      margin-top: 8px;
+      height: 50vh;
+      height: 50svh;
+      min-height: 300px;
+      max-height: 520px;
+      margin-top: 4px;
     }
     .brief__light {
       background: radial-gradient(60% 34% at 50% 58%, rgba(232, 165, 35, 0.16), rgba(232, 165, 35, 0) 70%);

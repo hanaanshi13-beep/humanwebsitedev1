@@ -1819,20 +1819,27 @@ await test('V11-01', 'Opening H holds the HUMAN blood tube photograph, turned in
   await p.context().close();
 });
 
-await test('V11-02', 'Company introduction: approved copy, headline far larger than before, full-viewport black chapter, 3D tube mounted, nothing overlaps at eight sizes', async () => {
+await test('V11-02', 'Company introduction: approved copy, headline far larger than before, full-viewport black chapter, the blood sample photograph sharp and undistorted, nothing overlaps at eight sizes', async () => {
   for (const [w, h] of [[1920, 1080], [1440, 900], [1366, 768], [1280, 720], [1024, 768], [768, 1024], [390, 844], [360, 640]]) {
     const p = await ctx({ viewport: { width: w, height: h } });
     await go(p, '/');
     await p.evaluate(() => { const n = document.querySelector('#what-is-human'); scrollTo({ top: n.getBoundingClientRect().top + scrollY, behavior: 'instant' }); });
-    await p.waitForFunction(() => document.querySelector('[data-tube-host]').classList.contains('is-3d'), null, { timeout: 20000 }).catch(() => {});
+    await p.waitForFunction(() => document.querySelector('.brief__photo').complete && document.querySelector('.brief__photo').naturalWidth > 0, null, { timeout: 20000 }).catch(() => {});
     const d = await p.evaluate(() => {
       const sec = document.querySelector('#what-is-human');
       const box = (q) => { const r = document.querySelector(q).getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
       const text = sec.innerText.replace(/\s+/g, ' ');
       return {
         text, h: sec.offsetHeight, bg: getComputedStyle(sec).backgroundColor, fs: parseFloat(getComputedStyle(document.querySelector('#brief-title')).fontSize),
-        copy: box('.brief__copy'), tube: box('[data-tube-host]'), path: box('[data-pathway]'), is3d: document.querySelector('[data-tube-host]').classList.contains('is-3d'),
-        canvas: !!document.querySelector('[data-tube-stage] canvas'), over: document.documentElement.scrollWidth - innerWidth,
+        copy: box('.brief__copy'), tube: box('[data-tube]'), path: box('[data-pathway]'),
+        photo: (() => {
+          const im = document.querySelector('.brief__photo'); const r = im.getBoundingClientRect();
+          // the real pixel width of the file the browser chose, from its srcset descriptor
+          const file = im.currentSrc.split('/').pop();
+          const hit = im.srcset.split(',').map((x) => x.trim().split(/\s+/)).find(([u]) => u.split('/').pop() === file);
+          return { nw: hit ? parseInt(hit[1], 10) : im.naturalWidth, ratio: r.width / r.height, w: r.width, dpr: devicePixelRatio, src: im.currentSrc };
+        })(),
+        canvas: !!document.querySelector('#what-is-human canvas'), over: document.documentElement.scrollWidth - innerWidth,
         clipped: [...sec.querySelectorAll('h2, p')].some((e) => e.scrollWidth > e.clientWidth + 1),
       };
     });
@@ -1841,7 +1848,10 @@ await test('V11-02', 'Company introduction: approved copy, headline far larger t
     assert(d.h >= h - 1, `${w}: introduction ${d.h}px is shorter than the viewport`);
     // the old headline was 36px at most; on desktop it is now at least ~1.4× that, even on short laptop screens
     assert(d.fs >= (w >= 1024 ? 50 : 33), `${w}: headline only ${d.fs}px`);
-    assert(d.is3d && d.canvas, `${w}: 3D tube not mounted`);
+    assert(!d.canvas, `${w}: the old 3D canvas is still on the page`);
+    assert(/human-tube-premium/.test(d.photo.src) && d.photo.nw > 0, `${w}: photograph not loaded ${JSON.stringify(d.photo)}`);
+    assert(Math.abs(d.photo.ratio - 1122 / 1402) < 0.01, `${w}: photograph distorted (ratio ${d.photo.ratio.toFixed(3)})`);
+    assert(d.photo.nw >= Math.min(1122, d.photo.w * d.photo.dpr) - 2, `${w}: photograph served smaller than it is shown (${d.photo.nw}px for ${Math.round(d.photo.w)}px)`);
     assert(d.over <= 0 && !d.clipped, `${w}: overflow or clipped text`);
     const apart = (a, b) => a.r <= b.l + 1 || b.r <= a.l + 1 || a.b <= b.t + 1 || b.b <= a.t + 1;
     assert(apart(d.copy, d.tube) && apart(d.copy, d.path) && apart(d.tube, d.path), `${w}: copy, tube and pathway overlap ${JSON.stringify([d.copy, d.tube, d.path])}`);
@@ -1953,24 +1963,43 @@ await test('V11-05', 'Opening arrow: travels through the film without rushing, s
   await p.context().close();
 });
 
-await test('V11-06', 'No WebGL: the introduction keeps a still of the same tube, no errors; no JavaScript: the still and the static pathway show', async () => {
-  const b2 = await chromium.launch({ args: ['--disable-webgl', '--disable-webgl2', '--disable-3d-apis'] });
-  const c = await b2.newContext({ viewport: { width: 1440, height: 900 } });
-  const p = await c.newPage();
-  const errs = [];
-  p.on('pageerror', (e) => errs.push(String(e)));
-  await p.goto(BASE + '/', { waitUntil: 'networkidle' });
-  await p.evaluate(() => { const n = document.querySelector('#what-is-human'); scrollTo({ top: n.getBoundingClientRect().top + scrollY, behavior: 'instant' }); });
-  await p.waitForTimeout(2500);
-  const d = await p.evaluate(() => { const i = document.querySelector('.brief__still'); return { is3d: document.querySelector('[data-tube-host]').classList.contains('is-3d'), w: i.naturalWidth, op: getComputedStyle(i).opacity, vis: i.getBoundingClientRect().height }; });
-  assert(!d.is3d && d.w > 0 && d.op === '1' && d.vis > 200, 'fallback still: ' + JSON.stringify(d));
-  assert(errs.length === 0, 'errors: ' + errs.join(' | '));
-  await b2.close();
-  const q = await ctx({ javaScriptEnabled: false });
+await test('V11-06', 'Blood sample photograph: gentle float and slight parallax only, paused off screen, perfectly still under reduced motion; shows without JavaScript; no 3D code shipped', async () => {
+  const p = await ctx();
+  const js = [];
+  p.on('response', (r) => /\.js(\?|$)/.test(r.url()) && js.push(r.url()));
+  await go(p, '/');
+  assert(!js.some((u) => /tube3d|three/i.test(u)), '3D code still loaded: ' + js.filter((u) => /tube3d|three/i.test(u)).join(', '));
+  await p.evaluate(() => { const n = document.querySelector('#what-is-human'); scrollTo({ top: n.getBoundingClientRect().top + scrollY - 300, behavior: 'instant' }); });
+  await p.waitForTimeout(500);
+  const a = await p.evaluate(() => ({ anim: getComputedStyle(document.querySelector('.brief__photo')).animationName, par: getComputedStyle(document.querySelector('[data-tube]')).getPropertyValue('--parallax') }));
+  await p.evaluate(() => scrollBy({ top: 300, behavior: 'instant' }));
+  await p.waitForTimeout(400);
+  const b = await p.evaluate(() => getComputedStyle(document.querySelector('[data-tube]')).getPropertyValue('--parallax'));
+  assert(a.anim === 'brief-float', 'no float: ' + a.anim);
+  const pa = parseFloat(a.par), pb = parseFloat(b);
+  assert(Number.isFinite(pa) && Number.isFinite(pb) && pb !== pa && Math.abs(pb - pa) < 12, `parallax ${a.par} → ${b}`);
+  // the float is a few pixels at most
+  const amp = await p.evaluate(() => new Promise((res) => { const im = document.querySelector('.brief__photo'); const ys = []; const t0 = performance.now(); const tick = () => { ys.push(new DOMMatrix(getComputedStyle(im).transform).m42); performance.now() - t0 < 2500 ? requestAnimationFrame(tick) : res(Math.max(...ys) - Math.min(...ys)); }; tick(); }));
+  assert(amp > 0.2 && amp <= 12, 'float amplitude ' + amp.toFixed(2) + 'px');
+  await p.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+  await p.waitForTimeout(500);
+  assert((await p.evaluate(() => getComputedStyle(document.querySelector('.brief__photo')).animationPlayState)) === 'paused', 'float keeps running off screen');
+  await p.context().close();
+  const q = await ctx({ reducedMotion: 'reduce' });
   await go(q, '/');
-  assert(await q.locator('.brief__still').isVisible(), 'no-JS still hidden');
-  assert((await q.locator('[data-pathway] ol').first().locator('li').count()) === 6 && (await q.locator('[data-pathway] li').first().isVisible()), 'no-JS pathway');
+  await q.evaluate(() => { const n = document.querySelector('#what-is-human'); scrollTo({ top: n.getBoundingClientRect().top + scrollY, behavior: 'instant' }); });
+  await q.waitForTimeout(400);
+  const r = await q.evaluate(() => ({ anim: getComputedStyle(document.querySelector('.brief__photo')).animationName, par: getComputedStyle(document.querySelector('[data-tube]')).getPropertyValue('--parallax').trim() }));
+  assert(r.anim === 'none' && (r.par === '' || parseFloat(r.par) === 0), 'moves under reduced motion: ' + JSON.stringify(r));
   await q.context().close();
+  const n = await ctx({ javaScriptEnabled: false });
+  await go(n, '/');
+  // the float is pure CSS, so without JavaScript it keeps moving: scroll by hand rather than wait for it to settle
+  await n.evaluate(() => document.querySelector('.brief__photo').scrollIntoView({ block: 'center' }));
+  await n.waitForTimeout(800);
+  assert(await n.locator('.brief__photo').evaluate((i) => i.complete && i.naturalWidth > 0 && i.getBoundingClientRect().height > 200), 'no-JS photograph');
+  assert((await n.locator('[data-pathway] ol').first().locator('li').count()) === 6 && (await n.locator('[data-pathway] li').first().isVisible()), 'no-JS pathway');
+  await n.context().close();
 });
 
 await test('ZOOM', '200% text size at 390px: hero and waitlist grow vertically, no clipping or overflow', async () => {
