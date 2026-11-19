@@ -1,0 +1,73 @@
+---
+// Explore Plans — the closing invitation. Copy is founder-approved. The only action is the existing waitlist.
+---
+
+<section class="xpc on-light" aria-labelledby="xpc-title">
+  <span class="xpc__glow" aria-hidden="true"></span>
+  <div class="wrap xpc__inner">
+    <p class="eyebrow no-rule xpc__eyebrow" data-reveal><span>HUMAN</span></p>
+    <h2 class="xpc__title" id="xpc-title" data-reveal style="--d:80ms">Take the first step towards understanding your health.</h2>
+    <p class="lede xpc__lede" data-reveal style="--d:180ms">Be among the first to experience HUMAN.</p>
+    <p class="xpc__action" data-reveal="fade" style="--d:300ms">
+      <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
+    </p>
+  </div>
+</section>
+
+<style is:global>
+  .xpc {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding-block: clamp(84px, 11vw, 168px) clamp(96px, 12vw, 184px);
+    text-align: center;
+  }
+  /* warm light through a translucent material: very soft, behind the words only */
+  .xpc__glow {
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 54%;
+    width: min(1180px, 150vw);
+    aspect-ratio: 16 / 10;
+    transform: translate(-50%, -50%);
+    /* many gentle stops: a glow with no edge anyone could point to */
+    background: radial-gradient(
+      closest-side,
+      rgba(232, 172, 62, 0.15) 0%,
+      rgba(232, 172, 62, 0.115) 22%,
+      rgba(232, 172, 62, 0.075) 44%,
+      rgba(232, 172, 62, 0.04) 64%,
+      rgba(232, 172, 62, 0.015) 82%,
+      rgba(232, 172, 62, 0) 100%
+    );
+    pointer-events: none;
+  }
+  .xpc__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .xpc__eyebrow {
+    color: var(--accent);
+    letter-spacing: 0.28em;
+  }
+  .xpc__title {
+    margin-top: clamp(18px, 2vw, 26px);
+    max-width: 15.5em;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2.125rem, 4.3vw, 3.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+  .xpc__lede {
+    margin-top: clamp(16px, 1.8vw, 24px);
+    color: var(--muted);
+  }
+  .xpc__action {
+    margin-top: var(--stack-action);
+  }
+</style>

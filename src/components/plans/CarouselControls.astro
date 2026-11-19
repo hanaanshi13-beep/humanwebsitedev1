@@ -1,0 +1,108 @@
+---
+// Progress line and previous / next controls for the membership explorer. The line is driven by the real scroll
+// position (see scripts/plans-explorer.ts); it is not decorative.
+---
+
+<div class="wrap xp__controls" data-rail-controls>
+  <div class="xp__progress" aria-hidden="true"><span class="xp__thumb" data-rail-thumb></span></div>
+  <div class="xp__arrows">
+    <button class="xp__nav" type="button" data-rail-prev aria-label="Previous plans" aria-disabled="true">
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13.5 8h-11M7 3.5 2.5 8 7 12.5"></path></svg>
+    </button>
+    <button class="xp__nav" type="button" data-rail-next aria-label="Next plans">
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5"></path></svg>
+    </button>
+  </div>
+</div>
+
+<style is:global>
+  .xp__controls {
+    display: flex;
+    align-items: center;
+    gap: clamp(20px, 3vw, 44px);
+    margin-top: clamp(6px, 1vw, 14px);
+  }
+  .xp__progress {
+    position: relative;
+    flex: 1 1 auto;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  .xp__thumb {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w, 44%);
+    border-radius: 2px;
+    background: var(--amber-ui-active);
+    transform: translateX(var(--x, 0%));
+    will-change: transform;
+  }
+  .xp__arrows {
+    display: flex;
+    gap: 10px;
+    flex: none;
+  }
+  /* the same clear glass as the navigation capsule's round button */
+  .xp__nav {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--glass-text);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-sheen), var(--glass-bg);
+    background-clip: padding-box;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--glass-shadow);
+    -webkit-backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+    backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--motion-control) var(--ease-human),
+      border-color var(--motion-control) var(--ease-human),
+      box-shadow var(--motion-control) var(--ease-human),
+      opacity var(--motion-control) var(--ease-human),
+      transform var(--motion-control) var(--ease-human);
+  }
+  .xp__nav svg {
+    transition: transform var(--motion-control) var(--ease-human);
+  }
+  @media (hover: hover) {
+    .xp__nav:not([aria-disabled='true']):hover {
+      --glass-bg: var(--glass-bg-hover);
+      border-color: var(--glass-border-hover);
+      box-shadow:
+        inset 0 1px 0 var(--glass-highlight),
+        var(--glass-shadow-hover);
+    }
+    .xp__nav[data-rail-next]:not([aria-disabled='true']):hover svg {
+      transform: translateX(2px);
+    }
+    .xp__nav[data-rail-prev]:not([aria-disabled='true']):hover svg {
+      transform: translateX(-2px);
+    }
+  }
+  .xp__nav:not([aria-disabled='true']):active {
+    transform: scale(0.96);
+  }
+  .xp__nav:focus-visible {
+    outline: 2px solid var(--glass-focus);
+    outline-offset: 3px;
+    border-radius: 50%;
+  }
+  .xp__nav[aria-disabled='true'] {
+    opacity: 0.38;
+    cursor: default;
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
+  }
+  /* without scripting the row scrolls natively; controls that cannot work are not shown */
+  html:not(.js) .xp__controls {
+    display: none;
+  }
+</style>

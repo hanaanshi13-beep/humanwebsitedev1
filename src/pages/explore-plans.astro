@@ -1,0 +1,30 @@
+---
+// Explore Plans — the membership architecture HUMAN is developing. Two sections only: the plan explorer and the
+// closing invitation. No prices, panels, purchase paths or availability claims (see data/plans.ts).
+import Base from '../layouts/Base.astro';
+import PlansIntro from '../components/plans/PlansIntro.astro';
+import MembershipExplorer from '../components/plans/MembershipExplorer.astro';
+import MembershipOverlay from '../components/plans/MembershipOverlay.astro';
+import PlansCta from '../components/plans/PlansCta.astro';
+---
+
+<Base
+  title="Explore Plans — HUMAN preventive health plans in development"
+  description="The preventive health plans HUMAN is developing for individuals, families and different stages of life. In development; nothing is available to buy yet."
+  bodyClass="xp-page"
+>
+  <section class="xp on-light" aria-labelledby="xp-title">
+    <PlansIntro />
+    <MembershipExplorer />
+  </section>
+  <PlansCta />
+  <MembershipOverlay />
+</Base>
+
+<style is:global>
+  /* The navigation capsule passes over photographs here, light and dark side by side. It keeps its dark text on
+     this page (the cards declare data-nav-tone) and, once the page has moved, takes enough ivory body to hold it. */
+  .xp-page .site-header.is-solid[data-tone='light'] .site-header__shell {
+    --glass-bg: rgba(246, 243, 236, 0.8);
+  }
+</style>

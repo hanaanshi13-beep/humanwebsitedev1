@@ -1,0 +1,19 @@
+---
+// The numbered plan names for one category. Static information: a list, never links or buttons.
+interface Props {
+  plans: string[];
+}
+const { plans } = Astro.props;
+---
+
+<ol class="xo__list" role="list">
+  {
+    plans.map((p, i) => (
+      <li style={`--r:${i}`}>
+        <span class="xo__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+        <span class="xo__dash" aria-hidden="true">—</span>
+        <span class="xo__plan">{p}</span>
+      </li>
+    ))
+  }
+</ol>

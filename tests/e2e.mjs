@@ -38,7 +38,7 @@ const assert = (cond, msg) => {
 const go = async (page, path) => {
   await page.goto(BASE + path, { waitUntil: 'networkidle' });
 };
-const ROUTES = ['/', '/women', '/men', '/about', '/faq', '/waitlist', '/privacy', '/terms', '/medical-disclaimer'];
+const ROUTES = ['/', '/women', '/men', '/explore-plans', '/about', '/faq', '/waitlist', '/privacy', '/terms', '/medical-disclaimer'];
 
 // ---------- homepage ----------
 // On the homepage the navigation is absent during the opening film and returns with the next section.
@@ -1737,7 +1737,7 @@ await test('HP-18', 'Portal typography is the main site’s: same families, weig
 
 await test('GLASS-01', 'Clear glass: navigation capsule and every button share one translucent material (no solid fills) on every route', async () => {
   const p = await ctx({ reducedMotion: 'reduce' });
-  for (const r of ['/', '/women', '/men', '/about', '/faq', '/waitlist', '/404']) {
+  for (const r of ['/', '/women', '/men', '/explore-plans', '/about', '/faq', '/waitlist', '/404']) {
     await go(p, r);
     const bad = await p.evaluate(() => {
       const out = [];
@@ -2065,6 +2065,485 @@ await test('V11-07', 'Blood sample photograph blends into the section: the fade 
     assert(step <= 4, `${w}: a colour step of ${step}/255 shows across the photograph's edge`);
     await q.context().close();
   }
+});
+
+// ---------- Explore Plans (/explore-plans) ----------
+const XP = '/explore-plans';
+const XP_PLANS = {
+  him: ['for Him.', ['Overall Health', 'Energy & Hormones', 'Weight & Blood Sugar', 'Sexual & Fertility Health', 'Healthy Ageing']],
+  her: ['for Her.', ['Overall Health', 'Periods & Hormones', 'Energy & Nutrition', 'Weight & Blood Sugar', 'Menopause & Healthy Ageing']],
+  athletes: ['for Athletes.', ['HYROX & Hybrid Athletes', 'Runners & Endurance Athletes', 'Strength & Physique Athletes', 'Cyclists & Triathletes', 'Competitive & Team Sports', 'Everyday Fitness']],
+  seniors: ['for Seniors.', ['Active Ageing', 'Comprehensive Senior Health', 'Strength & Independence', 'Assisted Health Monitoring']],
+  families: ['for Families.', ['Family Essential', 'Extended Family', 'Parents’ Health', 'Build Your Family Plan']],
+  professionals: ['for Professionals.', ['Workplace Health', 'Executive Health', 'Shift Worker Health', 'Frequent Traveller Health', 'Corporate Membership']],
+  'young-adults': ['for Young Adults.', ['Student Health', 'Early Career Health', 'Active Lifestyle', 'First Health Check']],
+  kids: ['for Kids.', ['Early Childhood', 'School-Age Health', 'Adolescent Health', 'Young Sportspeople']],
+  couples: ['for Couples.', ['Everyday Couples', 'Active Couples', 'Preparing for Parenthood', 'Healthy Ageing Together']],
+};
+const XP_IDS = Object.keys(XP_PLANS);
+const xoState = (p) => p.locator('[data-plans-overlay]').getAttribute('data-state');
+const xoWait = (p, s, ms = 8000) => p.waitForFunction((s) => document.querySelector('[data-plans-overlay]').dataset.state === s, s, { timeout: ms });
+const xpReady = async (p) => { await p.waitForFunction(() => document.querySelector('[data-rail]').classList.contains('is-in') || !document.documentElement.classList.contains('js-motion')); await p.waitForTimeout(1300); };
+const xoOpen = async (p, id) => { await p.locator(`[data-plan-open="${id}"]`).click(); await xoWait(p, 'open'); };
+const xoClose = async (p) => { await p.locator('[data-xo-close]').click(); await xoWait(p, 'closed'); };
+const rail = (p) => p.evaluate(() => { const s = document.querySelector('[data-rail-scroller]'); return { left: s.scrollLeft, max: s.scrollWidth - s.clientWidth, client: s.clientWidth, width: s.scrollWidth, y: scrollY }; });
+const railSettle = async (p) => { let last = -1; for (let i = 0; i < 40; i++) { const l = (await rail(p)).left; if (Math.abs(l - last) < 0.5) return l; last = l; await p.waitForTimeout(120); } return last; };
+
+await test('XP-01', 'Explore Plans in the navigation: exact label, desktop and mobile menu, opens /explore-plans, active state, other items untouched, capsule still fits', async () => {
+  const p = await ctx();
+  await go(p, '/about');
+  const labels = await p.locator('.site-header .nav a:not(.btn)').allInnerTexts();
+  assert(labels.join('|') === 'How it works|Explore Plans|For Her|For Him|About|FAQ', 'desktop nav: ' + labels.join('|'));
+  assert((await p.locator('.site-header .nav [aria-haspopup], .site-header .nav ul').count()) === 0, 'no dropdown');
+  await p.locator('.site-header .nav a', { hasText: 'Explore Plans' }).click();
+  await p.waitForURL('**/explore-plans**');
+  await p.waitForLoadState('networkidle');
+  const cur = await p.locator('.site-header .nav a[aria-current="page"]').allInnerTexts();
+  assert(cur.join() === 'Explore Plans', 'active item: ' + cur.join());
+  for (const w of [1024, 1100, 1280, 1920]) {
+    await p.setViewportSize({ width: w, height: 800 });
+    await p.waitForTimeout(120);
+    const fit = await p.evaluate(() => {
+      const shell = document.querySelector('.site-header__shell').getBoundingClientRect();
+      const kids = [...document.querySelectorAll('.site-header__shell > *')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.getBoundingClientRect());
+      const overlap = kids.some((a, i) => kids.some((b, j) => j > i && a.right > b.left + 1 && b.right > a.left + 1));
+      const links = [...document.querySelectorAll('.site-header .nav a')].map((e) => e.getBoundingClientRect().height);
+      return { inside: kids.every((k) => k.left >= shell.left - 1 && k.right <= shell.right + 1), overlap, oneLine: links.every((h) => h < 60) };
+    });
+    assert(fit.inside && !fit.overlap && fit.oneLine, `capsule at ${w}: ${JSON.stringify(fit)}`);
+  }
+  await p.context().close();
+  const m = await ctx({ viewport: { width: 390, height: 844 } });
+  await go(m, '/faq');
+  await m.locator('[data-menu-open]').click();
+  const ml = await m.locator('#mobile-menu nav a:not(.btn)').allInnerTexts();
+  assert(ml.join('|') === 'How it works|Explore Plans|For Her|For Him|About|FAQ', 'mobile menu: ' + ml.join('|'));
+  await m.locator('#mobile-menu nav a', { hasText: 'Explore Plans' }).click();
+  await m.waitForURL('**/explore-plans**');
+  await m.waitForLoadState('networkidle');
+  await m.locator('[data-menu-open]').click();
+  assert((await m.locator('#mobile-menu nav a[aria-current="page"]').innerText()) === 'Explore Plans', 'mobile active state');
+  assert(m.consoleErrors.length === 0, m.consoleErrors.join(' | '));
+  await m.context().close();
+});
+
+await test('XP-02', 'Explore Plans page: exactly two sections, approved copy word for word, the site’s own typography, no hero, one waitlist action', async () => {
+  const p = await ctx();
+  const failed = [];
+  p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
+  await go(p, XP);
+  await xpReady(p);
+  const d = await p.evaluate(() => {
+    const cs = (s) => getComputedStyle(document.querySelector(s));
+    const t = (s) => document.querySelector(s).textContent.replace(/\s+/g, ' ').trim();
+    return {
+      sections: document.querySelectorAll('main > section').length,
+      hero: document.querySelectorAll('main .page-hero').length,
+      eyebrow: t('.xp__eyebrow'), h1: t('h1'), lede: t('.xp__lede'),
+      ctaEyebrow: t('.xpc__eyebrow'), ctaH: t('.xpc__title'), ctaP: t('.xpc__lede'), ctaBtn: t('.xpc .btn').replace(/\s*→$/, ''), // the arrow glyph is drawn as an icon
+     
+      h1Font: cs('h1').fontFamily + '|' + cs('h1').fontStyle, ctaFont: cs('.xpc__title').fontFamily + '|' + cs('.xpc__title').fontStyle,
+      ledeFont: cs('.xp__lede').fontFamily, eyebrowCase: cs('.xp__eyebrow').textTransform + '|' + parseFloat(cs('.xp__eyebrow').letterSpacing),
+      introTop: document.querySelector('.xp__track').getBoundingClientRect().top,
+      links: [...document.querySelectorAll('main a')].map((a) => a.getAttribute('href')),
+      forms: document.querySelectorAll('main form, main input, main select').length,
+      ground: getComputedStyle(document.querySelector('.xp')).backgroundColor,
+    };
+  });
+  assert(d.sections === 2 && d.hero === 0, `sections ${d.sections}, hero ${d.hero}`);
+  assert(d.eyebrow === 'HUMAN' && d.h1 === 'Our preventive health plans.', `heading: ${d.eyebrow} / ${d.h1}`);
+  assert(d.lede === 'Explore the different health plans we are developing for individuals, families and different stages of life.', 'lede: ' + d.lede);
+  assert(d.ctaH === 'Take the first step towards understanding your health.' && d.ctaP === 'Be among the first to experience HUMAN.' && d.ctaBtn === 'Join the waitlist', `cta: ${d.ctaH} / ${d.ctaP} / ${d.ctaBtn}`);
+  assert(/Instrument Serif/.test(d.h1Font) && /italic/.test(d.h1Font) && /Instrument Serif/.test(d.ctaFont) && /italic/.test(d.ctaFont), 'serif italic headings: ' + d.h1Font);
+  assert(/Hanken Grotesk/.test(d.ledeFont) && /^uppercase\|/.test(d.eyebrowCase) && Number(d.eyebrowCase.split('|')[1]) > 2, 'body and label type');
+  assert(d.introTop < 520, `photographs start at ${d.introTop}px: too far down`);
+  assert(d.links.join() === '/waitlist' && d.forms === 0, 'only action is the waitlist: ' + d.links.join());
+  assert(d.ground === 'rgb(246, 243, 236)', 'ground ' + d.ground);
+  await p.locator('.xpc .btn').click();
+  await p.waitForURL('**/waitlist**');
+  assert((await p.locator('[data-hp]').count()) === 1, 'existing waitlist opened');
+  assert(failed.length === 0 && p.consoleErrors.length === 0, [...failed, ...p.consoleErrors].join(' | '));
+  await p.context().close();
+});
+
+await test('XP-03', 'Nine cards in the approved order, each with its own supplied photograph (loaded, 3:4, undistorted), code-set titles that clear the arrow', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  await p.evaluate(() => document.querySelectorAll('.xp-card img').forEach((i) => (i.loading = 'eager')));
+  await p.waitForFunction(() => [...document.querySelectorAll('.xp-card img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
+  const cards = await p.evaluate(() =>
+    [...document.querySelectorAll('.xp-card')].map((c) => {
+      const b = c.querySelector('button'), img = c.querySelector('img'), r = b.getBoundingClientRect();
+      const cap = c.querySelector('.xp-card__cap').getBoundingClientRect(), go = c.querySelector('.xp-card__go').getBoundingClientRect(), ti = c.querySelector('.xp-card__title');
+      const tr = ti.getBoundingClientRect(), tcs = getComputedStyle(ti);
+      const range = document.createRange(); range.selectNodeContents(ti); const ink = range.getBoundingClientRect();
+      return {
+        id: b.dataset.planOpen, brand: c.querySelector('.xp-card__brand').textContent, title: ti.textContent, src: img.currentSrc, w: r.width, h: r.height,
+        fit: getComputedStyle(img).objectFit, nat: img.naturalWidth / img.naturalHeight, font: tcs.fontFamily + '|' + tcs.fontStyle, size: parseFloat(tcs.fontSize),
+        clear: ink.right <= go.left - 4 && cap.left >= r.left && ink.bottom <= r.bottom && ink.left >= r.left, lines: Math.round(tr.height / parseFloat(tcs.lineHeight)),
+        nested: b.querySelectorAll('a, button, [tabindex]').length, name: b.innerText.replace(/\s+/g, ' ').trim(), badge: c.querySelectorAll('.status-pill, [class*=badge]').length,
+      };
+    }),
+  );
+  assert(cards.length === 9 && cards.map((c) => c.id).join() === XP_IDS.join(), 'order: ' + cards.map((c) => c.id).join());
+  for (const c of cards) {
+    assert(c.brand === 'HUMAN' && c.title === XP_PLANS[c.id][0], `${c.id}: title "${c.title}"`);
+    assert(new RegExp(`human-for-${c.id}\\.`).test(c.src), `${c.id}: photograph ${c.src}`);
+    assert(Math.abs(c.w / c.h - 0.75) < 0.01 && Math.abs(c.w - cards[0].w) < 0.6, `${c.id}: card ${c.w}x${c.h}`);
+    assert(c.fit === 'cover' && Math.abs(c.nat - 0.75) < 0.01, `${c.id}: image fit ${c.fit} ${c.nat}`);
+    assert(/Instrument Serif/.test(c.font) && /italic/.test(c.font) && c.size >= 26, `${c.id}: title type ${c.font} ${c.size}`);
+    assert(c.clear && c.lines <= 2, `${c.id}: title overflows or meets the arrow (${c.lines} lines)`);
+    assert(c.nested === 0 && c.badge === 0, `${c.id}: nested controls or badges`);
+  }
+  await p.context().close();
+});
+
+await test('XP-04', 'Explorer layout: about four cards on desktop, two to three on tablet, one large card and a slice of the next on phones; one row; no page overflow', async () => {
+  const p = await ctx();
+  for (const [w, h, lo, hi] of [[1920, 1080, 4, 4], [1440, 900, 4, 4], [1280, 720, 4, 4], [1024, 768, 2, 3], [768, 1024, 2, 3], [430, 932, 1, 1], [390, 844, 1, 1], [360, 740, 1, 1]]) {
+    await p.setViewportSize({ width: w, height: h });
+    await go(p, XP);
+    await xpReady(p);
+    const d = await p.evaluate(() => {
+      const rs = [...document.querySelectorAll('.xp-card')].map((c) => c.getBoundingClientRect());
+      const full = rs.filter((r) => r.left >= -0.5 && r.right <= innerWidth + 0.5).length;
+      const nxt = rs[full];
+      const first = rs[0], wrap = document.querySelector('.xp__intro .xp__title').getBoundingClientRect();
+      return { full, peek: nxt ? Math.max(0, innerWidth - nxt.left) : 0, cardW: first.width, rows: new Set(rs.map((r) => Math.round(r.top))).size, over: document.documentElement.scrollWidth - innerWidth, align: Math.abs(first.left - wrap.left), order: rs.every((r, i) => !i || r.left > rs[i - 1].left) };
+    });
+    assert(d.full >= lo && d.full <= hi, `${w}: ${d.full} whole cards`);
+    assert(d.peek >= 24 && d.peek < d.cardW * 0.6, `${w}: next card shows ${Math.round(d.peek)}px of ${Math.round(d.cardW)}`);
+    assert(d.rows === 1 && d.order && d.over <= 0 && d.align < 1.5, `${w}: ${JSON.stringify(d)}`);
+    if (w <= 430) assert(d.cardW >= w * 0.68, `${w}: phone card only ${Math.round(d.cardW)}px wide`);
+    if (w >= 1280) assert(d.cardW >= 250, `${w}: desktop card only ${Math.round(d.cardW)}px wide`);
+  }
+  await p.context().close();
+});
+
+await test('XP-05', 'Explorer controls: arrows land on card edges and disable at the ends, the progress line mirrors the real scroll position, keyboard works, nothing autoplays, the wheel still scrolls the page', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  const state = () => p.evaluate(() => {
+    const s = document.querySelector('[data-rail-scroller]'), th = document.querySelector('[data-rail-thumb]').getBoundingClientRect(), tr = document.querySelector('.xp__progress').getBoundingClientRect();
+    const pad = parseFloat(getComputedStyle(s).scrollPaddingLeft), max = s.scrollWidth - s.clientWidth;
+    const stops = [...document.querySelectorAll('.xp-card')].map((c) => Math.min(max, c.offsetLeft - pad));
+    const last = document.querySelector('.xp-card:last-child').getBoundingClientRect();
+    return { left: s.scrollLeft, max, onStop: Math.min(...stops.map((v) => Math.abs(v - s.scrollLeft))), thumbW: th.width / tr.width, thumbX: (th.left - tr.left) / tr.width, vis: s.clientWidth / s.scrollWidth,
+      prev: document.querySelector('[data-rail-prev]').getAttribute('aria-disabled'), next: document.querySelector('[data-rail-next]').getAttribute('aria-disabled'), lastIn: last.right <= innerWidth - pad + 1 && last.left >= 0 };
+  });
+  let s = await state();
+  assert(s.left === 0 && s.prev === 'true' && s.next === 'false', 'start: ' + JSON.stringify(s));
+  assert(Math.abs(s.thumbW - s.vis) < 0.01 && Math.abs(s.thumbX) < 0.005, `progress at start ${s.thumbW} vs ${s.vis}`);
+  await p.waitForTimeout(2600);
+  assert((await rail(p)).left === 0, 'the row moved on its own');
+  const seen = [];
+  for (let i = 0; i < 6 && s.next === 'false'; i++) {
+    await p.locator('[data-rail-next]').click();
+    await railSettle(p);
+    s = await state();
+    seen.push(Math.round(s.left));
+    assert(s.onStop < 1.5, `next landed off a card edge by ${s.onStop}px`);
+    assert(Math.abs(s.thumbX - (s.left / s.max) * (1 - s.vis)) < 0.01 && Math.abs(s.thumbW - s.vis) < 0.01, 'progress line out of step with the scroll position');
+  }
+  assert(s.next === 'true' && s.prev === 'false' && Math.abs(s.left - s.max) < 1.5 && s.lastIn, 'end: ' + JSON.stringify(s) + ' via ' + seen.join());
+  assert(Math.abs(s.thumbX + s.thumbW - 1) < 0.01, 'progress line does not reach the end');
+  await p.locator('[data-rail-next]').click({ force: true });
+  await p.waitForTimeout(300);
+  assert(Math.abs((await rail(p)).left - s.max) < 1.5, 'disabled next still moved');
+  for (let i = 0; i < 6 && s.prev === 'false'; i++) {
+    await p.locator('[data-rail-prev]').click();
+    await railSettle(p);
+    s = await state();
+    assert(s.onStop < 1.5, `prev landed off a card edge by ${s.onStop}px`);
+  }
+  assert(s.left === 0 && s.prev === 'true', 'back at the start');
+  // keyboard
+  await p.locator('[data-plan-open="him"]').focus();
+  await p.keyboard.press('ArrowRight');
+  assert((await p.evaluate(() => document.activeElement.dataset.planOpen)) === 'her', 'ArrowRight');
+  await p.keyboard.press('End');
+  await railSettle(p);
+  s = await state();
+  assert((await p.evaluate(() => document.activeElement.dataset.planOpen)) === 'couples' && s.lastIn, 'End reaches the last card');
+  await p.keyboard.press('Home');
+  await railSettle(p);
+  assert((await rail(p)).left === 0, 'Home returns');
+  const ring = await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle + parseFloat(getComputedStyle(document.activeElement).outlineWidth));
+  assert(/solid[2-9]/.test(ring), 'focus ring on a card: ' + ring);
+  // the wheel over the row scrolls the page, never the row
+  await p.mouse.move(700, 560);
+  await p.mouse.wheel(0, 500);
+  await p.waitForTimeout(700);
+  const after = await rail(p);
+  assert(after.y > 200 && after.left === 0, `wheel: page ${after.y}, row ${after.left}`);
+  // resize keeps the line true
+  await p.setViewportSize({ width: 820, height: 900 });
+  await p.waitForTimeout(400);
+  s = await state();
+  assert(Math.abs(s.thumbW - s.vis) < 0.01, 'progress line after resize');
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('XP-06', 'Mouse dragging: the row follows the hand and rests on a card edge; a drag never opens a card; a plain click still does; touch keeps native scrolling', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  const box = await p.locator('[data-plan-open="athletes"]').boundingBox();
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await p.mouse.move(x, y);
+  await p.mouse.down();
+  for (let i = 1; i <= 12; i++) { await p.mouse.move(x - i * 30, y); await p.waitForTimeout(16); }
+  const mid = await rail(p);
+  assert(mid.left > 300, `row did not follow the drag (${mid.left})`);
+  await p.mouse.up();
+  await p.waitForTimeout(900);
+  await railSettle(p);
+  assert((await xoState(p)) === 'closed', 'a drag opened a card');
+  const onStop = await p.evaluate(() => { const s = document.querySelector('[data-rail-scroller]'); const pad = parseFloat(getComputedStyle(s).scrollPaddingLeft), max = s.scrollWidth - s.clientWidth; return Math.min(...[...document.querySelectorAll('.xp-card')].map((c) => Math.abs(Math.min(max, c.offsetLeft - pad) - s.scrollLeft))); });
+  assert(onStop < 1.5, `after a drag the row rests ${onStop}px off a card edge`);
+  assert(!(await p.evaluate(() => document.querySelector('[data-rail]').classList.contains('is-dragging'))), 'drag state left on');
+  // 3px of wobble is still a click
+  const b2 = await p.locator('[data-plan-open="families"]').boundingBox();
+  await p.mouse.move(b2.x + 60, b2.y + 80);
+  await p.mouse.down();
+  await p.mouse.move(b2.x + 63, b2.y + 81);
+  await p.mouse.up();
+  await xoWait(p, 'open');
+  assert((await p.locator('.xo__panel:not([hidden]) .xo__title').innerText()).replace(/\s+/g, ' ').trim() === 'HUMAN for Families.', 'click opened the wrong category');
+  await xoClose(p);
+  const touch = await p.evaluate(() => { const c = getComputedStyle(document.querySelector('[data-rail-scroller]')); return c.overflowX + '|' + c.touchAction + '|' + c.scrollSnapType; });
+  assert(/^auto\|auto\|x( proximity)?$/.test(touch), 'native scrolling: ' + touch);
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('XP-07', 'Every card opens its own overlay: the same photograph, the right title, all 41 plan names in order as static text, the development note; nothing else', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  let total = 0;
+  for (const id of XP_IDS) {
+    const cardSrc = await p.locator(`[data-plan-open="${id}"] img`).evaluate((i) => i.currentSrc);
+    await p.locator(`[data-plan-open="${id}"]`).scrollIntoViewIfNeeded();
+    await railSettle(p);
+    await p.locator(`[data-plan-open="${id}"]`).click();
+    // at the moment of opening the overlay shows the very file the card was showing
+    const firstSrc = await p.locator('[data-xo-img]').evaluate((i) => i.src);
+    await xoWait(p, 'open');
+    const d = await p.evaluate(() => {
+      const dlg = document.querySelector('[data-plans-overlay]'), panel = dlg.querySelector('.xo__panel:not([hidden])');
+      const t = (e) => e.textContent.replace(/\s+/g, ' ').trim();
+      return {
+        open: dlg.open, panels: dlg.querySelectorAll('.xo__panel:not([hidden])').length, name: t(document.getElementById(dlg.getAttribute('aria-labelledby'))),
+        brand: t(panel.querySelector('.xo__brand')), label: t(panel.querySelector('.xo__label')), status: t(panel.querySelector('.xo__status')),
+        plans: [...panel.querySelectorAll('.xo__list li .xo__plan')].map(t), nums: [...panel.querySelectorAll('.xo__list li .xo__n')].map(t),
+        listTag: panel.querySelector('.xo__list').tagName, interactive: [...dlg.querySelectorAll('a, button, input, [role=button], summary, [onclick]')].map((e) => e.getAttribute('aria-label') || t(e)),
+        cursor: [...panel.querySelectorAll('.xo__list li')].map((li) => getComputedStyle(li).cursor).join(), img: dlg.querySelector('[data-xo-img]').currentSrc, alt: dlg.querySelector('[data-xo-img]').alt,
+        imgOk: dlg.querySelector('[data-xo-img]').naturalWidth > 0, font: getComputedStyle(panel.querySelector('.xo__title')).fontFamily + getComputedStyle(panel.querySelector('.xo__title')).fontStyle, planFont: getComputedStyle(panel.querySelector('.xo__plan')).fontFamily,
+        capGone: getComputedStyle(dlg.querySelector('[data-xo-cap]')).opacity, extra: panel.querySelectorAll('svg, img, details').length,
+      };
+    });
+    const [title, plans] = XP_PLANS[id];
+    assert(d.open && d.panels === 1 && d.name === `HUMAN ${title}`, `${id}: dialog name "${d.name}"`);
+    assert(d.brand === 'HUMAN' && d.label === 'Memberships' && d.status === 'Memberships currently in development.', `${id}: labels ${d.brand}/${d.label}/${d.status}`);
+    assert(d.plans.join('|') === plans.join('|'), `${id}: plans ${d.plans.join('|')}`);
+    assert(d.nums.join() === plans.map((_, i) => String(i + 1).padStart(2, '0')).join() && d.listTag === 'OL', `${id}: numbering ${d.nums.join()}`);
+    assert(d.interactive.join() === 'Close' && !/pointer/.test(d.cursor) && d.extra === 0, `${id}: controls in the overlay: ${d.interactive.join()}`);
+    assert(firstSrc === cardSrc && new RegExp(`human-for-${id}\\.`).test(d.img) && d.imgOk && d.alt.length > 20 && d.capGone === '0', `${id}: photograph ${firstSrc} vs ${cardSrc}`);
+    assert(/Instrument Serif.*italic/.test(d.font) && /Hanken Grotesk/.test(d.planFont), `${id}: type`);
+    total += d.plans.length;
+    await xoClose(p);
+  }
+  assert(total === 41, `plan names shown: ${total}`);
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('XP-08', 'Overlay behaviour: focus moves in and is held, Escape / close / backdrop all close it, a click inside does not, focus and both scroll positions return exactly, the page cannot scroll behind it', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  // far end of the row, page nudged down: the hardest position to preserve
+  await p.evaluate(() => { document.querySelector('[data-rail-scroller]').scrollTo({ left: 99999, behavior: 'instant' }); scrollTo({ top: 140, behavior: 'instant' }); });
+  await railSettle(p);
+  const before = await rail(p);
+  const cardBefore = await p.locator('[data-plan-open="couples"]').boundingBox();
+  for (const how of ['escape', 'button', 'backdrop']) {
+    await p.locator('[data-plan-open="couples"]').focus();
+    await p.keyboard.press('Enter');
+    await xoWait(p, 'open');
+    const o = await p.evaluate(() => ({ focus: document.activeElement.getAttribute('aria-label'), lock: getComputedStyle(document.documentElement).overflowY, src: document.querySelector('.xp-card.is-source button')?.dataset.planOpen, modal: document.querySelector('[data-plans-overlay]').matches(':modal') }));
+    assert(o.focus === 'Close' && o.lock === 'hidden' && o.src === 'couples' && o.modal, `${how}: open state ${JSON.stringify(o)}`);
+    await p.keyboard.press('Tab');
+    await p.keyboard.press('Tab');
+    assert(await p.evaluate(() => !!document.activeElement.closest('[data-plans-overlay]')), `${how}: focus left the dialog`);
+    await p.mouse.wheel(0, 600);
+    await p.waitForTimeout(250);
+    assert(Math.abs((await rail(p)).y - before.y) < 1, `${how}: page scrolled behind the overlay`);
+    const shell = await p.locator('[data-xo-shell]').boundingBox();
+    await p.mouse.click(shell.x + shell.width * 0.7, shell.y + shell.height * 0.5);
+    await p.waitForTimeout(200);
+    assert((await xoState(p)) === 'open', `${how}: a click inside closed it`);
+    if (how === 'escape') await p.keyboard.press('Escape');
+    else if (how === 'button') await p.locator('[data-xo-close]').click();
+    else await p.mouse.click(8, 450);
+    await xoWait(p, 'closed');
+    const a = await rail(p);
+    const c = await p.evaluate(() => ({ focus: document.activeElement.dataset.planOpen, lock: document.documentElement.style.overflow + document.documentElement.style.paddingRight, src: document.querySelectorAll('.is-source').length, open: document.querySelector('[data-plans-overlay]').open, vis: getComputedStyle(document.querySelector('[data-plan-open="couples"]')).visibility }));
+    assert(Math.abs(a.left - before.left) < 1 && Math.abs(a.y - before.y) < 1, `${how}: position moved (row ${before.left}→${a.left}, page ${before.y}→${a.y})`);
+    assert(c.focus === 'couples' && c.lock === '' && c.src === 0 && !c.open && c.vis === 'visible', `${how}: after close ${JSON.stringify(c)}`);
+    const cardAfter = await p.locator('[data-plan-open="couples"]').boundingBox();
+    assert(Math.abs(cardAfter.x - cardBefore.x) < 1 && Math.abs(cardAfter.y - cardBefore.y) < 1, `${how}: the card moved`);
+  }
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('XP-09', 'Signature expansion: the panel starts exactly on the card and lands centred with the photograph beside the list; returns to the card; rapid and interrupted presses leave one clean state', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  for (const id of ['him', 'seniors']) {
+    const start = await p.evaluate((id) => {
+      const btn = document.querySelector(`[data-plan-open="${id}"]`), card = btn.getBoundingClientRect();
+      btn.click();
+      const sh = document.querySelector('[data-xo-shell]'), r = sh.getBoundingClientRect(), ph = document.querySelector('[data-xo-photo]').getBoundingClientRect();
+      const an = sh.getAnimations()[0];
+      return { d: Math.max(Math.abs(r.left - card.left), Math.abs(r.top - card.top), Math.abs(r.width - card.width), Math.abs(r.height - card.height)), photo: Math.max(Math.abs(ph.width - card.width), Math.abs(ph.height - card.height), Math.abs(ph.left - card.left)), ms: an?.effect.getTiming().duration, flights: document.querySelector('[data-plans-overlay]').getAnimations({ subtree: true }).length, cap: getComputedStyle(document.querySelector('[data-xo-cap]')).opacity, capTitle: document.querySelector('[data-xo-cap-title]').textContent };
+    }, id);
+    assert(start.d < 1 && start.photo < 1, `${id}: expansion does not start on the card (${start.d}px, photo ${start.photo}px)`);
+    assert(start.ms >= 400 && start.ms <= 600 && start.flights >= 4 && Number(start.cap) > 0.9 && start.capTitle === XP_PLANS[id][0], `${id}: flight ${JSON.stringify(start)}`);
+    await xoWait(p, 'open');
+    await p.waitForTimeout(900);
+    const rest = await p.evaluate(() => {
+      const r = document.querySelector('[data-xo-shell]').getBoundingClientRect(), ph = document.querySelector('[data-xo-photo]').getBoundingClientRect(), img = document.querySelector('[data-xo-img]');
+      const rows = [...document.querySelectorAll('.xo__panel:not([hidden]) .xo__list li')].map((li) => Number(getComputedStyle(li).opacity));
+      return { cx: Math.abs(r.left + r.width / 2 - innerWidth / 2), cy: Math.abs(r.top + r.height / 2 - innerHeight / 2), w: r.width / innerWidth, h: r.height / innerHeight, split: ph.width / r.width, photoH: ph.height / r.height, ratio: ph.width / ph.height, fit: getComputedStyle(img).objectFit, rows: Math.min(...rows), flying: document.querySelector('[data-xo-shell]').className, radius: parseFloat(getComputedStyle(document.querySelector('[data-xo-shell]')).borderTopLeftRadius), scrim: getComputedStyle(document.querySelector('[data-xo-scrim]')).backdropFilter };
+    });
+    assert(rest.cx < 1.5 && rest.cy < 1.5 && rest.w > 0.78 && rest.w <= 0.9 && rest.h <= 0.9, `${id}: resting panel ${JSON.stringify(rest)}`);
+    assert(Math.abs(rest.split - 0.4) < 0.02 && rest.photoH > 0.99 && Math.abs(rest.ratio - 0.75) < 0.06 && rest.fit === 'cover', `${id}: photograph side ${JSON.stringify(rest)}`);
+    assert(rest.rows === 1 && !/is-flying/.test(rest.flying) && rest.radius >= 28 && /blur/.test(rest.scrim), `${id}: settled state ${JSON.stringify(rest)}`);
+    // return: ends on the card
+    const end = await p.evaluate(async () => {
+      document.querySelector('[data-xo-close]').click();
+      const sh = document.querySelector('[data-xo-shell]');
+      const an = sh.getAnimations()[0];
+      const kf = an.effect.getKeyframes().at(-1);
+      const card = document.querySelector('.xp-card.is-source button').getBoundingClientRect();
+      return { d: Math.max(Math.abs(parseFloat(kf.left) - card.left), Math.abs(parseFloat(kf.top) - card.top), Math.abs(parseFloat(kf.width) - card.width), Math.abs(parseFloat(kf.height) - card.height)), ms: an.effect.getTiming().duration };
+    });
+    assert(end.d < 1 && end.ms >= 350 && end.ms <= 550, `${id}: return does not end on the card (${JSON.stringify(end)})`);
+    await xoWait(p, 'closed');
+  }
+  // rapid presses: one overlay, never two
+  await p.evaluate(() => { const b = document.querySelector('[data-plan-open="her"]'); b.click(); b.click(); document.querySelector('[data-plan-open="him"]').click(); });
+  await xoWait(p, 'open');
+  assert((await p.locator('.xo__panel:not([hidden])').count()) === 1 && (await p.locator('.xo__panel:not([hidden]) .xo__title').innerText()).includes('for Her.'), 'rapid presses');
+  // close while still opening, then reopen at once, several times
+  await xoClose(p);
+  for (let i = 0; i < 4; i++) {
+    await p.locator('[data-plan-open="athletes"]').click();
+    await p.waitForTimeout(90 + i * 60);
+    await p.keyboard.press('Escape');
+    await xoWait(p, 'closed');
+    const c = await p.evaluate(() => ({ open: document.querySelector('[data-plans-overlay]').open, src: document.querySelectorAll('.is-source').length, lock: document.documentElement.style.overflow, anim: document.querySelector('[data-plans-overlay]').getAnimations({ subtree: true }).length, fly: document.querySelector('[data-xo-shell]').classList.contains('is-flying') }));
+    assert(!c.open && c.src === 0 && c.lock === '' && c.anim === 0 && !c.fly, `interrupted ${i}: ${JSON.stringify(c)}`);
+  }
+  await xoOpen(p, 'athletes');
+  assert((await p.locator('.xo__panel:not([hidden]) .xo__list li').count()) === 6, 'reopens normally afterwards');
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('XP-10', 'Overlay at phone, tablet, desktop and landscape sizes: inside the screen, close control reachable, every plan name and the note visible or scrollable, text never clipped', async () => {
+  for (const [w, h] of [[1920, 1080], [1440, 900], [1280, 720], [1024, 768], [768, 1024], [430, 932], [390, 844], [360, 640], [844, 390], [667, 375]]) {
+    const p = await ctx({ viewport: { width: w, height: h }, hasTouch: w < 900 });
+    await go(p, XP);
+    await xpReady(p);
+    for (const id of ['athletes', 'professionals']) {
+      await p.locator(`[data-plan-open="${id}"]`).scrollIntoViewIfNeeded();
+      await railSettle(p);
+      await xoOpen(p, id);
+      await p.waitForTimeout(700);
+      const d = await p.evaluate(async () => {
+        const sh = document.querySelector('[data-xo-shell]').getBoundingClientRect(), cl = document.querySelector('[data-xo-close]').getBoundingClientRect(), body = document.querySelector('[data-xo-body]'), ph = document.querySelector('[data-xo-photo]').getBoundingClientRect();
+        const panel = document.querySelector('.xo__panel:not([hidden])'), status = panel.querySelector('.xo__status'), tr = document.createRange();
+        tr.selectNodeContents(panel.querySelector('.xo__title'));
+        const title = tr.getBoundingClientRect(); // the words themselves, not the heading's box
+        const clipped = [...panel.querySelectorAll('.xo__plan, .xo__title')].filter((e) => e.scrollWidth > e.clientWidth + 1 || e.getBoundingClientRect().right > sh.right - 8).length;
+        const scrolls = body.scrollHeight > body.clientHeight + 1;
+        body.scrollTop = body.scrollHeight;
+        await new Promise((r) => requestAnimationFrame(r));
+        const st = status.getBoundingClientRect(), b = body.getBoundingClientRect();
+        const atEnd = st.bottom <= b.bottom + 1 && st.bottom <= sh.bottom + 1;
+        body.scrollTop = 0;
+        return { in: sh.left >= 0 && sh.top >= 0 && sh.right <= innerWidth && sh.bottom <= innerHeight, close: cl.left >= sh.left && cl.right <= sh.right && cl.top >= sh.top && cl.bottom <= innerHeight && cl.width >= 44 && cl.height >= 44, clipped, scrolls, atEnd, tab: body.tabIndex, split: ph.height > sh.height * 0.98, photo: [Math.round(ph.width), Math.round(ph.height)], titleUnderClose: title.right > cl.left - 2 && title.top < cl.bottom && title.bottom > cl.top, over: document.documentElement.scrollWidth - innerWidth, planSize: parseFloat(getComputedStyle(panel.querySelector('.xo__plan')).fontSize) };
+      });
+      assert(d.in && d.close && d.over <= 0, `${w}x${h} ${id}: panel or close control off screen ${JSON.stringify(d)}`);
+      assert(d.clipped === 0 && d.atEnd && !d.titleUnderClose && d.planSize >= 16, `${w}x${h} ${id}: content ${JSON.stringify(d)}`);
+      assert(!d.scrolls || d.tab === 0, `${w}x${h} ${id}: scrolling list is not keyboard reachable`);
+      assert(d.photo[0] >= 150 && d.photo[1] >= 150, `${w}x${h} ${id}: photograph ${d.photo}`);
+      if (w >= 900) assert(d.split, `${w}x${h}: expected the split composition`);
+      if (w < 600) assert(!d.split, `${w}x${h}: expected the vertical composition`);
+      await xoClose(p);
+    }
+    assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+    await p.context().close();
+  }
+});
+
+await test('XP-11', 'Reduced motion, no JavaScript and a missing photograph: everything still readable and usable', async () => {
+  const r = await ctx({ reducedMotion: 'reduce' });
+  await go(r, XP);
+  const vis = await r.evaluate(() => [...document.querySelectorAll('.xp-card, .xp__controls')].every((e) => getComputedStyle(e).opacity === '1' && getComputedStyle(e).transform === 'none'));
+  assert(vis, 'reduced motion: cards hidden or offset');
+  const flights = await r.evaluate(() => { document.querySelector('[data-plan-open="kids"]').click(); const d = document.querySelector('[data-plans-overlay]'); return { state: d.dataset.state, shell: document.querySelector('[data-xo-shell]').getAnimations().length, rows: getComputedStyle(d.querySelector('.xo__panel:not([hidden]) .xo__list li')).animationName }; });
+  assert(flights.state === 'open' && flights.shell === 0 && flights.rows === 'none', 'reduced motion: ' + JSON.stringify(flights));
+  assert((await r.locator('.xo__panel:not([hidden]) .xo__plan').allInnerTexts()).join('|') === XP_PLANS.kids[1].join('|'), 'reduced motion: plans');
+  await r.keyboard.press('Escape');
+  await xoWait(r, 'closed');
+  assert((await r.evaluate(() => document.activeElement.dataset.planOpen)) === 'kids', 'reduced motion: focus return');
+  const hov = await r.evaluate(() => getComputedStyle(document.querySelector('.xp-card__media img')).transitionDuration);
+  assert(/^0s/.test(hov), 'reduced motion: image zoom still animated');
+  await r.context().close();
+
+  const n = await ctx({ javaScriptEnabled: false });
+  await go(n, XP);
+  const t = await n.locator('main').innerText();
+  const all = Object.values(XP_PLANS).flatMap((v) => v[1]);
+  assert(all.every((name) => t.includes(name)) && t.includes('Memberships currently in development.'), 'no JS: plan names missing');
+  assert((await n.locator('.xp-card').count()) === 9 && (await n.locator('.xp__controls').isHidden()), 'no JS: cards present, dead controls hidden');
+  assert(await n.locator('.xp-card').first().evaluate((e) => getComputedStyle(e).opacity === '1'), 'no JS: cards visible');
+  assert((await n.locator('.xpc .btn').getAttribute('href')) === '/waitlist', 'no JS: waitlist link');
+  await n.context().close();
+
+  const m = await ctx();
+  await m.route(/human-for-seniors/, (rt) => rt.abort());
+  await go(m, XP);
+  await xpReady(m);
+  const miss = await m.evaluate(() => { const c = document.querySelector('[data-plan-open="seniors"]').closest('.xp-card'); return { cls: c.classList.contains('is-missing'), img: getComputedStyle(c.querySelector('img')).visibility, bg: getComputedStyle(c.querySelector('.xp-card__media')).backgroundColor, title: c.querySelector('.xp-card__title').getBoundingClientRect().height > 20 }; });
+  assert(miss.cls && miss.img === 'hidden' && miss.bg !== 'rgba(0, 0, 0, 0)' && miss.title, 'missing photograph: ' + JSON.stringify(miss));
+  await xoOpen(m, 'seniors');
+  assert((await m.locator('.xo__panel:not([hidden]) .xo__plan').count()) === 4 && (await m.locator('[data-xo-img]').isHidden()), 'missing photograph: overlay');
+  await m.context().close();
+});
+
+await test('XP-12', 'Explore Plans honesty: no prices, counts, panels, frequencies, outcomes, availability or partnership claims, no purchase path; images load only from the supplied set', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  const text = await p.evaluate(() => document.querySelector('main').textContent + ' ' + document.querySelector('[data-plans-overlay]').textContent);
+  const banned = /₹|\bRs\b|\$\s?\d|\bprice|pricing|per (month|year)|\/mo\b|discount|\boffer\b|biomarker|\b\d+\s*(\+\s*)?(tests|markers|parameters)|every \d+ (months|weeks)|consultation|doctor|diagnos|treat|cure|guarantee|testimonial|best[- ]seller|most popular|recommended|limited|exclusive|available now|buy|checkout|subscribe|add to cart|partner|sponsor|official|leading|launch(es|ing)? (on|in) /i;
+  const hit = text.match(banned);
+  assert(!hit, `claim on the page: "${hit && hit[0]}"`);
+  const imgs = await p.evaluate(() => [...document.querySelectorAll('main img, [data-plans-overlay] img')].map((i) => i.currentSrc || i.src).filter(Boolean));
+  assert(imgs.length >= 9 && imgs.every((s) => /\/_astro\/human-for-(him|her|athletes|seniors|families|professionals|young-adults|kids|couples)\./.test(s)), 'image sources: ' + imgs.join(', '));
+  const ext = p.requests.filter((q) => !q.url.startsWith(BASE) && !q.url.startsWith('data:'));
+  assert(ext.length === 0 && p.requests.every((q) => q.method === 'GET'), 'requests: ' + ext.map((q) => q.url).join());
+  await p.context().close();
 });
 
 await test('ZOOM', '200% text size at 390px: hero and waitlist grow vertically, no clipping or overflow', async () => {

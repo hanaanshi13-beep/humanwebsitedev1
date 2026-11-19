@@ -1,0 +1,173 @@
+---
+// The membership explorer: one horizontal row of nine uniform portrait cards, rendered from data/plans.ts.
+// Scrolling is the browser's own (trackpad, touch, keyboard); scripts/plans-explorer.ts adds mouse dragging,
+// the arrows and the progress line. Nothing autoplays and the wheel is never redirected.
+import MembershipCard from './MembershipCard.astro';
+import CarouselControls from './CarouselControls.astro';
+import { PLAN_CATEGORIES, STATUS_NOTE } from '../../data/plans';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../../assets/memberships/*.webp', { eager: true });
+const photo = (id: string) => {
+  const hit = files[`../../assets/memberships/human-for-${id}.webp`];
+  if (!hit) throw new Error(`Explore Plans: missing photograph src/assets/memberships/human-for-${id}.webp`);
+  return hit.default;
+};
+---
+
+<div class="xp__rail" data-rail>
+  <div class="xp__scroller" data-rail-scroller>
+    <ul class="xp__track" role="list" aria-label="HUMAN plans: nine categories">
+      {PLAN_CATEGORIES.map((c, i) => <MembershipCard category={c} image={photo(c.id)} index={i} />)}
+    </ul>
+  </div>
+  <CarouselControls />
+</div>
+
+<!-- Without JavaScript the cards cannot open, so the same plan names are written out. -->
+<noscript>
+  <div class="wrap xp__plain">
+    {
+      PLAN_CATEGORIES.map((c) => (
+        <section>
+          <h2>{c.name}</h2>
+          <ol role="list">
+            {c.plans.map((p) => <li>{p}</li>)}
+          </ol>
+        </section>
+      ))
+    }
+    <p class="note">{STATUS_NOTE['in-development']}</p>
+  </div>
+</noscript>
+
+<script>
+  import '../../scripts/plans-explorer.ts';
+</script>
+
+<style is:global>
+  .xp {
+    --xp-radius: 24px;
+    --xp-gap: clamp(14px, 1.4vw, 20px);
+    --xp-inset: clamp(18px, 6.5cqw, 24px);
+    --xp-go: 46px;
+    overflow: hidden; /* the row runs off the right edge of the page; nothing else may */
+  }
+  .xp__rail {
+    container-type: inline-size;
+    margin-top: clamp(28px, 3.4vw, 48px);
+  }
+  .xp__scroller {
+    /* the row starts on the page's own left edge (the same line as the heading) and runs to the screen edge */
+    --pad: max(var(--gutter), calc((100cqw - var(--max)) / 2 + var(--gutter)));
+    --n: 1;
+    --peek: 58px;
+    /* n whole cards plus a visible slice of the next; never taller than the screen can hold */
+    --card-w: clamp(
+      200px,
+      calc((100cqw - var(--pad) - var(--n) * var(--xp-gap) - var(--peek)) / var(--n)),
+      min(400px, calc((100svh - 150px) * 0.75))
+    );
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--pad);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .xp__scroller::-webkit-scrollbar {
+    display: none;
+  }
+  @media (min-width: 600px) {
+    .xp__scroller {
+      --n: 2;
+      --peek: 64px;
+    }
+  }
+  @media (min-width: 900px) {
+    .xp__scroller {
+      --n: 3;
+      --peek: 72px;
+    }
+  }
+  @media (min-width: 1200px) {
+    .xp__scroller {
+      --n: 4;
+      --peek: 76px;
+    }
+  }
+  .xp__track {
+    display: flex;
+    gap: var(--xp-gap);
+    width: max-content;
+    /* room above and below so the cards' soft shadows are not cut by the scroller */
+    padding: 10px var(--pad) 44px;
+  }
+  .xp-card {
+    scroll-snap-align: start;
+  }
+  /* mouse dragging (set by the script): the row follows the hand, snapping waits until it is released */
+  @media (hover: hover) and (pointer: fine) {
+    html.js .xp__scroller {
+      cursor: grab;
+    }
+  }
+  .xp__rail.is-dragging .xp__scroller {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    cursor: grabbing;
+    user-select: none;
+  }
+  .xp__rail.is-dragging .xp-card__hit {
+    cursor: grabbing;
+  }
+  /* entrance: once, staggered across the cards that are on screen; the rest are simply there when reached */
+  .js-motion .xp__rail .xp-card {
+    opacity: 0;
+    transform: translateY(22px);
+    /* if the script never runs, the cards still appear */
+    animation: xp-failsafe 1ms linear 4s forwards;
+  }
+  .js-motion .xp__rail.is-in .xp-card {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition:
+      opacity 750ms cubic-bezier(0.2, 0.75, 0.25, 1),
+      transform 750ms cubic-bezier(0.2, 0.75, 0.25, 1);
+    transition-delay: calc(min(var(--i), 5) * 100ms);
+  }
+  .js-motion .xp__rail .xp__controls {
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out) 420ms;
+  }
+  .js-motion .xp__rail.is-in .xp__controls {
+    opacity: 1;
+  }
+  @keyframes xp-failsafe {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .xp__plain {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 28px 32px;
+    padding-block: 8px 24px;
+  }
+  .xp__plain h2 {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  .xp__plain li {
+    color: var(--muted);
+  }
+  .xp__plain .note {
+    grid-column: 1 / -1;
+  }
+</style>
