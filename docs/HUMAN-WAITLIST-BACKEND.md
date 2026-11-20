@@ -98,10 +98,11 @@ choose the *Preview* environment only:
 | `SUPABASE_SECRET_KEY` | **Secret** (encrypted) | the project's secret key, typed into Cloudflare only |
 
 Then:
-1. Pages → Settings → General → enable the **Access policy** for preview deployments, limited to the founders'
-   email addresses. Do this before the first preview is built.
-2. Push a branch (for example `waitlist-test`). Cloudflare builds a preview at `waitlist-test.<project>.pages.dev`.
-3. The waitlist header on that site reads "Private test — what you enter is saved".
+1. Push a branch (for example `waitlist-test`). Cloudflare builds a preview at `waitlist-test.<project>.pages.dev`.
+2. The waitlist header on that site reads "Private test — what you enter is saved".
+3. **The preview address has no login.** While `WAITLIST_ENABLED` is `true` there, anyone who has that address can
+   submit, within the function's validation and rate limits. Keep it on only for the length of the test, do not
+   share the preview address, and remove `WAITLIST_ENABLED` (then redeploy) as soon as the test is done.
 
 Never give `SUPABASE_SECRET_KEY` a name starting with `PUBLIC_`, never set it as plaintext, and never put it in
 `.env`, `.dev.vars` or any file in this repository.
