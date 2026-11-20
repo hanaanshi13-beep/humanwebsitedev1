@@ -23,3 +23,9 @@ exports/
 /HUMAN-For-Him.html
 /explore-plans.html
 !.env.example
+/about.html
+/faq.html
+/privacy.html
+/terms.html
+/medical-disclaimer.html
+/404.html
