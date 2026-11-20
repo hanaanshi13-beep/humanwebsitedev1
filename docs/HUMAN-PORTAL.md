@@ -61,11 +61,11 @@ Responses the page understands (HTTP 200 with JSON):
 - `{"status":"duplicate","userFacingMessage":"…"}` → a neutral notice on Chapter 04. The page never says whether an address is already registered.
 - anything else, a non-200, or no response within 15 seconds → a recoverable error; every value stays in the form.
 
-The server must do its own validation, de-duplication (by normalised email and by idempotency key), rate limiting and access control. The storage record should add a registration ID and server-side created/consent timestamps. To switch the portal on, set `PUBLIC_WAITLIST_ENDPOINT` at build time; never put service keys in front-end code.
+The server must do its own validation, de-duplication (by normalised email and by idempotency key), rate limiting and access control. The storage record should add a registration ID and server-side created/consent timestamps. To switch the portal on (private development only), set `PUBLIC_WAITLIST_MODE=live` and `PUBLIC_WAITLIST_ENDPOINT` at build time; never put service keys in front-end code.
 
 ## Launch prerequisites (none of these are done)
 
-1. **Approved Privacy Notice.** `/privacy` is a draft marked as such. The consent line links to it; `PRIVACY_NOTICE_VERSION` is `draft-unapproved` and must be replaced with the approved version label.
+1. **Approved Privacy Policy.** `/privacy` is an interim prototype notice. The consent line links to it; `PRIVACY_NOTICE_VERSION` is `interim-2026-11-20` and must be replaced with the approved version label.
 2. **Backend** implementing the contract above, tested against the real page (the current tests use a stub).
 3. **Legal review for India (DPDP Act 2023)** of what is collected. Health interests, age group and gender are optional but can be sensitive in combination with contact details: decide retention period, who can access them, and how a deletion or correction request is handled, before collecting anything.
 4. **Consent scope.** The checkbox covers waitlist and launch updates only. An optional mobile number does not authorise calls, SMS or WhatsApp marketing; a separate, explicit consent is needed for that.

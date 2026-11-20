@@ -9,6 +9,7 @@ type Manifest = {
   fallback: Visual;
   motion: { chapterOut: number; bloodwork: Record<string, number>; finale: number };
   privacyVersion: string;
+  demoNotice: { title: string; body: string };
 };
 
 export type Draft = {
@@ -77,7 +78,7 @@ export function createPortal(root: HTMLElement) {
   let busy = false; // a chapter transition is playing
   let submitting = false;
   let accepted = false; // set only by an authoritative accepted response
-  let previewDemo = false; // preview build only: the visitor chose to look at the closing chapter
+  let previewDemo = false; // demonstration only: the journey was completed with nothing sent
   let idempotencyKey = '';
 
   // ------------------------------------------------------------------ images
@@ -386,15 +387,17 @@ export function createPortal(root: HTMLElement) {
   const notice = $('[data-notice]');
   const submitBtn = $<HTMLButtonElement>('[data-submit]');
   const submitLabel = $('[data-submit-label]');
-  const demoBtn = $<HTMLButtonElement>('[data-demo]');
-  function showNotice(title: string, body: string, kind: 'info' | 'error' = 'info', demo = false) {
+  function showNotice(title: string, body: string, kind: 'info' | 'error' = 'info') {
     notice.dataset.kind = kind;
     $('[data-notice-title]').textContent = title;
     $('[data-notice-body]').textContent = body;
-    demoBtn.hidden = !demo;
     notice.classList.add('is-on');
   }
-  const hideNotice = () => notice.classList.remove('is-on');
+  // In a demonstration the standing notice never goes away: clearing a message puts it back.
+  const hideNotice = () => {
+    if (endpoint()) notice.classList.remove('is-on');
+    else showNotice(M.demoNotice.title, M.demoNotice.body);
+  };
 
   async function submit() {
     if (submitting || accepted) return; // a second press while sending does nothing
@@ -405,14 +408,11 @@ export function createPortal(root: HTMLElement) {
     draft.waitlistConsent = true;
 
     if (!endpoint()) {
-      // Preview: nothing is sent or stored, and nobody is registered.
-      showNotice(
-        'Preview — not accepting registrations yet.',
-        'Nothing has been sent or saved, and you have not been added to a list. Registration opens once the privacy notice and the systems behind it are approved.',
-        'info',
-        true,
-      );
-      notice.focus({ preventScroll: false });
+      // Demonstration: no request is made, nothing is stored, nobody is registered. The closing chapter is shown
+      // so the whole journey can be seen, and it carries its own "Demonstration" label.
+      previewDemo = true;
+      readChapter2();
+      await go(5, { push: true });
       return;
     }
 
@@ -488,12 +488,6 @@ export function createPortal(root: HTMLElement) {
       void go(chapter - 1, { push: true }); // everything typed stays in the fields
     }),
   );
-  demoBtn.addEventListener('click', () => {
-    if (endpoint()) return; // preview builds only
-    previewDemo = true;
-    readChapter2();
-    void go(5, { push: true });
-  });
   // Browser Back/Forward moves between chapters already opened; the Finale never comes back by history alone.
   window.addEventListener('popstate', (e) => {
     if (submitting) return;

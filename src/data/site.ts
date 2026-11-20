@@ -14,12 +14,19 @@ export const LEGAL = [
   { href: '/medical-disclaimer', label: 'Medical disclaimer' },
 ];
 
-// PENDING: no verified public contact address yet. Leave null until a founder confirms one.
-export const CONTACT_EMAIL: string | null = null;
+// Official contact addresses (founder-confirmed 2026-11-20). No legal entity, postal address, phone number or
+// grievance officer is published: none has been confirmed.
+export const CONTACT_EMAIL = 'hello@humanforlife.in'; // general enquiries
+export const PRIVACY_EMAIL = 'privacy@humanforlife.in'; // privacy and data-related enquiries
 
-// Waitlist backend. Empty string = preview mode (no network request is ever made).
-// Only set after legal + backend approval (docs/HUMAN-RELEASE-GATES.md).
-export const WAITLIST_ENDPOINT: string = import.meta.env.PUBLIC_WAITLIST_ENDPOINT ?? '';
+// Waitlist. The investor-facing build runs in DEMONSTRATION mode: the five chapters play in full, nothing typed
+// into them leaves the browser, and no request is made. Sending is possible only in a private development build
+// that sets BOTH variables below (see docs/HUMAN-HOSTING.md). A hosted investor build must set neither.
+//   PUBLIC_WAITLIST_MODE=live        an explicit switch, so an endpoint left in an environment cannot go live by itself
+//   PUBLIC_WAITLIST_ENDPOINT=https…  the development endpoint that implements docs/HUMAN-PORTAL.md
+const endpoint: string = import.meta.env.PUBLIC_WAITLIST_ENDPOINT ?? '';
+export const WAITLIST_LIVE: boolean = import.meta.env.PUBLIC_WAITLIST_MODE === 'live' && endpoint !== '';
+export const WAITLIST_ENDPOINT: string = WAITLIST_LIVE ? endpoint : '';
 
 export const STAGES = [
   {

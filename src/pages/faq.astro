@@ -6,6 +6,7 @@ import PageIntro from '../components/info/PageIntro.astro';
 import PlansCta from '../components/plans/PlansCta.astro';
 import { FAQ } from '../data/faq';
 import { rich } from '../data/rich';
+import { CONTACT_EMAIL } from '../data/site';
 ---
 
 <Base
@@ -57,6 +58,9 @@ import { rich } from '../data/rich';
           </section>
         ))
       }
+      <p class="fq__more">
+        Have another question? Write to <a class="text-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+      </p>
     </div>
   </section>
 
@@ -289,6 +293,17 @@ import { rich } from '../data/rich';
       grid-template-rows 320ms var(--ease-human),
       opacity 220ms var(--ease-human),
       visibility 0s linear 320ms;
+  }
+  /* further questions: one quiet line under the list, aligned with it */
+  .fq__more {
+    margin-top: clamp(22px, 2.6vw, 34px);
+    font-size: var(--fs-small);
+    color: var(--muted);
+  }
+  @media (min-width: 900px) {
+    .fq__more {
+      margin-left: calc((100% + var(--col-gap)) / 3);
+    }
   }
   /* changing category: the new list arrives with a short fade */
   html.js-motion .fq__panel.is-active {

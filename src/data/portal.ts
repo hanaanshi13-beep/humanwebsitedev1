@@ -63,5 +63,11 @@ export const MOTION = {
   finale: 1700,
 } as const;
 
-/** Version label recorded with consent. The notice itself is still a draft: a launch prerequisite. */
-export const PRIVACY_NOTICE_VERSION = 'draft-unapproved';
+/** Version label recorded with consent in a live (development) build. The published notice is interim. */
+export const PRIVACY_NOTICE_VERSION = 'interim-2026-11-20';
+
+/** Shown on Chapter 04 for as long as the portal is a demonstration (no endpoint): before anything is typed. */
+export const DEMO_NOTICE = {
+  title: 'This is a demonstration.',
+  body: 'Please use fictional details. Nothing you enter is sent or stored, and completing it does not register you.',
+} as const;

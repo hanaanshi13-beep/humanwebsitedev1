@@ -21,5 +21,8 @@
 - [ ] Safari, Firefox, real iOS/Android, screen reader and Lighthouse runs.
 - [ ] Explicit founder approval to deploy and to collect data.
 
-## How the waitlist goes live (when approved)
-Set `PUBLIC_WAITLIST_ENDPOINT` at build time. The client then POSTs JSON once, with an `Idempotency-Key` header, and shows Success only for `{ "status": "accepted", "registrationId": "…" }`. With the variable empty (today) no request is ever made.
+## Waitlist modes
+The investor-facing build is a **demonstration**: no request is made and nothing is stored. Sending needs both
+`PUBLIC_WAITLIST_MODE=live` and `PUBLIC_WAITLIST_ENDPOINT` at build time (private development only). In a live build
+the client POSTs JSON once, with an `Idempotency-Key` header, and shows the closing chapter only for
+`{ "status": "accepted" }`. See `docs/HUMAN-HOSTING.md` and `docs/HUMAN-PORTAL.md`.

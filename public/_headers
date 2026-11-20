@@ -1,0 +1,7 @@
+# Applied by Cloudflare Pages to every response. The site is a private, pre-launch prototype:
+# it must not be indexed, and it should not be framed by other sites.
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin

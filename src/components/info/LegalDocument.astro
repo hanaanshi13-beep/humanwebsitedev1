@@ -51,13 +51,6 @@ const sid = (i: number) => `${doc.id}-${nn(i)}`;
             {s.blocks.map((b) => {
               if ('p' in b) return <p set:html={rich(b.p)} />;
               if ('ul' in b) return <ul>{b.ul.map((li) => <li set:html={rich(li)} />)}</ul>;
-              if ('pending' in b)
-                return (
-                  <p class="lg__todo">
-                    <span class="lg__todo-label">To be confirmed before publication</span>
-                    <mark class="inf-pending">[{b.pending}]</mark>
-                  </p>
-                );
               if ('fields' in b)
                 return (
                   <dl class="lg__fields">
@@ -247,23 +240,6 @@ const sid = (i: number) => `${doc.id}-${nn(i)}`;
   }
   .lg__fields dd {
     margin: 0;
-  }
-  /* a passage that still has to be written from verified facts */
-  .lg__todo {
-    margin-top: 0.95em;
-    display: grid;
-    gap: 6px;
-  }
-  .lg__todo-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .lg__todo .inf-pending {
-    justify-self: start;
   }
   /* emergency information: easy to find, never alarming */
   .lg__urgent {

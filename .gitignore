@@ -22,3 +22,4 @@ exports/
 /men.html
 /HUMAN-For-Him.html
 /explore-plans.html
+!.env.example

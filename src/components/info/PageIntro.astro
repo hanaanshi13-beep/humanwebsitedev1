@@ -42,18 +42,7 @@ const { eyebrow, title, lede, id = 'page-title' } = Astro.props;
     max-width: 33em;
     color: var(--muted);
   }
-  /* a detail awaiting confirmation: visible to reviewers, impossible to mistake for final wording */
-  .inf-pending {
-    padding: 0.05em 0; /* no side padding: a wrapped placeholder must never push past the line */
-    border-radius: 3px;
-    background: rgba(217, 166, 72, 0.2);
-    box-shadow: inset 0 0 0 1px rgba(138, 95, 10, 0.28);
-    color: inherit;
-    font-style: normal;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-  }
-  /* review-build flag for documents that are not yet approved */
+  /* status label for the interim notices */
   .inf__draft {
     display: inline-flex;
     align-items: center;

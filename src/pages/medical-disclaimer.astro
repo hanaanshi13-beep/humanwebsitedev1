@@ -1,19 +1,20 @@
 ---
 // Medical Disclaimer: one uninterrupted reading page, eight sections, all visible. No accordion, no promotion.
-// DRAFT: not medically or legally approved (see docs/HUMAN-LEGAL-REVIEW-REGISTER.md).
+// An INTERIM PROTOTYPE NOTICE: not medically or legally reviewed (see data/legal/types.ts).
 import Base from '../layouts/Base.astro';
 import PageIntro from '../components/info/PageIntro.astro';
 import LegalDocument from '../components/info/LegalDocument.astro';
 import { DISCLAIMER } from '../data/legal/disclaimer';
+import { INTERIM_FLAG } from '../data/legal/types';
 ---
 
 <Base
   title="Medical Disclaimer | HUMAN"
-  description="What HUMAN can and cannot do: website information is educational, blood tests have limits, and HUMAN does not replace a qualified medical professional. Draft for review."
+  description="HUMAN is in development. This website is informational and illustrative: it does not provide medical diagnosis, treatment or individual medical advice."
 >
   <div class="on-light">
     <PageIntro eyebrow="HUMAN" title="Medical Disclaimer" id="md-title">
-      <p class="inf__draft" role="note">Draft for review — not approved for publication</p>
+      <p class="inf__draft" role="note">{INTERIM_FLAG}</p>
     </PageIntro>
     <LegalDocument doc={DISCLAIMER} headingTag="p" />
   </div>

@@ -1,11 +1,12 @@
 ---
 // /waitlist — HUMAN PORTAL. Five chapters in one page: Opening, Individual, Discovery, Invitation, Finale.
-// PREVIEW MODE: with no approved endpoint configured, no network request is made and nobody is registered.
-// The Finale is shown for real only after the backend answers `accepted`.
+// DEMONSTRATION MODE (the investor-facing build): the journey plays in full, no network request is made, nothing
+// is stored and nobody is registered; every chapter says so. Only a private development build with an endpoint
+// sends anything, and there the Finale is shown only after the backend answers `accepted`.
 import Base from '../layouts/Base.astro';
 import { getImage } from 'astro:assets';
 import { WAITLIST_ENDPOINT } from '../data/site';
-import { CHAPTERS, AGE_GROUPS, GENDERS, SELF_DESCRIBE, INTERESTS, DEFAULT_VISUAL, ASSETS, MOTION, PRIVACY_NOTICE_VERSION, type AssetId } from '../data/portal';
+import { CHAPTERS, AGE_GROUPS, GENDERS, SELF_DESCRIBE, INTERESTS, DEFAULT_VISUAL, ASSETS, MOTION, PRIVACY_NOTICE_VERSION, DEMO_NOTICE, type AssetId } from '../data/portal';
 
 const live = WAITLIST_ENDPOINT !== '';
 const files = import.meta.glob<{ default: ImageMetadata }>('../assets/portal/originals/*.{webp,png}', { eager: true });
@@ -25,13 +26,14 @@ const manifest = {
   fallback: DEFAULT_VISUAL,
   motion: MOTION,
   privacyVersion: PRIVACY_NOTICE_VERSION,
+  demoNotice: DEMO_NOTICE,
 };
 const ch = (n: number) => CHAPTERS[n - 1];
 ---
 
 <Base
   title="HUMAN Portal — join the waitlist"
-  description="Register your interest in HUMAN, a preventive-health brand in development. Preview: registrations are not being accepted yet."
+  description="A demonstration of the HUMAN waitlist journey. HUMAN is in development: nothing entered here is sent or stored, and no registration is made."
   chrome={false}
   bodyClass="hp-body"
 >
@@ -39,7 +41,7 @@ const ch = (n: number) => CHAPTERS[n - 1];
   <div class="hp" data-hp data-endpoint={WAITLIST_ENDPOINT} data-chapter="1" data-manifest={JSON.stringify(manifest)}>
     <header class="hp__top">
       <a class="hp__mark" href="/" aria-label="HUMAN — home">HUMAN</a>
-      <p class="hp__mode">{live ? 'Waitlist' : 'Preview — registrations are not being accepted yet'}</p>
+      <p class="hp__mode">{live ? 'Waitlist' : 'Demonstration — nothing you enter is sent or stored'}</p>
       <div class="hp__where">
         <p class="hp__count" aria-live="polite"><span class="vh">Chapter </span><span data-count>01</span> / 05</p>
         <ol class="hp__bar" aria-hidden="true">
@@ -63,7 +65,7 @@ const ch = (n: number) => CHAPTERS[n - 1];
         <p class="hp__micro" data-r style="--d:1450ms">A little about you. A new perspective on health.</p>
         <noscript>
           <p class="hp__notice is-on">
-            The portal needs JavaScript. Registrations are not being accepted yet, so you are not missing a way to join.
+            The portal needs JavaScript. It is a demonstration: registrations are not being accepted, so you are not missing a way to join.
             <a href="/">Return to HUMAN</a>
           </p>
         </noscript>
@@ -196,16 +198,15 @@ const ch = (n: number) => CHAPTERS[n - 1];
             <input id="hp-consent" name="waitlistConsent" type="checkbox" required aria-describedby="hp-consent-err" />
             <span>
               I agree to receive HUMAN waitlist and launch updates and acknowledge the
-              <a href="/privacy" target="_blank" rel="noopener">Privacy Notice<span class="vh"> (draft, opens in a new tab)</span></a>.
+              <a href="/privacy" target="_blank" rel="noopener">Privacy Policy<span class="vh"> (opens in a new tab)</span></a>.
             </span>
           </label>
           <p class="hp__err" id="hp-consent-err" aria-live="polite"></p>
         </div>
 
-        <div class="hp__notice" data-notice role="status" aria-live="polite" tabindex="-1">
-          <strong data-notice-title></strong>
-          <span data-notice-body></span>
-          <button type="button" class="hp-back hp__demo" data-demo hidden>See the closing chapter (preview only) <span class="hp-arr" aria-hidden="true"></span></button>
+        <div class:list={['hp__notice', { 'is-on': !live }]} data-notice role="status" aria-live="polite" tabindex="-1">
+          <strong data-notice-title>{live ? '' : DEMO_NOTICE.title}</strong>
+          <span data-notice-body>{live ? '' : DEMO_NOTICE.body}</span>
         </div>
 
         <div class="hp__acts" data-r style="--d:860ms">
@@ -223,7 +224,7 @@ const ch = (n: number) => CHAPTERS[n - 1];
       <div class="hp5__art"><img {...pic('A13')} sizes="100vw" alt={img.A13.alt} decoding="async" /></div>
       <div class="hp5__shade" aria-hidden="true"></div>
       <div class="hp5__copy">
-        <p class="hp5__preview" data-preview-flag hidden>Preview of the closing chapter. No registration was made.</p>
+        <p class="hp5__preview" data-preview-flag hidden>Demonstration — no registration was made</p>
         <h1 class="hp__h" id="hp-h-5" tabindex="-1">
           <span class="hp__mask"><span class="hp__l1" style="--d:1100ms">{ch(5).l1}</span></span>
           <span class="hp__mask"><span class="hp__l2" style="--d:1320ms">{ch(5).l2}</span></span>
@@ -801,12 +802,6 @@ const ch = (n: number) => CHAPTERS[n - 1];
   .hp__notice strong {
     display: block;
     font-weight: 700;
-  }
-  .hp__demo {
-    margin-top: 6px;
-    padding: 0;
-    text-decoration: underline;
-    text-underline-offset: 4px;
   }
 
   /* ---- 01 opening ---- */

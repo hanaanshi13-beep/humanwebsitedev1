@@ -2,12 +2,13 @@
 // Privacy & Terms: two documents in one reading layout, chosen with two tabs.
 // /privacy and /terms are both real pages that render this component with their own document showing, so direct
 // links, bookmarks, the footer and Back/Forward all behave. With scripting the tabs switch in place.
-// Both documents are DRAFTS: flagged on the page, not indexed, and not approved for publication.
+// Both are INTERIM PROTOTYPE NOTICES: labelled as such on the page and not indexed (see data/legal/types.ts).
 import Base from '../../layouts/Base.astro';
 import PageIntro from './PageIntro.astro';
 import LegalDocument from './LegalDocument.astro';
 import { PRIVACY } from '../../data/legal/privacy';
 import { TERMS } from '../../data/legal/terms';
+import { INTERIM_FLAG } from '../../data/legal/types';
 
 interface Props {
   active: 'privacy' | 'terms';
@@ -23,12 +24,12 @@ const current = docs.find((d) => d.doc.id === active)!;
 <Base
   title={current.title}
   description={active === 'privacy'
-    ? 'How HUMAN handles the information you share when you visit the website or join the waitlist. Draft for review; HUMAN is currently in development.'
-    : 'What you can expect from the HUMAN website and what we ask of you when you use it. Draft for review; HUMAN is currently in development.'}
+    ? 'What this prototype website does, and does not do, with information. An interim notice; HUMAN is currently in development.'
+    : 'What this prototype website is and what you can expect from it. An interim notice; HUMAN is currently in development.'}
 >
   <div class="lgp on-light" data-legal={active}>
     <PageIntro eyebrow="HUMAN" title="Privacy & Terms." lede="Understanding how we handle your information and what you can expect when using HUMAN." id="legal-title">
-      <p class="inf__draft" role="note">Draft for review — not approved for publication</p>
+      <p class="inf__draft" role="note">{INTERIM_FLAG}</p>
     </PageIntro>
 
     <div class="wrap">
