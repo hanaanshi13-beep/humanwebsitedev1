@@ -19,7 +19,7 @@ their placeholders) are in git history at commit 7cba72d and are the starting po
 | No cookies, no analytics or advertising tools, no third-party content | tests `NO-TRACKERS`, `HP-10`; built pages contain no external URL |
 | The host may process IP address, browser type and pages requested | True of any web host. **Re-check against the chosen host's own logging and analytics settings before going live** |
 | Email sent to us is received and used to reply | hello@ and privacy@humanforlife.in, founder-confirmed |
-| A private development environment is tested separately with test information | Founder-provided (a Supabase project). Nothing in this repository connects to it |
+| A private development environment is tested separately with test information | A Supabase project, reached only by the `/api/waitlist` function, which is off by default and not used by the investor build (`docs/HUMAN-WAITLIST-BACKEND.md`) |
 | 112 is India's national emergency number | Government of India ERSS (112.gov.in) and PIB describe 112 as the pan-India single emergency number. Checked through search results for those official sites; the pages themselves could not be opened from the build environment. **Re-verify before any public launch** |
 
 ## B. Deliberately not stated (nothing confirmed)
@@ -29,7 +29,8 @@ security measures, retention periods, hosting or storage location, any complianc
 
 ## C. If any of these change, change the notice first
 
-- A live endpoint is set (`PUBLIC_WAITLIST_MODE=live`): the Privacy Policy's "demonstration" section becomes false.
+- A live build is made (`PUBLIC_WAITLIST_MODE=live` with the backend enabled): the Privacy Policy's "demonstration"
+  section is false for that build. Live builds are therefore private, founder-only and labelled "Private test".
 - Analytics, cookies, embedded third-party content or a contact form are added.
 - The host adds its own analytics or bot protection that sets cookies.
 

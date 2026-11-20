@@ -35,7 +35,7 @@ Built with the site's existing Astro + TypeScript stack. Transitions use the bro
 
 Web derivatives are WebP at the supplied width or smaller (two sizes each). Only A01 is preloaded; the next chapter's images are fetched and decoded while the visitor is on the current one. If the transition images are not decoded in time, the passage falls back to a plain dissolve.
 
-## Backend contract (to be built)
+## Backend contract (implemented in `server/waitlist-core.ts`; see `docs/HUMAN-WAITLIST-BACKEND.md`)
 
 `POST {PUBLIC_WAITLIST_ENDPOINT}` with header `Idempotency-Key: <uuid>` and JSON body:
 

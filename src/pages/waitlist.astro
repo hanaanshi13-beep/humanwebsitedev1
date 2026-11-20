@@ -2,7 +2,8 @@
 // /waitlist — HUMAN PORTAL. Five chapters in one page: Opening, Individual, Discovery, Invitation, Finale.
 // DEMONSTRATION MODE (the investor-facing build): the journey plays in full, no network request is made, nothing
 // is stored and nobody is registered; every chapter says so. Only a private development build with an endpoint
-// sends anything, and there the Finale is shown only after the backend answers `accepted`.
+// sends anything (to /api/waitlist, see server/waitlist-core.ts); it is labelled as a private test, and there the
+// Finale is shown only after the backend answers `accepted`.
 import Base from '../layouts/Base.astro';
 import { getImage } from 'astro:assets';
 import { WAITLIST_ENDPOINT } from '../data/site';
@@ -41,7 +42,7 @@ const ch = (n: number) => CHAPTERS[n - 1];
   <div class="hp" data-hp data-endpoint={WAITLIST_ENDPOINT} data-chapter="1" data-manifest={JSON.stringify(manifest)}>
     <header class="hp__top">
       <a class="hp__mark" href="/" aria-label="HUMAN — home">HUMAN</a>
-      <p class="hp__mode">{live ? 'Waitlist' : 'Demonstration — nothing you enter is sent or stored'}</p>
+      <p class="hp__mode">{live ? 'Private test — what you enter is saved' : 'Demonstration — nothing you enter is sent or stored'}</p>
       <div class="hp__where">
         <p class="hp__count" aria-live="polite"><span class="vh">Chapter </span><span data-count>01</span> / 05</p>
         <ol class="hp__bar" aria-hidden="true">

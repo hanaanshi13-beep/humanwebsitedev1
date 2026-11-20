@@ -1,0 +1,5 @@
+# Local testing of the /api/waitlist function with `wrangler pages dev`. Copy to .dev.vars (which git ignores).
+# Use a TEST project or the local mock (tests/waitlist-live.mjs). Never commit a real key.
+WAITLIST_ENABLED=true
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SECRET_KEY=<never commit this>

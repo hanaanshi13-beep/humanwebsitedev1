@@ -30,3 +30,6 @@ exports/
 /medical-disclaimer.html
 /404.html
 /HUMAN-website.html
+.dev.vars
+.wrangler/
+!.dev.vars.example

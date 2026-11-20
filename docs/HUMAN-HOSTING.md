@@ -4,8 +4,9 @@
 
 ## What is being hosted
 
-A fully static website: Astro 5 builds plain HTML, CSS, JavaScript and images into `dist/`. There is no server,
-no database connection and no API route. Any static host can serve it.
+A static website: Astro 5 builds plain HTML, CSS, JavaScript and images into `dist/`. Any static host can serve
+it. One optional server function, `/api/waitlist`, exists for private testing of real registrations; it runs only
+on Cloudflare Pages, is off by default, and the investor-facing site never calls it.
 
 | Setting | Value |
 |---|---|
@@ -16,17 +17,20 @@ no database connection and no API route. Any static host can serve it.
 
 ## Environment variables
 
-| Variable | Investor-facing build | Private development build |
+**The investor-facing website needs none.** Set nothing and the waitlist is a demonstration.
+
+| Variable | Investor-facing site | Private test site |
 |---|---|---|
 | `PUBLIC_WAITLIST_MODE` | **not set** | `live` |
-| `PUBLIC_WAITLIST_ENDPOINT` | **not set** | URL of the development endpoint |
+| `PUBLIC_WAITLIST_ENDPOINT` | **not set** | `/api/waitlist` |
+| `WAITLIST_ENABLED` | **not set** | `true` |
+| `SUPABASE_URL` | **not set** | the project's address |
+| `SUPABASE_SECRET_KEY` | **not set** | the secret key, as an encrypted Secret |
 | `NODE_VERSION` | `22` (only if the host ignores `.nvmrc`) | `22` |
 
-- With neither waitlist variable set, the waitlist is a **demonstration**: no request is made and nothing is stored.
-- Sending needs **both** variables. An endpoint alone does nothing.
-- Variables that begin with `PUBLIC_` are written into the pages visitors download. **Never** put a private key in
-  one (for example a Supabase `service_role` or secret key). The website itself needs no secret of any kind.
-- No Supabase code, URL or key exists in this repository. The founders' Supabase project is separate and untouched.
+- Sending needs the two `PUBLIC_` variables **and** `WAITLIST_ENABLED=true`. Any one missing: nothing is stored.
+- Variables that begin with `PUBLIC_` are written into the pages visitors download. **Never** put a key in one.
+- The backend, its variables and the private test set-up: `docs/HUMAN-WAITLIST-BACKEND.md`.
 
 ## Indexing
 
