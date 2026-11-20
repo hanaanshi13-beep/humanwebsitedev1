@@ -56,29 +56,37 @@ their email address, receives a one-time code and is let in. No shared password;
 3. Environment variables: leave the two waitlist variables **unset**. Add `NODE_VERSION=22` if the build log shows
    an older Node.
 4. Deploy. The site appears at `<project>.pages.dev`.
-5. Zero Trust → Access → Applications → Add → Self-hosted. Add **both** the custom domain and the `pages.dev`
-   address, with a policy that allows only the listed email addresses. Until this step is done the `pages.dev`
-   address is open to anyone who has it.
+5. Immediately afterwards: Zero Trust → Access → Applications → Add → Self-hosted. Add the `<project>.pages.dev`
+   address with a policy that allows only the listed email addresses (login by one-time code). Until this is done
+   the address is open to anyone who has it.
+6. Pages project → Settings → General → enable the **Access policy** for preview deployments, so branch previews
+   (including the private waitlist test site) also ask for a login.
+7. Check both in a private browser window: each must ask for an email before showing the site.
 
 ### Connect humanforlife.in
 
-Check first where the domain's DNS is managed, because **hello@ and privacy@ depend on its mail records**.
+**Simplest and safest for investor presentations: do not connect the domain yet.** Share the Access-protected
+`<project>.pages.dev` address. Nothing about the domain or its email changes.
 
-**Option A (recommended): a subdomain, for example `preview.humanforlife.in`.** Email is not touched.
-1. Pages project → Custom domains → Set up a custom domain → `preview.humanforlife.in`.
-2. At the current DNS provider add the record Cloudflare shows: `CNAME preview → <project>.pages.dev`.
-3. Wait for Cloudflare to show the domain as Active (the certificate is issued automatically).
-4. Add `preview.humanforlife.in` to the Access application.
+Connecting the domain *with* private access needs care, because **hello@ and privacy@ depend on the domain's mail
+records**, and because Cloudflare Access protects a custom address only when the domain's DNS is managed by
+Cloudflare. (If `humanforlife.in` does not appear in the Access domain list, this is why.) A plain CNAME from another
+DNS provider would serve the site on the domain **without** the Access login in front of it. Do not do that for a
+private prototype.
 
-**Option B: the main domain `humanforlife.in`.** This requires the domain's nameservers to move to Cloudflare.
-1. Cloudflare → Add a site → `humanforlife.in` (Free plan). Cloudflare imports the existing DNS records.
-2. **Before changing nameservers**, compare the imported records with the current provider's list and confirm every
-   mail record is present: all `MX` records, the SPF `TXT` record, DKIM `TXT`/`CNAME` records and any DMARC record.
-   A missing record stops email.
-3. At the registrar, replace the nameservers with the two Cloudflare gives.
-4. When the zone is Active: Pages project → Custom domains → add `humanforlife.in` and `www.humanforlife.in`.
-5. Add both to the Access application.
-6. Send a test email to and from hello@humanforlife.in.
+**To put the site on humanforlife.in behind Access (moves the domain's DNS to Cloudflare):**
+1. At the current DNS provider, list or export every existing record. Keep this list.
+2. Cloudflare → Add a site → `humanforlife.in` (Free plan). Cloudflare imports the records it can find.
+3. **Before changing nameservers**, compare Cloudflare's list with yours and add anything missing. Mail needs all of:
+   every `MX` record, the SPF record (`TXT` starting `v=spf1`), every DKIM record (names containing `_domainkey`),
+   the DMARC record (`_dmarc`), and any verification `TXT` record from the email provider.
+   Set mail-related `CNAME` records to "DNS only" (grey cloud). A missing record stops email.
+4. At the registrar, replace the nameservers with the two Cloudflare gives. The change can take up to a day; the old
+   provider keeps answering in the meantime.
+5. When Cloudflare shows the zone as Active: send a test email to and from hello@humanforlife.in **before** going on.
+6. Pages project → Custom domains → add the address to use (for example `preview.humanforlife.in`, or
+   `humanforlife.in` and `www.humanforlife.in`). Cloudflare creates the record and the certificate.
+7. Add that address to the Access application, and confirm in a private browser window that it asks for a login.
 
 ### If Vercel is preferred
 
