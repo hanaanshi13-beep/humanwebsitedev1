@@ -2937,9 +2937,9 @@ await test('XP-13', 'Explore Plans: the new HUMAN for Him photograph is on the c
   await p.context().close();
 });
 
-await test('ZOOM', '200% text size at 390px: hero and waitlist grow vertically, no clipping or overflow', async () => {
+await test('ZOOM', '200% text size at 390px: hero, waitlist and the informational pages grow vertically, no clipping or overflow', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
-  for (const r of ['/', '/waitlist', '/faq']) {
+  for (const r of ['/', '/waitlist', '/faq', '/about', '/privacy', '/terms', '/medical-disclaimer', '/explore-plans']) {
     await go(p, r);
     await p.evaluate(() => (document.documentElement.style.fontSize = '200%'));
     await p.waitForTimeout(150);

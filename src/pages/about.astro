@@ -173,6 +173,7 @@ const principles = [
   .ab__h {
     margin-top: clamp(14px, 1.5vw, 20px);
     max-width: 13em;
+    overflow-wrap: break-word; /* enlarged text: a long word breaks rather than widen the page */
     font-family: var(--serif);
     font-style: italic;
     font-weight: 400;
@@ -219,6 +220,7 @@ const principles = [
   .ab-open__title {
     margin-top: clamp(14px, 1.6vw, 20px);
     max-width: 9.5em;
+    overflow-wrap: break-word;
     font-family: var(--serif);
     font-style: italic;
     font-weight: 400;
@@ -373,7 +375,7 @@ const principles = [
     text-align: center;
   }
   .ab-vision__h {
-    max-width: 12.5em;
+    max-width: min(12.5em, 100%); /* a centred item may not grow past the page at enlarged text sizes */
     font-size: clamp(2.375rem, 4.6vw, 4.25rem);
     line-height: 1.02;
   }
@@ -383,6 +385,7 @@ const principles = [
   }
 
   .ab-vision__contact {
+    overflow-wrap: anywhere;
     margin-top: clamp(22px, 2.4vw, 32px);
     font-size: var(--fs-small);
   }

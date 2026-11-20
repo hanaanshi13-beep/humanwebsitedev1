@@ -34,7 +34,7 @@ import { NAV, LEGAL, CONTACT_EMAIL } from '../data/site';
         </ul>
         {
           CONTACT_EMAIL && (
-            <p class="note" style="margin-top:16px">
+            <p class="note" style="margin-top:16px;overflow-wrap:anywhere">
               <a class="text-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             </p>
           )

@@ -128,10 +128,12 @@ const current = docs.find((d) => d.doc.id === active)!;
   }
   .lgp__tablist {
     display: inline-flex;
+    flex-wrap: wrap; /* at very large text sizes the two tabs stack rather than widen the page */
+    max-width: 100%;
     gap: 4px;
     padding: 4px;
     margin-bottom: clamp(14px, 1.6vw, 20px);
-    border-radius: var(--radius-pill);
+    border-radius: 28px; /* a full pill at one row; still soft if the tabs stack */
     border: 1px solid var(--glass-border);
     background: var(--glass-sheen), var(--glass-bg);
     background-clip: padding-box;

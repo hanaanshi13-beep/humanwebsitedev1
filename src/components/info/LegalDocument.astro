@@ -146,6 +146,7 @@ const sid = (i: number) => `${doc.id}-${nn(i)}`;
     letter-spacing: -0.01em;
     color: var(--text);
     text-wrap: balance;
+    overflow-wrap: break-word;
   }
   .lg__intro {
     margin-top: clamp(20px, 2.2vw, 30px);
@@ -185,7 +186,8 @@ const sid = (i: number) => `${doc.id}-${nn(i)}`;
   /* section titles are clear, not decorative: the site's sans, with a small amber number */
   .lg__h {
     display: grid;
-    grid-template-columns: auto auto 1fr;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    overflow-wrap: anywhere; /* enlarged text: a long word breaks rather than widen the page */
     column-gap: 0.55em;
     align-items: baseline;
     margin-bottom: clamp(12px, 1.4vw, 18px);
@@ -240,6 +242,7 @@ const sid = (i: number) => `${doc.id}-${nn(i)}`;
   }
   .lg__fields dd {
     margin: 0;
+    overflow-wrap: anywhere;
   }
   /* emergency information: easy to find, never alarming */
   .lg__urgent {

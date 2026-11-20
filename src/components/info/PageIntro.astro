@@ -29,6 +29,7 @@ const { eyebrow, title, lede, id = 'page-title' } = Astro.props;
   .inf__title {
     margin-top: clamp(14px, 1.6vw, 20px);
     max-width: 16em;
+    overflow-wrap: break-word;
     font-family: var(--serif);
     font-style: italic;
     font-weight: 400;
