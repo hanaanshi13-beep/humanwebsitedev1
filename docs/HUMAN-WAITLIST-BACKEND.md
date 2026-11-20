@@ -31,6 +31,9 @@ Tested: with the page switch off, the pages send nothing even if every server va
 
 ## What the function does, in order
 
+Before any of this, the site password gate (`docs/HUMAN-SITE-PASSWORD.md`) has already refused anyone who is not
+signed in: an unauthenticated request never reaches the function.
+
 1. `WAITLIST_ENABLED` is not exactly `true` → 503. Nothing is read.
 2. Not `POST` → 405. A browser preflight is answered with no permissions, so other websites cannot call it.
 3. The request did not come from this site's own pages (`Origin` must equal the site's own address) → 403.
@@ -85,6 +88,7 @@ built folder by hand does not include it, which is fine for the investor site.
 | `WAITLIST_ENABLED` | not set |
 | `SUPABASE_URL` | not set |
 | `SUPABASE_SECRET_KEY` | not set |
+| `SITE_PASSWORD` | Secret, 12+ characters (required: without it the site is closed) |
 
 **Preview environment = the private, founder-only test site.** In Pages → Settings → Variables and Secrets,
 choose the *Preview* environment only:
@@ -96,12 +100,13 @@ choose the *Preview* environment only:
 | `WAITLIST_ENABLED` | Plaintext | `true` |
 | `SUPABASE_URL` | Plaintext | `https://<project-ref>.supabase.co` |
 | `SUPABASE_SECRET_KEY` | **Secret** (encrypted) | the project's secret key, typed into Cloudflare only |
+| `SITE_PASSWORD` | **Secret** (encrypted) | the site password |
 
 Then:
-1. Pages → Settings → General → enable the **Access policy** for preview deployments, limited to the founders'
-   email addresses. Do this before the first preview is built.
+1. Make sure `SITE_PASSWORD` is also set as a Secret in the Preview environment (`docs/HUMAN-SITE-PASSWORD.md`).
+   Without it the preview stays closed. With it, the preview and its `/api/waitlist` are behind the password.
 2. Push a branch (for example `waitlist-test`). Cloudflare builds a preview at `waitlist-test.<project>.pages.dev`.
-3. The waitlist header on that site reads "Private test — what you enter is saved".
+3. Sign in. The waitlist header on that site reads "Private test — what you enter is saved".
 
 Never give `SUPABASE_SECRET_KEY` a name starting with `PUBLIC_`, never set it as plaintext, and never put it in
 `.env`, `.dev.vars` or any file in this repository.
