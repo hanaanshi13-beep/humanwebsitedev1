@@ -1,9 +1,6 @@
 // HUMAN waitlist backend — end-to-end checks in Cloudflare's local Pages runtime (workerd, via `wrangler pages dev`).
 // The real pages talk to the real function file (functions/api/waitlist.ts) exactly as they would on Cloudflare.
 //
-// The site's password gate (functions/_middleware.ts) is active throughout, as it will be on Cloudflare: the test
-// signs in with a made-up password first.
-//
 // THE DATABASE IS MOCKED. Supabase is replaced by a small local server on 127.0.0.1 that behaves like its REST API
 // (key check, unique email, unique idempotency key). No request leaves this machine and the key is a made-up string.
 //
@@ -24,7 +21,6 @@ const DEMO_DIR = process.env.DEMO_DIR || 'dist';
 const WRANGLER = (process.env.WRANGLER || 'npx wrangler@4').split(' ');
 if (!LIVE_DIR || !fs.existsSync(LIVE_DIR)) { console.error('Set LIVE_DIR to a build made with PUBLIC_WAITLIST_MODE=live PUBLIC_WAITLIST_ENDPOINT=/api/waitlist'); process.exit(2); }
 const FAKE_KEY = 'FAKE-TEST-KEY-not-a-real-secret';
-const GATE_PW = 'made-up-test-password-42'; // the site password gate is in front of everything, including /api
 const DB_PORT = 54329, SITE_PORT = 8791, SITE = `http://127.0.0.1:${SITE_PORT}`;
 
 // ---------- the stand-in for Supabase ----------
@@ -47,20 +43,15 @@ const mock = http.createServer((req, res) => {
 await new Promise((r) => mock.listen(DB_PORT, '127.0.0.1', r));
 
 // ---------- the site + function, in the Pages runtime ----------
-let site = null, siteLog = '', session = '';
-const signIn = async () => {
-  const r = await fetch(SITE + '/__human/login', { method: 'POST', redirect: 'manual', headers: { 'content-type': 'application/x-www-form-urlencoded', origin: SITE }, body: new URLSearchParams({ password: GATE_PW, next: '/' }) });
-  if (r.status !== 303) throw new Error('could not sign in to the test site: ' + r.status);
-  return (r.headers.get('set-cookie') || '').split(';')[0];
-};
+let site = null, siteLog = '';
 async function startSite(dir, vars) {
   await stopSite();
   siteLog = '';
-  const args = [...WRANGLER.slice(1), 'pages', 'dev', path.resolve(dir), '--port', String(SITE_PORT), '--ip', '127.0.0.1', '--compatibility-date', '2026-01-01', ...Object.entries({ SITE_PASSWORD: GATE_PW, ...vars }).flatMap(([k, v]) => ['-b', `${k}=${v}`])];
+  const args = [...WRANGLER.slice(1), 'pages', 'dev', path.resolve(dir), '--port', String(SITE_PORT), '--ip', '127.0.0.1', '--compatibility-date', '2026-01-01', ...Object.entries(vars).flatMap(([k, v]) => ['-b', `${k}=${v}`])];
   site = spawn(WRANGLER[0], args, { cwd: process.cwd(), env: { ...process.env, WRANGLER_SEND_METRICS: 'false', CI: '1', NO_COLOR: '1' }, detached: true });
   site.stdout.on('data', (d) => (siteLog += d)); site.stderr.on('data', (d) => (siteLog += d));
   for (let i = 0; i < 120; i++) {
-    try { await fetch(SITE + '/', { redirect: 'manual' }); session = await signIn(); return; } catch { /* not up yet */ }
+    try { const r = await fetch(SITE + '/robots.txt'); if (r.ok) return; } catch { /* not up yet */ }
     await new Promise((r) => setTimeout(r, 500));
   }
   throw new Error('the local Pages runtime did not start:\n' + siteLog.slice(-1500));
@@ -84,8 +75,6 @@ async function journey(email, { first = 'Asha' } = {}) {
   p.on('response', async (r) => { if (r.request().method() !== 'GET') responses.push({ status: r.status(), text: await r.text().catch(() => ''), headers: r.headers() }); });
   p.on('pageerror', (e) => errors.push(String(e)));
   await p.goto(SITE + '/waitlist', { waitUntil: 'networkidle' });
-  await p.fill('input[name=password]', GATE_PW); await p.click('button[type=submit]'); await p.waitForLoadState('networkidle'); // through the site gate
-  posts.length = 0; responses.length = 0;
   const label = await p.locator('.hp__mode').innerText();
   await p.locator('[data-begin]').click(); await settle(p, 2);
   await p.fill('[name=firstName]', first); await p.locator('#hp-age-1').check({ force: true }); await p.locator('#hp-gen-0').check({ force: true });
@@ -100,7 +89,7 @@ async function journey(email, { first = 'Asha' } = {}) {
   await ctx.close();
   return out;
 }
-const post = (body, headers = {}, method = 'POST') => fetch(SITE + '/api/waitlist', { method, headers: { 'content-type': 'application/json', origin: SITE, cookie: session, ...headers }, body: method === 'GET' ? undefined : typeof body === 'string' ? body : JSON.stringify(body) });
+const post = (body, headers = {}, method = 'POST') => fetch(SITE + '/api/waitlist', { method, headers: { 'content-type': 'application/json', origin: SITE, ...headers }, body: method === 'GET' ? undefined : typeof body === 'string' ? body : JSON.stringify(body) });
 const good = (email) => ({ firstName: 'Ravi', ageGroup: null, gender: null, genderSelfDescribed: null, interests: [], email, mobile: null, city: null, waitlistConsent: true, consentAt: new Date().toISOString(), privacyNoticeVersion: 'interim-2026-11-20' });
 
 try {
@@ -147,13 +136,9 @@ try {
   await test('A4 unauthorised requests: another site, no origin, other methods → refused; the function grants no cross-site permission', async () => {
     const before = db.rows.length;
     assert.equal((await post(good('x@example.com'), { origin: 'https://evil.example' })).status, 403);
-    assert.equal((await fetch(SITE + '/api/waitlist', { method: 'POST', headers: { 'content-type': 'application/json', cookie: session }, body: JSON.stringify(good('x@example.com')) })).status, 403);
-    // and without the site password nothing reaches the function at all
-    const calls = db.calls.length;
-    const shut = await fetch(SITE + '/api/waitlist', { method: 'POST', headers: { 'content-type': 'application/json', origin: SITE }, body: JSON.stringify(good('nopass@example.com')) });
-    assert.equal(shut.status, 401); assert.deepEqual(await shut.json(), { status: 'unauthorised' }); assert.equal(db.calls.length, calls);
+    assert.equal((await fetch(SITE + '/api/waitlist', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(good('x@example.com')) })).status, 403);
     assert.equal((await post(null, {}, 'GET')).status, 405);
-    const pre = await fetch(SITE + '/api/waitlist', { method: 'OPTIONS', headers: { cookie: session, origin: 'https://evil.example', 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } });
+    const pre = await fetch(SITE + '/api/waitlist', { method: 'OPTIONS', headers: { origin: 'https://evil.example', 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type' } });
     assert.equal(pre.headers.get('access-control-allow-origin'), null);
     assert.equal(db.rows.length, before);
   });
@@ -173,9 +158,9 @@ try {
     const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
     for (const dir of [LIVE_DIR, DEMO_DIR]) for (const f of walk(dir)) if (/\.(html|js|css|json|txt|map)$/.test(f) || path.basename(f).startsWith('_')) {
       const t = fs.readFileSync(f, 'utf8');
-      assert.ok(!t.includes(FAKE_KEY) && !t.includes(GATE_PW) && !/SUPABASE_SECRET_KEY|SITE_PASSWORD|sb_secret|service_role|supabase\.co/i.test(t), 'found in ' + f);
+      assert.ok(!t.includes(FAKE_KEY) && !/SUPABASE_SECRET_KEY|sb_secret|service_role|supabase\.co/i.test(t), 'found in ' + f);
     }
-    for (const u of ['/', '/waitlist/', '/api/waitlist']) for (const cookie of ['', session]) { const t = await (await fetch(SITE + u, { headers: { cookie } })).text(); assert.ok(!t.includes(FAKE_KEY) && !t.includes(GATE_PW), u); }
+    for (const u of ['/', '/waitlist', '/api/waitlist']) { const t = await (await fetch(SITE + u)).text(); assert.ok(!t.includes(FAKE_KEY), u); }
   });
 
   // ===== B. Same private build, backend left OFF (the default) =====

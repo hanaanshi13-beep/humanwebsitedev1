@@ -17,8 +17,7 @@ on Cloudflare Pages, is off by default, and the investor-facing site never calls
 
 ## Environment variables
 
-**The investor-facing website needs exactly one: `SITE_PASSWORD`.** Without it the site stays closed. Set no
-waitlist variable and the waitlist is a demonstration.
+**The investor-facing website needs none.** Set nothing and the waitlist is a demonstration.
 
 | Variable | Investor-facing site | Private test site |
 |---|---|---|
@@ -27,7 +26,6 @@ waitlist variable and the waitlist is a demonstration.
 | `WAITLIST_ENABLED` | **not set** | `true` |
 | `SUPABASE_URL` | **not set** | the project's address |
 | `SUPABASE_SECRET_KEY` | **not set** | the secret key, as an encrypted Secret |
-| `SITE_PASSWORD` | **required**, encrypted Secret, 12+ characters | **required**, encrypted Secret |
 | `NODE_VERSION` | `22` (only if the host ignores `.nvmrc`) | `22` |
 
 - Sending needs the two `PUBLIC_` variables **and** `WAITLIST_ENABLED=true`. Any one missing: nothing is stored.
@@ -41,46 +39,54 @@ Three layers keep the prototype out of search engines. Keep all three until laun
 1. `<meta name="robots" content="noindex, nofollow">` on every page (`src/layouts/Base.astro`).
 2. `public/robots.txt` disallows everything.
 3. `public/_headers` sends `X-Robots-Tag: noindex, nofollow` (Cloudflare Pages reads this file).
-4. The password gate answers every signed-out request with `X-Robots-Tag: noindex, nofollow` and no content.
 
-## Recommended host: Cloudflare Pages, behind the site password
+## Recommended host: Cloudflare Pages, behind Cloudflare Access
 
-Cloudflare Pages on the free plan. Private access is provided by the site's own password gate
-(`docs/HUMAN-SITE-PASSWORD.md`): no paid service and no Cloudflare Zero Trust is needed.
+Both Cloudflare Pages and Vercel can serve this site as it is. Cloudflare is recommended because private access for
+named people is included on its free plan (Cloudflare Access, up to 50 users), while Vercel charges for password
+protection on custom domains.
+
+**Private access for investors:** Cloudflare Access with an email allow-list. An investor opens the link, enters
+their email address, receives a one-time code and is let in. No shared password; access can be removed per person.
 
 ### Deploy (when authorised)
 
-1. In Cloudflare: Workers & Pages → Create → Pages → **Connect to Git** → choose the repository.
-   Do not use "Upload assets": a hand upload leaves out the password gate and would be public.
-2. Framework preset: Astro. Build command `npm run build`. Output directory `dist`. Production branch: the
-   repository's default branch.
-3. Add the secret `SITE_PASSWORD` (at least 12 characters, type **Secret**) to Production **and** Preview.
-   Until it is set the site shows "This site is not available" to everyone.
-4. Redeploy so the secret takes effect.
-5. Settings → Runtime → **Fail closed**.
-6. Check in a private browser window that the `pages.dev` address and a deep link such as `/about` both ask for
-   the password.
-
-Leave the waitlist variables unset on Production. `NODE_VERSION=22` is only needed if the build log shows an older
-Node.
+1. In Cloudflare: Workers & Pages → Create → Pages → Connect to Git → choose the repository.
+2. Framework preset: Astro. Build command `npm run build`. Output directory `dist`.
+3. Environment variables: leave the two waitlist variables **unset**. Add `NODE_VERSION=22` if the build log shows
+   an older Node.
+4. Deploy. The site appears at `<project>.pages.dev`.
+5. Immediately afterwards: Zero Trust → Access → Applications → Add → Self-hosted. Add the `<project>.pages.dev`
+   address with a policy that allows only the listed email addresses (login by one-time code). Until this is done
+   the address is open to anyone who has it.
+6. Pages project → Settings → General → enable the **Access policy** for preview deployments, so branch previews
+   (including the private waitlist test site) also ask for a login.
+7. Check both in a private browser window: each must ask for an email before showing the site.
 
 ### Connect humanforlife.in
 
-The password gate is part of the site, so it protects any address the site is served from. The domain can therefore
-be connected **without moving its DNS and without touching email**.
+**Simplest and safest for investor presentations: do not connect the domain yet.** Share the Access-protected
+`<project>.pages.dev` address. Nothing about the domain or its email changes.
 
-**Recommended: a subdomain, for example `preview.humanforlife.in`.**
-1. Pages project → Custom domains → Set up a custom domain → `preview.humanforlife.in`.
-2. At the current DNS provider add the one record Cloudflare shows: `CNAME  preview  →  <project>.pages.dev`.
-   Change nothing else there. The `MX`, SPF, DKIM and DMARC records that hello@ and privacy@ rely on stay as they are.
-3. Wait for Cloudflare to show the domain as Active (the certificate is issued automatically).
-4. Open it in a private browser window: it must ask for the password.
+Connecting the domain *with* private access needs care, because **hello@ and privacy@ depend on the domain's mail
+records**, and because Cloudflare Access protects a custom address only when the domain's DNS is managed by
+Cloudflare. (If `humanforlife.in` does not appear in the Access domain list, this is why.) A plain CNAME from another
+DNS provider would serve the site on the domain **without** the Access login in front of it. Do not do that for a
+private prototype.
 
-**The main address `humanforlife.in` itself** can only be connected by moving the domain's nameservers to
-Cloudflare. That is not needed for investor presentations. If it is done later: list every existing record first,
-confirm after Cloudflare's import that every mail record is present (all `MX`, the SPF `TXT` starting `v=spf1`,
-every `_domainkey` record, `_dmarc`, and any verification `TXT`), keep mail-related `CNAME` records as "DNS only",
-and send a test email to and from hello@humanforlife.in before going further.
+**To put the site on humanforlife.in behind Access (moves the domain's DNS to Cloudflare):**
+1. At the current DNS provider, list or export every existing record. Keep this list.
+2. Cloudflare → Add a site → `humanforlife.in` (Free plan). Cloudflare imports the records it can find.
+3. **Before changing nameservers**, compare Cloudflare's list with yours and add anything missing. Mail needs all of:
+   every `MX` record, the SPF record (`TXT` starting `v=spf1`), every DKIM record (names containing `_domainkey`),
+   the DMARC record (`_dmarc`), and any verification `TXT` record from the email provider.
+   Set mail-related `CNAME` records to "DNS only" (grey cloud). A missing record stops email.
+4. At the registrar, replace the nameservers with the two Cloudflare gives. The change can take up to a day; the old
+   provider keeps answering in the meantime.
+5. When Cloudflare shows the zone as Active: send a test email to and from hello@humanforlife.in **before** going on.
+6. Pages project → Custom domains → add the address to use (for example `preview.humanforlife.in`, or
+   `humanforlife.in` and `www.humanforlife.in`). Cloudflare creates the record and the certificate.
+7. Add that address to the Access application, and confirm in a private browser window that it asks for a login.
 
 ### If Vercel is preferred
 
@@ -90,5 +96,8 @@ paid feature there.
 
 ## GitHub
 
-The repository is `hanaanshi13-beep/humanwebsitedev1`; the working branch `claude/sharp-knuth-tnlel1` is its only
-branch and its default. Cloudflare Pages should be connected to this repository.
+Pushing from the Claude session fails with HTTP 403: "Claude doesn't have GitHub access to
+hanaanshi13-beep/humanwebsitedev1". The repository itself is fine. To fix: install the Claude GitHub App on the
+repository (https://github.com/apps/claude/installations/select_target) or reconnect GitHub in Claude's settings,
+then start a new session. Alternatively push from a computer that has the repository and normal GitHub access.
+All work is committed locally on `claude/sharp-knuth-tnlel1`.

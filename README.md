@@ -4,7 +4,6 @@ Static site built with Astro 5 and TypeScript. No analytics, no third-party requ
 The waitlist is a **demonstration**: nothing typed into it is sent or stored. A server function for real
 registrations exists for private testing only and is off by default (`docs/HUMAN-WAITLIST-BACKEND.md`).
 **Not deployed.** Hosting, variables and domain steps: `docs/HUMAN-HOSTING.md`.
-On Cloudflare Pages the whole site is behind a password (`docs/HUMAN-SITE-PASSWORD.md`); `npm run dev` is not.
 
 Needs Node 22 (see `.nvmrc`). No environment variables are needed to run or build it.
 
@@ -58,9 +57,8 @@ npm install --no-save playwright && npx playwright install chromium
 | `src/scripts/` | Behaviour: `motion.ts`, `portal.ts` (waitlist), `plans-explorer.ts`, `plans-overlay.ts`, `faq.ts` |
 | `src/assets/` | Founder-supplied photographs and artwork (originals; web sizes are generated at build) |
 | `public/` | `robots.txt`, `_headers` (no-index header for the host), favicon |
-| `functions/`, `server/` | Cloudflare Pages Functions: the site-wide password gate (`_middleware.ts`) and the optional `/api/waitlist` function (off by default) |
+| `functions/`, `server/` | The optional `/api/waitlist` Cloudflare function (off by default) and its logic |
 | `supabase/` | Reference schema for the waitlist table |
 | `tests/e2e.mjs` | 91 end-to-end checks of the website |
 | `tests/waitlist-api.mjs`, `tests/waitlist-live.mjs` | Backend checks (database mocked): `npm run test:api` |
-| `tests/site-gate.mjs`, `tests/site-gate-live.mjs` | Password gate checks: `npm run test:gate` |
 | `docs/` | Hosting, legal review register, Explore Plans notes, waitlist contract, release gates |
