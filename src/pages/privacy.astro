@@ -1,18 +1,5 @@
 ---
-import Legal from '../components/Legal.astro';
-const sections = [
-  { h: 'Who is responsible', items: ['The verified legal entity behind HUMAN and how to contact it.'] },
-  { h: 'What we would collect', items: ['Waitlist fields: full name, email address, city, state or union territory, and an optional WhatsApp number.', 'Your consent choices and when you made them.', 'No health information is requested by the waitlist.'] },
-  { h: 'Why we would use it', items: ['To administer your waitlist registration.', 'To send updates only if you separately opt in.'] },
-  { h: 'Who it would be shared with', items: ['Any service providers that process the information, once they are chosen and verified.'] },
-  { h: 'Storage, security and retention', items: ['Where and how information is stored and protected.', 'How long it is kept, and how it is deleted.'] },
-  { h: 'Your choices and rights', items: ['How to access, correct or delete your information, withdraw consent, and raise a complaint, as required by applicable Indian law.'] },
-  { h: 'Contact', items: ['A verified address for privacy questions.'] },
-];
+import LegalTabs from '../components/info/LegalTabs.astro';
 ---
 
-<Legal
-  title="Privacy notice"
-  intro="How HUMAN intends to handle the information people share when they join the waitlist."
-  sections={sections}
-/>
+<LegalTabs active="privacy" />

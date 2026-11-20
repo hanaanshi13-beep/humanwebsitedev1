@@ -26,7 +26,7 @@ Originals are kept unmodified in `src/assets/memberships/` (1086 × 1448 WebP). 
 
 | Upload | Category | File |
 |---|---|---|
-| 01 | HUMAN for Him | `human-for-him.webp` |
+| 01 | HUMAN for Him | `human-for-him.webp` (replaced 2026-11-20 with the founders' candid living-room photograph; the earlier posed portrait is in git history at f1ca818) |
 | 02 | HUMAN for Her | `human-for-her.webp` |
 | 03 | HUMAN for Athletes | `human-for-athletes.webp` |
 | 04 | HUMAN for Professionals | `human-for-professionals.webp` |

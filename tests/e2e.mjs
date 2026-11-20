@@ -1089,39 +1089,6 @@ await test('E2E-02', 'Logo from an interior page returns home', async () => {
   await p.context().close();
 });
 
-await test('E2E-16', 'FAQ: 12 questions; a question opens with keyboard and shows its answer', async () => {
-  const p = await ctx();
-  await go(p, '/faq');
-  assert((await p.locator('details').count()) === 12, 'expected 12 questions');
-  const d = p.locator('details').nth(1);
-  await d.locator('summary').focus();
-  await p.keyboard.press('Enter');
-  assert(await d.locator('p').isVisible(), 'answer not visible');
-  assert(/No\. HUMAN is in prelaunch development/.test(await d.locator('p').innerText()), 'answer text');
-  await p.context().close();
-});
-
-await test('E2E-17', 'About: no founder names or bios; pending line shown', async () => {
-  const p = await ctx();
-  await go(p, '/about');
-  const t = await p.locator('main').innerText();
-  assert(/Our story is still being written/.test(t), 'pending line missing');
-  assert(!/Abdanshi|Hana|founder(s)? (is|are|was|were)/i.test(t), 'founder detail present');
-  await p.context().close();
-});
-
-await test('E2E-18', 'Legal routes exist, are marked Draft, and are linked from the waitlist', async () => {
-  const p = await ctx();
-  for (const r of ['/privacy', '/terms', '/medical-disclaimer']) {
-    const res = await p.goto(BASE + r);
-    assert(res.status() === 200, r + ' status ' + res.status());
-    assert(/Draft — not approved for public launch/i.test(await p.locator('.legal__flag').innerText()), r + ' flag');
-  }
-  await go(p, '/waitlist');
-  assert((await p.locator('a[href="/privacy"]').count()) >= 1, 'privacy link missing in waitlist');
-  await p.context().close();
-});
-
 await test('E2E-47', 'Unknown route returns the branded 404 with working recovery links', async () => {
   const p = await ctx();
   const res = await p.goto(BASE + '/definitely-not-a-page');
@@ -2543,6 +2510,412 @@ await test('XP-12', 'Explore Plans honesty: no prices, counts, panels, frequenci
   assert(imgs.length >= 9 && imgs.every((s) => /\/_astro\/human-for-(him|her|athletes|seniors|families|professionals|young-adults|kids|couples)\./.test(s)), 'image sources: ' + imgs.join(', '));
   const ext = p.requests.filter((q) => !q.url.startsWith(BASE) && !q.url.startsWith('data:'));
   assert(ext.length === 0 && p.requests.every((q) => q.method === 'GET'), 'requests: ' + ext.map((q) => q.url).join());
+  await p.context().close();
+});
+
+// ---------- informational pages: About, FAQ, Privacy & Terms, Medical Disclaimer ----------
+const norm = (s) => s.replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+const pageText = async (p, sel = 'main') => norm(await p.locator(sel).evaluate((e) => e.textContent));
+const CTA_COPY = ['Take the first step towards understanding your health.', 'Be among the first to experience HUMAN.', 'Join the waitlist'];
+
+await test('ABOUT-01', 'About: the approved story in six parts, word for word, in the site’s type; approved photographs only; closing invitation opens the existing waitlist', async () => {
+  const p = await ctx();
+  const failed = [];
+  p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
+  await go(p, '/about');
+  const t = await pageText(p);
+  const must = [
+    'About HUMAN', 'You deserve to understand your health.',
+    'We spend so much of our lives taking care of the things that matter to us. Yet when it comes to our own health, we often wait until something feels wrong.',
+    "We believe understanding your health should be a part of life, not something you think about only when you're unwell.",
+    'Making health easier to understand.',
+    'HUMAN is a preventive health platform being developed to help you better understand your body through blood tests and personalised health insights.',
+    'We want to make it easier for you to understand what your blood test results mean, what changes over time and what may need attention.',
+    'Because receiving a health report is one thing. Understanding it is another.',
+    'No two humans are the same.',
+    'Our bodies are different. Our lifestyles are different. Our health needs change as we grow older.',
+    'A woman in her twenties may have very different health concerns from a man in his forties. An athlete may have different needs from someone working long hours at a desk.',
+    "That's why we're developing different preventive health plans around different people and different stages of life.",
+    'A clearer picture of your health.', "We're building HUMAN around three simple ideas.",
+    'Understand your body.', 'Make sense of your blood test results in language you can understand.',
+    'Understand what changes.', 'Follow how your health markers change over time, rather than looking at a single report in isolation.',
+    'Make informed decisions.', 'Have clearer information to guide your health decisions and conversations with your doctor.',
+    'Understanding your health should be for everyone.',
+    "We want to build a future where preventive health is easier to access, easier to understand and a natural part of people's lives.",
+    "HUMAN is currently in development. We're working towards creating a health experience that is personal, meaningful and built around you.",
+    ...CTA_COPY,
+  ];
+  for (const m of must) assert(t.includes(m), `missing: "${m.slice(0, 60)}"`);
+  const d = await p.evaluate(() => {
+    const cs = (e) => getComputedStyle(e);
+    const eyebrows = [...document.querySelectorAll('main .ab__eyebrow')].map((e) => e.textContent.replace(/\s+/g, ' ').trim());
+    return {
+      h1: document.querySelectorAll('h1').length, h2: [...document.querySelectorAll('main h2')].map((e) => e.textContent.trim()), h3: document.querySelectorAll('main .ab-build__list h3').length,
+      eyebrows, h1Font: cs(document.querySelector('h1')).fontFamily + cs(document.querySelector('h1')).fontStyle, h2Font: cs(document.querySelector('main h2')).fontFamily + cs(document.querySelector('main h2')).fontStyle,
+      body: cs(document.querySelector('.ab__body p')).fontFamily, ground: cs(document.querySelector('main section')).backgroundColor,
+      line: cs(document.querySelector('.ab-what__line')).fontFamily + cs(document.querySelector('.ab-what__line')).fontStyle,
+      lineCount: (document.querySelector('main').textContent.match(/Understanding it is another\./g) || []).length,
+      imgs: [...document.querySelectorAll('main img')].map((i) => ({ src: i.currentSrc || i.src, ok: i.complete && i.naturalWidth > 0, alt: i.alt.length, ratio: Math.abs(i.naturalWidth / i.naturalHeight - i.width / i.height) < 5 })),
+      links: [...document.querySelectorAll('main a')].map((a) => a.getAttribute('href')), measure: Math.max(...[...document.querySelectorAll('main .ab__body p')].map((e) => e.getBoundingClientRect().width / parseFloat(cs(e).fontSize))),
+      cards: document.querySelectorAll('main .xp-card, main details, main form').length, dark: document.querySelectorAll('main .on-dark').length,
+    };
+  });
+  assert(d.h1 === 1 && d.h2.length === 5 && d.h3 === 3, `headings h1 ${d.h1}, h2 ${d.h2.length}, principles ${d.h3}`);
+  assert(d.eyebrows.join('|') === 'About HUMAN|01 — What is HUMAN|02 — Our belief|03 — What we are building|04 — Our vision', 'labels: ' + d.eyebrows.join('|'));
+  assert(/Instrument Serif.*italic/.test(d.h1Font) && /Instrument Serif.*italic/.test(d.h2Font) && /Instrument Serif.*italic/.test(d.line) && /Hanken Grotesk/.test(d.body), 'type: ' + d.h1Font + ' / ' + d.body);
+  assert(d.ground === 'rgb(246, 243, 236)' && d.dark === 0 && d.lineCount === 1, `ground ${d.ground}, emphasis line shown ${d.lineCount}x`);
+  assert(d.imgs.length >= 2 && d.imgs.every((i) => i.ok && i.alt > 10 && /\/_astro\/(care-meal|journey-professional|journey-elder|A05-female-runners)\./.test(i.src)), 'photographs: ' + JSON.stringify(d.imgs));
+  assert(t.includes('Images, where shown, are of models. They are not HUMAN members.'), 'model disclosure missing');
+  assert(d.links.join() === '/waitlist' && d.cards === 0, 'actions: ' + d.links.join());
+  assert(d.measure <= 42, `body lines run to about ${Math.round(d.measure * 2)} characters`);
+  assert(!/Abdanshi|Hana|founder|testimonial|India's first|leading|revolution|empower|unlock|reimagin|cutting-edge|world-class/i.test(t), 'unapproved claim or founder detail');
+  await p.locator('.xpc .btn').click();
+  await p.waitForURL('**/waitlist**');
+  assert((await p.locator('[data-hp]').count()) === 1, 'existing waitlist opened');
+  assert(failed.length === 0 && p.consoleErrors.length === 0, [...failed, ...p.consoleErrors].join(' | '));
+  await p.context().close();
+  const q = await ctx({ reducedMotion: 'reduce' });
+  for (const w of [1920, 1440, 1280, 1024, 768, 430, 390, 360]) {
+    await q.setViewportSize({ width: w, height: w < 500 ? 780 : 900 });
+    await go(q, '/about');
+    const r = await q.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, clip: [...document.querySelectorAll('main h1, main h2, main h3, main p')].filter((e) => e.scrollWidth > e.clientWidth + 1 || e.getBoundingClientRect().right > innerWidth + 0.5).length, h1: parseFloat(getComputedStyle(document.querySelector('h1')).fontSize), cols: new Set([...document.querySelectorAll('.ab-build__list li')].map((li) => Math.round(li.getBoundingClientRect().left))).size }));
+    assert(r.over <= 0 && r.clip === 0, `${w}: overflow ${r.over}, clipped ${r.clip}`);
+    assert(r.h1 >= 40 && r.h1 <= 90 && r.cols === (w >= 900 ? 3 : 1), `${w}: h1 ${r.h1}px, principle columns ${r.cols}`);
+  }
+  await q.context().close();
+});
+
+const FAQ_Q = {
+  'Understanding HUMAN': ['What is HUMAN?', 'What is preventive health?', 'Why was HUMAN created?', 'How is HUMAN different from a regular health check-up?', 'Is HUMAN available right now?'],
+  'Health Plans & Memberships': ['Who is HUMAN for?', 'What health plans does HUMAN offer?', 'Are the plans for men and women different?', 'How much will a HUMAN membership cost?', 'Can I choose a plan based on my health concerns?'],
+  'Blood Tests & Health Insights': ['What is a biomarker?', 'What can blood tests tell me about my health?', 'Which blood tests will be included?', 'How will my blood samples be collected?', 'How often will I need to get tested?', 'Will HUMAN help me understand my results?', 'Will I be able to track my health over time?'],
+  'Medical Care & Safety': ['Can HUMAN replace my doctor?', 'Can HUMAN detect every health condition?', 'What if something is abnormal in my blood test results?', 'Can I use HUMAN if I already have a medical condition?', 'Should I wait for HUMAN if I am experiencing symptoms?'],
+  'Waitlist & Availability': ['What happens when I join the waitlist?', 'Does joining the waitlist mean I have purchased a membership?', 'When will HUMAN launch?', 'Where will HUMAN be available?'],
+};
+
+await test('FAQ-01', 'FAQ content: approved introduction, five categories in order, exactly 26 questions with their answers, links on existing words, closing invitation', async () => {
+  const p = await ctx({ javaScriptEnabled: false }); // the full content must be in the page itself
+  await go(p, '/faq');
+  const t = await pageText(p);
+  for (const m of ['HUMAN', 'Your questions, answered.', "Everything you need to know about HUMAN, what we're building and how we want to help you understand your health.", ...CTA_COPY]) assert(t.includes(m), `missing: "${m}"`);
+  const cats = await p.evaluate(() => [...document.querySelectorAll('.fq__panel')].map((s) => ({ name: s.querySelector('h2').textContent.trim(), qs: [...s.querySelectorAll('.fq__q button > span:first-child')].map((e) => e.textContent.trim()), as: [...s.querySelectorAll('.fq__a p')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()), vis: [...s.querySelectorAll('.fq__a p')].every((e) => e.getBoundingClientRect().height > 10 && getComputedStyle(e).visibility === 'visible') })));
+  assert(cats.map((c) => c.name).join('|') === Object.keys(FAQ_Q).join('|'), 'categories: ' + cats.map((c) => c.name).join('|'));
+  let n = 0;
+  for (const c of cats) {
+    assert(c.qs.join('|') === FAQ_Q[c.name].join('|'), `${c.name}: ${c.qs.join('|')}`);
+    assert(c.as.length === c.qs.length && c.as.every((a) => a.length > 60) && c.vis, `${c.name}: answers missing or hidden without scripts`);
+    n += c.qs.length;
+  }
+  assert(n === 26, `questions: ${n}`);
+  const spot = [
+    'HUMAN is a preventive health platform being developed to help you understand your body through blood tests, personalised health insights and tracking changes in your health over time.',
+    'We are developing plans for men, women, athletes, seniors, families, professionals, young adults, children and couples. You can discover these upcoming plans on our Explore Plans page.',
+    'We are currently working on our membership structure and pricing. We will share confirmed details before memberships become available.',
+    'A biomarker is something we can measure in your body that gives us information about your health. For example, your blood sugar, cholesterol and iron levels are biomarkers.',
+    'We are currently evaluating blood collection methods and diagnostic partners. We will explain the confirmed collection process before memberships become available.',
+    'No. HUMAN is intended to help you understand your health information. It is not a replacement for a qualified medical professional, medical diagnosis or treatment.',
+    'No. If you are experiencing symptoms or have concerns about your health, please seek appropriate medical advice. Do not wait for HUMAN to become available.',
+    'No. Joining the waitlist does not purchase a membership or commit you to buying one.',
+    'HUMAN is being developed for India. Our initial service locations will be announced once our operational arrangements are confirmed.',
+  ];
+  for (const s of spot) assert(t.includes(s), `answer changed: "${s.slice(0, 50)}"`);
+  const links = await p.evaluate(() => [...document.querySelectorAll('.fq__a a')].map((a) => a.textContent.trim() + '→' + a.getAttribute('href')));
+  assert(links.join('|') === 'join our waitlist→/waitlist|Explore Plans page→/explore-plans', 'answer links: ' + links.join('|'));
+  assert((await p.locator('main img, main picture, main video').count()) === 0, 'FAQ carries imagery');
+  assert((await p.locator('.xpc .btn').getAttribute('href')) === '/waitlist' && (await p.locator('.fq__cats').isHidden()), 'no-JS: waitlist link, switcher hidden');
+  assert(!/₹|\bRs\b|per (month|year)|\b\d+\s*\+?\s*(biomarkers|tests|markers)\b|launch(es|ing)? (on|in) \d|guarantee/i.test(t), 'unapproved claim');
+  await p.context().close();
+});
+
+await test('FAQ-02', 'FAQ interaction: one category at a time, first question open, questions expand independently with mouse and keyboard, category change resets, phone tabs scroll', async () => {
+  const p = await ctx();
+  await go(p, '/faq');
+  const state = () => p.evaluate(() => ({
+    tab: [...document.querySelectorAll('[data-faq-tab]')].filter((t) => t.getAttribute('aria-selected') === 'true').map((t) => t.textContent.trim()).join(),
+    panels: [...document.querySelectorAll('.fq__panel')].filter((s) => getComputedStyle(s).display !== 'none').map((s) => s.querySelector('h2').textContent.trim()).join(),
+    open: [...document.querySelectorAll('.fq__panel.is-active .fq__item')].map((i) => { const b = i.querySelector('button'), a = i.querySelector('.fq__a'); const pr = a.querySelector('p').getBoundingClientRect(); return b.getAttribute('aria-expanded') === 'true' && getComputedStyle(a).visibility === 'visible' && a.getBoundingClientRect().height >= pr.height - 1 ? 1 : b.getAttribute('aria-expanded') === 'false' && getComputedStyle(a).visibility === 'hidden' ? 0 : -1; }).join(''),
+    roles: document.querySelector('[data-faq-tabs]').getAttribute('role') + '/' + document.querySelector('.fq__panel.is-active').getAttribute('role'),
+    wired: [...document.querySelectorAll('[data-faq-q]')].every((b) => b.tagName === 'BUTTON' && document.getElementById(b.getAttribute('aria-controls'))?.classList.contains('fq__a')),
+  }));
+  await p.evaluate(() => (window.__same = true));
+  let s = await state();
+  assert(s.tab === 'Understanding HUMAN' && s.panels === 'Understanding HUMAN' && s.open === '10000' && s.roles === 'tablist/tabpanel' && s.wired, 'initial: ' + JSON.stringify(s));
+  // several open at once; each closes on its own
+  await p.locator('.fq__panel.is-active [data-faq-q]').nth(2).click();
+  await p.locator('.fq__panel.is-active [data-faq-q]').nth(4).click();
+  await p.waitForTimeout(500);
+  assert((await state()).open === '10101', 'independent expansion: ' + (await state()).open);
+  await p.locator('.fq__panel.is-active [data-faq-q]').nth(0).click();
+  await p.waitForTimeout(500);
+  assert((await state()).open === '00101', 'collapse: ' + (await state()).open);
+  // keyboard: Enter and Space
+  await p.locator('.fq__panel.is-active [data-faq-q]').nth(1).focus();
+  await p.keyboard.press('Enter');
+  await p.waitForTimeout(450);
+  assert((await state()).open === '01101', 'Enter');
+  await p.keyboard.press('Space');
+  await p.waitForTimeout(450);
+  assert((await state()).open === '00101', 'Space');
+  const ring = await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle + parseFloat(getComputedStyle(document.activeElement).outlineWidth));
+  assert(/solid[2-9]/.test(ring), 'focus ring: ' + ring);
+  // a collapsed answer's link is not a keyboard stop; an open one's is
+  const stops = async () => { const seen = []; await p.locator('.fq__panel.is-active [data-faq-q]').first().focus(); for (let i = 0; i < 12; i++) { await p.keyboard.press('Tab'); seen.push(await p.evaluate(() => document.activeElement.getAttribute('href') || '')); } return seen; };
+  let seen = await stops();
+  assert(seen.includes('/waitlist') && seen.indexOf('/waitlist') < 6, 'open answer link not reachable: ' + seen.join());
+  await p.locator('.fq__panel.is-active [data-faq-q]').nth(4).click();
+  await p.waitForTimeout(500);
+  seen = await stops();
+  assert(seen.slice(0, 4).every((h) => h !== '/waitlist') , 'collapsed answer link still focusable: ' + seen.join());
+  // categories (starting away from the one already showing, and ending back on it)
+  const order = Object.entries(FAQ_Q);
+  for (const [name, qs] of [...order.slice(1), order[0]]) {
+    await p.locator('[data-faq-tab]', { hasText: name }).click();
+    await p.waitForTimeout(350);
+    s = await state();
+    assert(s.tab === name && s.panels === name && s.open === '0'.repeat(qs.length), `${name}: ${JSON.stringify(s)}`);
+    const shown = await p.locator('.fq__panel.is-active .fq__q button > span:first-child').allInnerTexts();
+    assert(shown.join('|') === qs.join('|'), `${name}: wrong questions`);
+    for (let i = 0; i < qs.length; i++) await p.locator('.fq__panel.is-active [data-faq-q]').nth(i).click();
+    await p.waitForTimeout(450);
+    assert((await state()).open === '1'.repeat(qs.length), `${name}: not every question opens`);
+  }
+  // leaving a category closes it: nothing from another category is found open
+  await p.locator('[data-faq-tab]').nth(2).click();
+  await p.locator('[data-faq-tab]').first().click();
+  await p.waitForTimeout(300);
+  assert((await state()).open === '00000', 'state leaked between categories');
+  await p.locator('[data-faq-tab]').first().focus();
+  await p.keyboard.press('ArrowRight');
+  assert((await state()).tab === 'Health Plans & Memberships' && (await p.evaluate(() => document.activeElement.textContent.trim())) === 'Health Plans & Memberships', 'arrow keys on the category row');
+  await p.keyboard.press('End');
+  assert((await state()).tab === 'Waitlist & Availability', 'End key');
+  assert(await p.evaluate(() => window.__same === true), 'the page reloaded');
+  await p.locator('[data-faq-tab]', { hasText: 'Health Plans' }).click();
+  await p.locator('.fq__panel.is-active [data-faq-q]').nth(1).click();
+  await p.locator('.fq__panel.is-active .fq__a a').click();
+  await p.waitForURL('**/explore-plans**');
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+  // phones: the category row scrolls inside itself, the page never does; long questions wrap
+  for (const w of [430, 390, 360]) {
+    const m = await ctx({ viewport: { width: w, height: 800 }, hasTouch: true });
+    await go(m, '/faq');
+    const r = await m.evaluate(() => { const c = document.querySelector('.fq__cats'); return { scrolls: c.scrollWidth > c.clientWidth + 20, over: document.documentElement.scrollWidth - innerWidth, h: Math.min(...[...document.querySelectorAll('.fq__cat')].map((b) => b.getBoundingClientRect().height)) }; });
+    assert(r.scrolls && r.over <= 0 && r.h >= 44, `${w}: ${JSON.stringify(r)}`);
+    await m.locator('[data-faq-tab]', { hasText: 'Waitlist & Availability' }).click();
+    await m.waitForTimeout(400);
+    const v = await m.evaluate(() => { const t = document.querySelector('[data-faq-tab][aria-selected="true"]').getBoundingClientRect(); const qs = [...document.querySelectorAll('.fq__panel.is-active .fq__q button')]; return { tabIn: t.left >= 0 && t.right <= innerWidth + 1, wrap: qs.every((b) => b.scrollWidth <= b.clientWidth + 1), ico: qs.every((b) => { const i = b.querySelector('.fq__ico').getBoundingClientRect(); return i.right <= innerWidth - 12 && i.width === 36; }), hit: Math.min(...qs.map((b) => b.getBoundingClientRect().height)), over: document.documentElement.scrollWidth - innerWidth }; });
+    assert(v.tabIn && v.wrap && v.ico && v.hit >= 48 && v.over <= 0, `${w}: ${JSON.stringify(v)}`);
+    await m.context().close();
+  }
+  const rm = await ctx({ reducedMotion: 'reduce' });
+  await go(rm, '/faq');
+  assert(/^0s/.test(await rm.locator('.fq__a').first().evaluate((e) => getComputedStyle(e).transitionDuration)), 'reduced motion: answers still animate');
+  await rm.context().close();
+});
+
+const PRIVACY_T = ['Who we are', 'What information we collect', 'Why we collect your information', 'Your health information', 'Who we share your information with', 'How we protect your information', 'Cookies and website analytics', 'How long we keep your information', 'Your information, your choices', "Children's privacy", 'Changes to this policy', 'Get in touch'];
+const TERMS_T = ['About HUMAN', 'Using our website', 'Our health plans', 'Joining the waitlist', 'Health information on our website', 'Eligibility', 'Responsible use', 'Our content', 'External websites', 'Website availability and limitations', 'Changes to these terms', 'Applicable law', 'Contact us'];
+const docState = (p) => p.evaluate(() => {
+  const vis = [...document.querySelectorAll('[data-legal-panel]')].filter((e) => !e.hidden && getComputedStyle(e).display !== 'none');
+  const panel = vis[0];
+  return { shown: vis.map((e) => e.dataset.legalPanel).join(), tab: [...document.querySelectorAll('[data-legal-tab]')].filter((t) => t.getAttribute('aria-selected') === 'true' || t.getAttribute('aria-current') === 'page').map((t) => t.textContent.trim()).join(), heading: panel.querySelector('.lg__heading').textContent.trim(), titles: [...panel.querySelectorAll('.lg__h')].map((h) => h.textContent.replace(/\s+/g, ' ').replace(/[’]/g, "'").trim()), title: document.title, path: location.pathname.replace(/\/$/, '') };
+});
+
+await test('LEGAL-01', 'Privacy & Terms: shared introduction, two working tabs, /privacy and /terms each open their own document, Back/Forward and keyboard behave, no reload', async () => {
+  const p = await ctx();
+  await go(p, '/privacy');
+  const t = await pageText(p);
+  for (const m of ['HUMAN', 'Privacy & Terms.', 'Understanding how we handle your information and what you can expect when using HUMAN.']) assert(t.includes(m), 'missing ' + m);
+  assert((await p.locator('h1').innerText()).trim() === 'Privacy & Terms.' && (await p.locator('h1').count()) === 1, 'page heading');
+  let s = await docState(p);
+  assert(s.shown === 'privacy' && s.tab === 'Privacy Policy' && s.heading === 'Your privacy matters.' && s.title === 'Privacy Policy | HUMAN', 'privacy route: ' + JSON.stringify(s));
+  assert(s.titles.length === 12 && s.titles.join('|') === PRIVACY_T.map((x, i) => `${String(i + 1).padStart(2, '0')} — ${x}`).join('|'), 'privacy sections: ' + s.titles.join('|'));
+  assert((await p.locator('[data-legal-tabs]').getAttribute('role')) === 'tablist' && (await p.locator('[data-legal-panel="privacy"]').getAttribute('role')) === 'tabpanel', 'tab semantics');
+  await p.evaluate(() => (window.__same = true));
+  await p.locator('[data-legal-tab="terms"]').click();
+  await p.waitForTimeout(350);
+  s = await docState(p);
+  assert(s.shown === 'terms' && s.tab === 'Terms of Use' && s.heading === 'Using HUMAN.' && s.path === '/terms' && s.title === 'Terms of Use | HUMAN', 'after tab: ' + JSON.stringify(s));
+  assert(s.titles.length === 13 && s.titles.join('|') === TERMS_T.map((x, i) => `${String(i + 1).padStart(2, '0')} — ${x}`).join('|'), 'terms sections: ' + s.titles.join('|'));
+  assert(await p.evaluate(() => window.__same === true), 'switching tabs reloaded the page');
+  await p.goBack();
+  await p.waitForTimeout(300);
+  s = await docState(p);
+  assert(s.shown === 'privacy' && s.path === '/privacy', 'Back: ' + JSON.stringify(s));
+  await p.goForward();
+  await p.waitForTimeout(300);
+  assert((await docState(p)).shown === 'terms', 'Forward');
+  await p.locator('[data-legal-tab="terms"]').focus();
+  await p.keyboard.press('ArrowLeft');
+  await p.waitForTimeout(300);
+  s = await docState(p);
+  assert(s.shown === 'privacy' && (await p.evaluate(() => document.activeElement.dataset.legalTab)) === 'privacy', 'arrow key: ' + JSON.stringify(s));
+  const ring = await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle + parseFloat(getComputedStyle(document.activeElement).outlineWidth));
+  assert(/solid[2-9]/.test(ring), 'focus ring: ' + ring);
+  // returning from another page through a Terms link shows Terms
+  await go(p, '/medical-disclaimer');
+  await p.locator('.site-footer a[href="/terms"]').click();
+  await p.waitForURL('**/terms**');
+  await p.waitForLoadState('networkidle');
+  s = await docState(p);
+  assert(s.shown === 'terms' && s.tab === 'Terms of Use', 'footer Terms link: ' + JSON.stringify(s));
+  await p.locator('.lg__sec a[href="/medical-disclaimer"]').click();
+  await p.waitForURL('**/medical-disclaimer**');
+  await p.goBack();
+  await p.waitForLoadState('networkidle');
+  assert((await docState(p)).shown === 'terms', 'Back from the disclaimer lands on Terms');
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+  // without scripts each route still shows its own document, and the tabs are plain links
+  const n = await ctx({ javaScriptEnabled: false });
+  for (const [r, id, label] of [['/privacy', 'privacy', 'Privacy Policy'], ['/terms', 'terms', 'Terms of Use']]) {
+    await go(n, r);
+    const s2 = await docState(n);
+    assert(s2.shown === id && s2.tab === label, `no JS ${r}: ${JSON.stringify(s2)}`);
+  }
+  await n.locator('[data-legal-tab="privacy"]').click();
+  await n.waitForURL('**/privacy**');
+  await n.context().close();
+  await go((await ctx()), '/waitlist').catch(() => {});
+});
+
+await test('LEGAL-02', 'Privacy & Terms drafts: complete and readable, nothing collapsed, nothing invented, every unconfirmed detail marked, flagged as draft, no promotion', async () => {
+  const p = await ctx();
+  await go(p, '/privacy');
+  const read = (id) => p.evaluate((id) => {
+    const panel = document.querySelector(`[data-legal-panel="${id}"]`);
+    const was = panel.hidden; panel.hidden = false;
+    const t = panel.textContent.replace(/[’]/g, "'").replace(/\s+/g, ' ').trim();
+    const ps = [...panel.querySelectorAll('.lg__sec p, .lg__intro p')];
+    const out = { text: t, paras: ps.length, lists: [...panel.querySelectorAll('.lg__sec ul')].map((u) => u.children.length), pending: [...panel.querySelectorAll('.inf-pending')].map((m) => m.textContent.trim()), hiddenBits: panel.querySelectorAll('details, [aria-expanded], [hidden], .fq__item').length, promo: panel.querySelectorAll('.btn, img, picture, video, form, input').length, emails: (t.match(/[\w.+-]+@[\w-]+\.[\w.]+/g) || []).length,
+      measure: Math.max(...ps.map((e) => e.getBoundingClientRect().width / parseFloat(getComputedStyle(e).fontSize))), size: Math.min(...ps.map((e) => parseFloat(getComputedStyle(e).fontSize))), lh: parseFloat(getComputedStyle(ps[3]).lineHeight) / parseFloat(getComputedStyle(ps[3]).fontSize), font: getComputedStyle(ps[3]).fontFamily, hFont: getComputedStyle(panel.querySelector('.lg__heading')).fontFamily + getComputedStyle(panel.querySelector('.lg__heading')).fontStyle, secFont: getComputedStyle(panel.querySelector('.lg__h')).fontFamily, secSize: parseFloat(getComputedStyle(panel.querySelector('.lg__h')).fontSize),
+      contrast: getComputedStyle(ps[3]).color, toc: [...panel.querySelectorAll('.lg__toc a')].every((a) => panel.querySelector(a.getAttribute('href'))), tocN: panel.querySelectorAll('.lg__toc a').length };
+    panel.hidden = was;
+    return out;
+  }, id);
+  const pv = await read('privacy');
+  const tm = await read('terms');
+  for (const m of [
+    'Your health is personal. So is the information you choose to share with us.',
+    'This Privacy Policy explains how HUMAN handles your personal information when you visit our website or join our waitlist.',
+    'When you join our waitlist, contact us or complete a form on our website, we may collect information that you choose to share with us.',
+    'We aim to collect only the information necessary for the purpose for which it is being requested.',
+    'Please do not send medical reports, prescriptions or detailed medical records through ordinary website contact forms unless we specifically provide an appropriate way to receive them.',
+    'We may also need to disclose information when legally required to do so.',
+    'However, no online platform can guarantee complete security.',
+    'Cookies are small files that websites may store on your device.',
+    'Some information may need to be retained where we have a legal obligation to keep it.',
+    'Our website waitlist is intended for individuals aged 18 and above.',
+    "Please do not submit a child's personal or medical information unless an appropriate process and necessary consent arrangements have been established.",
+    'Your trust matters to us, and we want you to feel comfortable asking questions about the information you share with HUMAN.',
+  ]) assert(pv.text.includes(m), `privacy missing: "${m.slice(0, 50)}"`);
+  for (const m of [
+    'We want your experience with HUMAN to be simple, transparent and built on trust.',
+    'By using our website, you agree to follow these Terms of Use.',
+    'Displaying a health plan on our website does not mean that it is currently available for purchase or that every proposed feature will be included at launch.',
+    'Does not establish a medical relationship with HUMAN.',
+    'It is not a substitute for professional medical advice, diagnosis or treatment.',
+    'Joining the waitlist does not confirm eligibility for any future health service.',
+    "Submit another person's personal information without appropriate permission.",
+    'A link to another organisation does not necessarily mean that we have a partnership with or endorse that organisation.',
+    'Nothing in these terms is intended to exclude your statutory rights or responsibilities that cannot legally be excluded.',
+    'These Terms of Use are governed by applicable Indian law, without limiting any rights you may have under applicable consumer protection laws.',
+  ]) assert(tm.text.includes(m), `terms missing: "${m.slice(0, 50)}"`);
+  assert(pv.lists.join() === '6,5,6' && tm.lists.join() === '4,5', `lists privacy ${pv.lists}, terms ${tm.lists}`);
+  assert(pv.pending.length === 9 && tm.pending.length === 4, `placeholders marked: privacy ${pv.pending.length}, terms ${tm.pending.length}`);
+  assert(pv.pending[0] === '[Date of publication]' && pv.pending.includes('[Verified privacy contact email]') && tm.pending.includes('[Verified legal name]'), 'placeholder wording');
+  for (const d of [pv, tm]) {
+    assert(d.hiddenBits === 0 && d.promo === 0 && d.emails === 0, `collapsed ${d.hiddenBits}, promotional ${d.promo}, invented addresses ${d.emails}`);
+    assert(d.measure <= 42 && d.measure >= 20 && d.size >= 17 && d.lh >= 1.55, `reading comfort: ${Math.round(d.measure * 2)} chars, ${d.size}px, line height ${d.lh.toFixed(2)}`);
+    assert(/Hanken Grotesk/.test(d.font) && /Instrument Serif.*italic/.test(d.hFont) && /Hanken Grotesk/.test(d.secFont) && d.secSize <= 26, 'type: ' + d.hFont + ' / ' + d.secFont + ' ' + d.secSize);
+    assert(d.toc && d.tocN > 10, 'contents links do not resolve');
+    assert(!/\b(GDPR|HIPAA|DPDP|Digital Personal Data Protection|ISO ?\d|certified|compliant with)\b/i.test(d.text), 'compliance claim present');
+  }
+  assert(/Draft for review — not approved for publication/i.test(await p.locator('.inf__draft').innerText()), 'draft flag');
+  assert((await p.locator('meta[name="robots"]').getAttribute('content')).includes('noindex'), 'drafts are indexable');
+  assert((await p.locator('main .btn, main img').count()) === 0, 'promotion or imagery on the legal page');
+  for (const w of [1440, 1024, 768, 390, 360]) {
+    await p.setViewportSize({ width: w, height: 900 });
+    for (const r of ['/privacy', '/terms']) {
+      await go(p, r);
+      const v = await p.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, clip: [...document.querySelectorAll('main h1, main h2, main h3, main p, main li, .lgp__tab')].filter((e) => e.offsetParent && (e.scrollWidth > e.clientWidth + 1 || e.getBoundingClientRect().right > innerWidth + 0.5)).length, tabs: [...document.querySelectorAll('.lgp__tab')].every((t) => { const b = t.getBoundingClientRect(); return b.height >= 44 && b.left >= 0 && b.right <= innerWidth; }), toc: getComputedStyle(document.querySelector('[data-legal-panel]:not([hidden]) .lg__toc')).display }));
+      assert(v.over <= 0 && v.clip === 0 && v.tabs, `${r}@${w}: ${JSON.stringify(v)}`);
+      assert((w >= 1100) === (v.toc !== 'none'), `${r}@${w}: contents list ${v.toc}`);
+    }
+  }
+  await go(p, '/waitlist');
+  assert((await p.locator('a[href="/privacy"]').count()) >= 1, 'privacy link missing in waitlist');
+  await p.context().close();
+});
+
+await test('MD-01', 'Medical Disclaimer: heading, supporting line, eight sections all visible, emergency information easy to read, closing statement, draft flag, no promotion', async () => {
+  const p = await ctx();
+  const res = await p.goto(BASE + '/medical-disclaimer', { waitUntil: 'networkidle' });
+  assert(res.status() === 200, 'status');
+  const t = await pageText(p);
+  const titles = ['Our role in your health', 'We are not a replacement for your doctor', 'Understanding your blood test results', "Everyone's health is different", 'Existing medical conditions and medications', 'If you are feeling unwell', 'Our developing health plans', 'Our commitment to responsible health information'];
+  const d = await p.evaluate(() => {
+    const cs = (e) => getComputedStyle(e);
+    const urgent = document.querySelector('.lg__urgent'), st = document.querySelector('.lg__statement'), body = document.querySelector('.lg__sec p');
+    return { h1: [...document.querySelectorAll('h1')].map((e) => e.textContent.trim()), heading: document.querySelector('.lg__heading').textContent.trim(), headingFont: cs(document.querySelector('.lg__heading')).fontFamily + cs(document.querySelector('.lg__heading')).fontStyle, headingSize: parseFloat(cs(document.querySelector('.lg__heading')).fontSize), eyebrow: document.querySelector('.inf__eyebrow').textContent.trim(),
+      titles: [...document.querySelectorAll('.lg__h')].map((h) => h.textContent.replace(/\s+/g, ' ').replace(/[’]/g, "'").trim()), tags: [...new Set([...document.querySelectorAll('.lg__h')].map((h) => h.tagName))].join(),
+      allVisible: [...document.querySelectorAll('.lg__sec p')].every((e) => e.getBoundingClientRect().height > 10 && cs(e).visibility === 'visible'), hidden: document.querySelectorAll('main details, main [aria-expanded], main [hidden]').length, promo: document.querySelectorAll('main .btn, main img, main form, main .xpc').length,
+      tel: document.querySelector('.lg__urgent a')?.getAttribute('href'), telText: document.querySelector('.lg__urgent a')?.textContent, urgentSize: parseFloat(cs(urgent.querySelector('p')).fontSize), bodySize: parseFloat(cs(body).fontSize), urgentWeight: Number(cs(urgent.querySelector('p')).fontWeight), urgentIn: urgent.closest('section').id, urgentBg: cs(urgent).backgroundColor, urgentColor: cs(urgent.querySelector('p')).color,
+      statement: [...st.querySelectorAll('span')].map((s) => s.textContent.trim()), stFont: cs(st).fontFamily + cs(st).fontStyle, stCount: (document.querySelector('main').textContent.match(/Our purpose is not to replace your doctor\./g) || []).length,
+      updated: document.querySelector('.lg__updated').textContent.replace(/\s+/g, ' ').trim(), updatedLast: !document.querySelector('.lg__updated').nextElementSibling, draft: document.querySelector('.inf__draft').textContent.trim(), measure: Math.max(...[...document.querySelectorAll('.lg__sec p')].map((e) => e.getBoundingClientRect().width / parseFloat(cs(e).fontSize))) };
+  });
+  assert(d.h1.join() === 'Medical Disclaimer' && d.eyebrow === 'HUMAN' && d.heading === 'Understanding your health starts with the right information.', 'headings: ' + JSON.stringify([d.h1, d.heading]));
+  assert(/Instrument Serif.*italic/.test(d.headingFont) && d.headingSize >= 30, 'supporting headline type: ' + d.headingFont + ' ' + d.headingSize);
+  assert(d.titles.join('|') === titles.map((x, i) => `${String(i + 1).padStart(2, '0')} — ${x}`).join('|') && d.tags === 'H2', 'sections: ' + d.titles.join('|'));
+  assert(d.allVisible && d.hidden === 0 && d.promo === 0, `visible ${d.allVisible}, collapsed ${d.hidden}, promotional ${d.promo}`);
+  for (const m of [
+    'At HUMAN, we believe that understanding your body can help you make more informed decisions about your health.',
+    'However, it is important to understand what HUMAN can and cannot do.',
+    'HUMAN is intended to support your understanding of your health, not replace the care you receive from a qualified medical professional.',
+    'It should not be considered a medical diagnosis, prescription or treatment recommendation.',
+    'A result outside the normal range does not necessarily mean you have a medical condition. Similarly, results within the normal range do not always mean that everything is fine.',
+    'Some health conditions require additional examinations or investigations that cannot be replaced by blood tests alone.',
+    'Your age, biological sex, medical history, lifestyle, medications and other circumstances can influence your health and blood test results.',
+    'Do not start, stop or change any medication or prescribed treatment based solely on information provided by HUMAN.',
+    'Please do not ignore symptoms or delay seeking medical attention because of information you read on our website or because you are waiting for HUMAN to become available.',
+    'If you are experiencing a medical emergency, seek immediate medical assistance.',
+    'In India, you can call the national emergency number, 112.',
+    'HUMAN is not an emergency medical service.',
+    'Joining the HUMAN waitlist does not establish a doctor-patient relationship, provide medical supervision or enrol you in a health service.',
+    'We believe health information should be clear, meaningful and responsible.',
+  ]) assert(t.includes(m), `missing: "${m.slice(0, 50)}"`);
+  assert(d.tel === 'tel:112' && d.telText === '112' && d.urgentIn === 'disclaimer-06' && d.urgentSize > d.bodySize && d.urgentWeight >= 500, 'emergency information: ' + JSON.stringify([d.tel, d.urgentSize, d.bodySize, d.urgentWeight]));
+  assert(d.urgentBg === 'rgba(0, 0, 0, 0)' && !/rgb\((2[0-9]{2}), [0-9]{1,2}, [0-9]{1,2}\)/.test(d.urgentColor), 'emergency block is styled as an alarm');
+  assert(d.statement.join('|') === 'Our purpose is not to replace your doctor.|It is to help you better understand your health.' && /Instrument Serif.*italic/.test(d.stFont) && d.stCount === 1, 'closing statement: ' + d.statement.join('|'));
+  assert(d.updated === 'Last updated: [Date of publication]' && d.updatedLast && /Draft for review/i.test(d.draft), 'date field and draft flag: ' + d.updated);
+  assert(d.measure <= 42, 'line length');
+  assert(!/reviewed by (dr|doctor)|medically reviewed|approved by|symptom checker/i.test(t), 'invented review claim');
+  for (const w of [1440, 768, 390, 360]) {
+    await p.setViewportSize({ width: w, height: 850 });
+    await go(p, '/medical-disclaimer');
+    const v = await p.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, clip: [...document.querySelectorAll('main h1, main h2, main p')].filter((e) => e.scrollWidth > e.clientWidth + 1).length, tel: document.querySelector('.lg__urgent a').getBoundingClientRect().width > 20 }));
+    assert(v.over <= 0 && v.clip === 0 && v.tel, `${w}: ${JSON.stringify(v)}`);
+  }
+  assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+  await p.context().close();
+});
+
+await test('XP-13', 'Explore Plans: the new HUMAN for Him photograph is on the card and in the overlay, 3:4 and undistorted; nothing else about the page changed', async () => {
+  const p = await ctx();
+  await go(p, XP);
+  await xpReady(p);
+  const c = await p.locator('[data-plan-open="him"] img').evaluate((i) => ({ src: i.currentSrc, ratio: i.naturalWidth / i.naturalHeight, ok: i.naturalWidth > 0, box: i.getBoundingClientRect().width / i.getBoundingClientRect().height }));
+  assert(c.ok && /human-for-him\./.test(c.src) && Math.abs(c.ratio - 0.75) < 0.005 && Math.abs(c.box - 0.75) < 0.01, 'card: ' + JSON.stringify(c));
+  // sunlit living-room scene: clearly greener and darker at the top-left than the old cream studio wall
+  const tone = await p.locator('[data-plan-open="him"] img').evaluate((i) => { const cv = document.createElement('canvas'); cv.width = 30; cv.height = 40; const g = cv.getContext('2d'); g.drawImage(i, 0, 0, 30, 40); const d = g.getImageData(1, 1, 5, 6).data; let r = 0, gr = 0; for (let k = 0; k < d.length; k += 4) { r += d[k]; gr += d[k + 1]; } return gr / r; });
+  assert(tone > 0.98, `the card still shows the earlier photograph (green/red ${tone.toFixed(2)})`);
+  await xoOpen(p, 'him');
+  const o = await p.evaluate(() => { const i = document.querySelector('[data-xo-img]'); return { src: i.currentSrc, alt: i.alt, fit: getComputedStyle(i).objectFit }; });
+  assert(/human-for-him\./.test(o.src) && /conversation/.test(o.alt) && o.fit === 'cover', 'overlay: ' + JSON.stringify(o));
+  assert((await p.locator('.xo__panel:not([hidden]) .xo__plan').allInnerTexts()).join('|') === XP_PLANS.him[1].join('|'), 'plan names changed');
+  await xoClose(p);
+  assert((await p.locator('.xp-card').count()) === 9 && (await p.locator('h1').innerText()).trim() === 'Our preventive health plans.', 'page changed');
   await p.context().close();
 });
 

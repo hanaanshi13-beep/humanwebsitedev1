@@ -1,17 +1,5 @@
 ---
-import Legal from '../components/Legal.astro';
-const sections = [
-  { h: 'About this website', items: ['HUMAN is in development. This website describes a planned concept and does not offer services for sale.'] },
-  { h: 'Using the website', items: ['Who may use the site and what use is permitted.'] },
-  { h: 'Ownership', items: ['Ownership and licensing of the content, design and brand.'] },
-  { h: 'Prototype previews', items: ['Any app preview is illustrative, uses example information and may change or be withdrawn.'] },
-  { h: 'Liability', items: ['Limitations consistent with applicable law, to be drafted by counsel.'] },
-  { h: 'Contact', items: ['A verified way to reach HUMAN about these terms.'] },
-];
+import LegalTabs from '../components/info/LegalTabs.astro';
 ---
 
-<Legal
-  title="Terms of use"
-  intro="The terms that will apply to using this website once they have been reviewed."
-  sections={sections}
-/>
+<LegalTabs active="terms" />

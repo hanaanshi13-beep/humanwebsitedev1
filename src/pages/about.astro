@@ -1,70 +1,126 @@
 ---
+// About HUMAN. An editorial story in six parts: opening, four numbered sections, the closing invitation.
+// The copy is founder-approved (2026-11): do not rewrite, shorten or extend it here.
+// Photographs are existing approved campaign images. The people in them are models, not HUMAN members.
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import Material from '../components/Material.astro';
-import { STAGES } from '../data/site';
-const beliefs = [
-  { t: 'Understanding', d: 'Information is only useful when you can make sense of it. Clarity comes before action.' },
-  { t: 'Continuity', d: 'Health is a line, not a dot. What changes over time often matters more than a single reading.' },
-  { t: 'Individual context', d: 'Age, lifestyle, history and priorities shape what deserves attention. There is no universal checklist.' },
+import PlansCta from '../components/plans/PlansCta.astro';
+import opening from '../assets/human/care-meal.jpg';
+import desk from '../assets/human/journey-professional.jpg';
+import elder from '../assets/human/journey-elder.jpg';
+import runners from '../assets/portal/originals/A05-female-runners.webp';
+
+const principles = [
+  { t: 'Understand your body.', d: 'Make sense of your blood test results in language you can understand.' },
+  { t: 'Understand what changes.', d: 'Follow how your health markers change over time, rather than looking at a single report in isolation.' },
+  { t: 'Make informed decisions.', d: 'Have clearer information to guide your health decisions and conversations with your doctor.' },
 ];
 ---
 
 <Base
-  title="About HUMAN — health is more than a moment in time"
-  description="What HUMAN believes, what it intends to build, and where things stand today. HUMAN is in development."
+  title="About HUMAN | Preventive Health"
+  description="Why HUMAN is being created: a preventive health platform in development, to help you understand your body through blood tests and personalised health insights."
 >
-  <section class="page-hero on-dark" aria-labelledby="about-title" data-reveal-eager>
-    <Material tone="amber" shape="d" opacity={0.5} />
-    <div class="wrap">
-      <p class="eyebrow" data-reveal><span>About</span></p>
-      <h1 class="display" id="about-title" data-reveal="mask" style="--d:80ms">
-        <span class="mask"><span>Health is more than</span></span>
-        <span class="mask" style="--i:1"><span><em>a moment in time.</em></span></span>
-      </h1>
-      <p class="lede" data-reveal style="--d:300ms">
-        HUMAN is a preventive-health membership being built in India. This page says what we believe, what we intend to
-        build, and — plainly — where things stand.
-      </p>
-    </div>
-  </section>
-
-  <section class="section on-light" aria-labelledby="believe-title">
-    <div class="wrap">
-      <p class="eyebrow" data-reveal><span class="num">01</span><span>What we believe</span></p>
-      <h2 class="vh" id="believe-title">What we believe</h2>
-      <ul class="about__beliefs">
-        {
-          beliefs.map((b, i) => (
-            <li data-reveal style={`--d:${i * 100}ms`}>
-              <h3>{b.t}</h3>
-              <p>{b.d}</p>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
-
-  <section class="section on-dark" aria-labelledby="building-title">
-    <div class="wrap split">
-      <div class="a">
-        <p class="eyebrow" data-reveal><span class="num">02</span><span>What we’re building</span></p>
-        <h2 class="display" id="building-title" data-reveal="mask">
-          <span class="mask"><span>Six stages,</span></span>
-          <span class="mask" style="--i:1"><span><em>connected.</em></span></span>
-        </h2>
-        <p class="prose" data-reveal style="margin-top:26px">
-          The aspiration is one membership that joins up what usually happens in pieces. It is a plan, not a product you
-          can use today.
-        </p>
+  <!-- Opening -->
+  <section class="ab ab-open on-light" aria-labelledby="about-title" data-reveal-eager>
+    <div class="wrap ab-open__grid">
+      <div class="ab-open__copy">
+        <p class="eyebrow no-rule ab__eyebrow" data-reveal><span>About HUMAN</span></p>
+        <h1 class="ab-open__title" id="about-title" data-reveal style="--d:80ms">You deserve to understand your health.</h1>
+        <div class="ab__body ab-open__body" data-reveal style="--d:180ms">
+          <p>
+            We spend so much of our lives taking care of the things that matter to us. Yet when it comes to our own
+            health, we often wait until something feels wrong.
+          </p>
+          <p>
+            We believe understanding your health should be a part of life, not something you think about only when
+            you’re unwell.
+          </p>
+        </div>
       </div>
-      <ol class="b about__stages" data-reveal>
+      <figure class="ab-photo ab-open__photo" data-reveal="fade" style="--d:220ms">
+        <Image
+          src={opening}
+          alt="A woman sitting by a window with a plate of food, in soft daylight."
+          widths={[480, 720, opening.width]}
+          sizes="(max-width: 899px) 100vw, 36vw"
+          format="webp"
+          quality={80}
+          loading="eager"
+        />
+      </figure>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section class="ab ab-what on-light" aria-labelledby="ab-1">
+    <div class="wrap ab-split">
+      <div class="ab-split__head">
+        <p class="eyebrow no-rule ab__eyebrow" data-reveal><span class="ab__n">01</span> <span aria-hidden="true">—</span> <span>What is HUMAN</span></p>
+        <h2 class="ab__h" id="ab-1" data-reveal style="--d:80ms">Making health easier to understand.</h2>
+      </div>
+      <div class="ab-split__body">
+        <div class="ab__body" data-reveal style="--d:140ms">
+          <p>
+            HUMAN is a preventive health platform being developed to help you better understand your body through blood
+            tests and personalised health insights.
+          </p>
+          <p>
+            We want to make it easier for you to understand what your blood test results mean, what changes over time
+            and what may need attention.
+          </p>
+        </div>
+        <p class="ab-what__line" data-reveal style="--d:220ms">Because receiving a health report is one thing. Understanding it is another.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="ab ab-belief on-light on-ivory" aria-labelledby="ab-2">
+    <div class="wrap ab-belief__grid">
+      <div class="ab-belief__copy">
+        <p class="eyebrow no-rule ab__eyebrow" data-reveal><span class="ab__n">02</span> <span aria-hidden="true">—</span> <span>Our belief</span></p>
+        <h2 class="ab__h" id="ab-2" data-reveal style="--d:80ms">No two humans are the same.</h2>
+        <div class="ab__body" data-reveal style="--d:140ms">
+          <p>Our bodies are different. Our lifestyles are different. Our health needs change as we grow older.</p>
+          <p>
+            A woman in her twenties may have very different health concerns from a man in his forties. An athlete may
+            have different needs from someone working long hours at a desk.
+          </p>
+          <p>
+            That’s why we’re developing different preventive health plans around different people and different stages
+            of life.
+          </p>
+        </div>
+      </div>
+      <div class="ab-belief__photos">
+        <figure class="ab-photo ab-belief__a" data-reveal="fade">
+          <Image src={desk} alt="A woman in glasses sitting on a work table beside tall windows." widths={[420, 640, desk.width]} sizes="(max-width: 899px) 46vw, 20vw" format="webp" quality={80} />
+        </figure>
+        <figure class="ab-photo ab-belief__b" data-reveal="fade" style="--d:120ms">
+          <Image src={runners} alt="Two women running side by side on a red track, seen from above." widths={[420, 640, 900]} sizes="(max-width: 899px) 46vw, 20vw" format="webp" quality={80} />
+        </figure>
+        <figure class="ab-photo ab-belief__c" data-reveal="fade" style="--d:240ms">
+          <Image src={elder} alt="An older woman in a cream shirt, smiling and looking away." widths={[420, 640, elder.width]} sizes="(max-width: 899px) 60vw, 22vw" format="webp" quality={80} />
+        </figure>
+        <p class="note ab-belief__note">Images, where shown, are of models. They are not HUMAN members.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="ab ab-build on-light" aria-labelledby="ab-3">
+    <div class="wrap">
+      <p class="eyebrow no-rule ab__eyebrow" data-reveal><span class="ab__n">03</span> <span aria-hidden="true">—</span> <span>What we are building</span></p>
+      <h2 class="ab__h" id="ab-3" data-reveal style="--d:80ms">A clearer picture of your health.</h2>
+      <p class="ab__body ab-build__intro" data-reveal style="--d:140ms">We’re building HUMAN around three simple ideas.</p>
+      <ol class="ab-build__list" role="list">
         {
-          STAGES.map((s, i) => (
-            <li>
-              <span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-              <strong>{s.name}</strong>
-              <em>{s.line}</em>
+          principles.map((p, i) => (
+            <li data-reveal style={`--d:${180 + i * 90}ms`}>
+              <span class="ab-build__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{p.t}</h3>
+              <p>{p.d}</p>
             </li>
           ))
         }
@@ -72,118 +128,289 @@ const beliefs = [
     </div>
   </section>
 
-  <section class="section on-light on-ivory" aria-labelledby="now-title">
-    <div class="wrap split">
-      <div class="a">
-        <p class="eyebrow" data-reveal><span class="num">03</span><span>What’s happening now</span></p>
-        <h2 class="display" id="now-title" data-reveal="mask">
-          <span class="mask"><span>In development.</span></span>
-          <span class="mask" style="--i:1"><span><em>Honestly.</em></span></span>
-        </h2>
-      </div>
-      <div class="b prose" data-reveal style="--d:120ms">
-        <p><strong>HUMAN is not yet an operating service.</strong> No tests, consultations or memberships are available.</p>
-        <p>A first pilot is planned for Delhi NCR. Plans can change, and we’ll say so when they do.</p>
-        <p>The waitlist is open to interest from across India. Joining registers interest only.</p>
-        <p>Pricing, what’s included, and the clinical details are still being worked out and reviewed.</p>
+  <!-- 04 -->
+  <section class="ab ab-vision on-light" aria-labelledby="ab-4">
+    <div class="wrap ab-vision__inner">
+      <p class="eyebrow no-rule ab__eyebrow" data-reveal><span class="ab__n">04</span> <span aria-hidden="true">—</span> <span>Our vision</span></p>
+      <h2 class="ab__h ab-vision__h" id="ab-4" data-reveal style="--d:80ms">Understanding your health should be for everyone.</h2>
+      <div class="ab__body ab-vision__body" data-reveal style="--d:160ms">
+        <p>
+          We want to build a future where preventive health is easier to access, easier to understand and a natural
+          part of people’s lives.
+        </p>
+        <p>
+          HUMAN is currently in development. We’re working towards creating a health experience that is personal,
+          meaningful and built around you.
+        </p>
       </div>
     </div>
   </section>
 
-  <section class="section on-light" aria-labelledby="people-title">
-    <div class="wrap about__people">
-      <p class="eyebrow" data-reveal><span class="num">04</span><span>The people</span></p>
-      <h2 class="about__pending" id="people-title" data-reveal>
-        Our story is still being written — more about the people building HUMAN will be shared soon.
-      </h2>
-    </div>
-  </section>
-
-  <section class="section on-dark cta-band" aria-labelledby="aboutcta-title">
-    <Material tone="amber" shape="b" opacity={0.6} />
-    <div class="wrap">
-      <h2 class="display" id="aboutcta-title" data-reveal="mask">
-        <span class="mask"><span>Be part of what</span></span>
-        <span class="mask" style="--i:1"><span><em>we’re building.</em></span></span>
-      </h2>
-      <p class="lede" data-reveal>Register your interest and, if you opt in, hear about HUMAN as it develops.</p>
-      <div class="actions">
-        <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
-        <a class="link" href="/faq">Read the FAQ <span class="arr" aria-hidden="true">→</span></a>
-      </div>
-    </div>
-  </section>
+  <PlansCta />
 </Base>
 
 <style>
-  .about__beliefs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(20px, 3vw, 48px);
-    margin-top: clamp(32px, 4vw, 56px);
+  .ab {
+    position: relative;
+    padding-block: clamp(64px, 8vw, 128px);
   }
-  .about__beliefs li {
-    border-top: 1px solid var(--text);
-    padding-top: 18px;
-  }
-  .about__beliefs h3 {
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 400;
-    font-size: clamp(2rem, 3.6vw, 3.2rem);
-    line-height: 1.05;
-    margin-bottom: 14px;
-  }
-  .about__beliefs p {
-    color: var(--muted);
-    max-width: 24em;
-  }
-  .about__stages li {
-    display: grid;
-    grid-template-columns: 40px minmax(120px, 1fr) 2fr;
-    gap: 12px;
-    align-items: baseline;
-    padding: 16px 0;
-    border-top: 1px solid var(--rule);
-  }
-  .about__stages li:last-child {
-    border-bottom: 1px solid var(--rule);
-  }
-  .about__stages span {
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
+  .ab__eyebrow {
+    gap: 10px;
     color: var(--accent);
-    font-weight: 600;
+    letter-spacing: 0.24em;
   }
-  .about__stages strong {
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
-    font-size: 1.25rem;
-  }
-  .about__stages em {
-    font-family: var(--serif);
-    font-size: 1.2rem;
+  .ab__eyebrow [aria-hidden] {
     color: var(--muted);
+    letter-spacing: 0;
   }
-  .about__pending {
+  .ab__n {
+    font-variant-numeric: tabular-nums;
+  }
+  .ab__h {
+    margin-top: clamp(14px, 1.5vw, 20px);
+    max-width: 13em;
     font-family: var(--serif);
     font-style: italic;
     font-weight: 400;
-    font-size: clamp(1.8rem, 3.8vw, 3.4rem);
-    line-height: 1.12;
-    max-width: 20em;
-    margin-top: 26px;
+    font-size: clamp(2.125rem, 3.7vw, 3.375rem);
+    line-height: 1.04;
+    letter-spacing: -0.012em;
     text-wrap: balance;
   }
-  @media (max-width: 767px) {
-    .about__beliefs {
+  .ab__body {
+    max-width: 33em;
+    font-size: clamp(1.0625rem, 1.25vw, 1.1875rem);
+    line-height: 1.62;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .ab__body p + p {
+    margin-top: 1.05em;
+  }
+  .ab-photo {
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--stone);
+  }
+  .ab-photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* opening */
+  .ab-open {
+    padding-top: calc(var(--header-h) + clamp(32px, 6vh, 76px));
+    padding-bottom: clamp(56px, 7vw, 104px);
+  }
+  .ab-open__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--col-gap);
+    align-items: center;
+  }
+  .ab-open__copy {
+    grid-column: 1 / span 7;
+  }
+  .ab-open__title {
+    margin-top: clamp(14px, 1.6vw, 20px);
+    max-width: 9.5em;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(2.75rem, 5.6vw, 5.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .ab-open__body {
+    margin-top: clamp(22px, 2.6vw, 36px);
+    font-size: var(--fs-lede);
+    line-height: 1.5;
+  }
+  .ab-open__photo {
+    grid-column: 9 / span 4;
+    aspect-ratio: 4 / 5;
+    max-height: min(68svh, 620px);
+    justify-self: end;
+    width: 100%;
+  }
+  .ab-open__photo :global(img) {
+    object-position: 50% 40%;
+  }
+
+  /* 01 and the shared two-column section */
+  .ab-split {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--col-gap);
+    row-gap: clamp(24px, 3vw, 36px);
+    align-items: start;
+  }
+  .ab-split__head {
+    grid-column: 1 / span 5;
+  }
+  .ab-split__body {
+    grid-column: 7 / span 6;
+    padding-top: clamp(0px, 2.6vw, 38px);
+  }
+  .ab-what {
+    border-top: 1px solid var(--rule);
+  }
+  /* the one sentence the section turns on */
+  .ab-what__line {
+    margin-top: clamp(26px, 3vw, 40px);
+    padding-left: clamp(16px, 1.6vw, 22px);
+    border-left: 1px solid var(--amber-ui-active);
+    max-width: 17em;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.5rem, 2.3vw, 2.125rem);
+    line-height: 1.16;
+    letter-spacing: -0.008em;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  /* 02 */
+  .ab-belief__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--col-gap);
+    row-gap: clamp(36px, 5vw, 56px);
+    align-items: center;
+  }
+  .ab-belief__copy {
+    grid-column: 1 / span 5;
+  }
+  .ab-belief__copy .ab__body {
+    margin-top: clamp(20px, 2.2vw, 30px);
+  }
+  .ab-belief__photos {
+    grid-column: 7 / span 6;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: clamp(10px, 1.2vw, 18px);
+    align-items: end;
+  }
+  .ab-belief__a {
+    grid-column: 1 / span 3;
+    aspect-ratio: 4 / 5;
+  }
+  .ab-belief__b {
+    grid-column: 4 / span 3;
+    aspect-ratio: 4 / 5;
+    margin-bottom: clamp(24px, 4vw, 64px);
+  }
+  .ab-belief__b :global(img) {
+    object-position: 60% 50%;
+  }
+  .ab-belief__c {
+    grid-column: 2 / span 4;
+    aspect-ratio: 16 / 10;
+  }
+  .ab-belief__c :global(img) {
+    object-position: 50% 22%;
+  }
+  .ab-belief__note {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
+
+  /* 03 */
+  .ab-build__intro {
+    margin-top: clamp(16px, 1.8vw, 24px);
+  }
+  .ab-build__list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: var(--col-gap);
+    row-gap: 0;
+    margin-top: clamp(36px, 4.6vw, 68px);
+  }
+  .ab-build__list li {
+    padding-top: clamp(18px, 2vw, 26px);
+    border-top: 1px solid var(--text);
+  }
+  .ab-build__n {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+  .ab-build__list h3 {
+    margin-top: clamp(14px, 1.6vw, 22px);
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.625rem, 2.3vw, 2.125rem);
+    line-height: 1.08;
+    letter-spacing: -0.008em;
+  }
+  .ab-build__list p {
+    margin-top: 12px;
+    max-width: 23em;
+    color: var(--muted);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  /* 04 */
+  .ab-vision {
+    border-top: 1px solid var(--rule);
+    padding-bottom: clamp(24px, 3vw, 48px);
+  }
+  .ab-vision__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .ab-vision__h {
+    max-width: 12.5em;
+    font-size: clamp(2.375rem, 4.6vw, 4.25rem);
+    line-height: 1.02;
+  }
+  .ab-vision__body {
+    margin-top: clamp(22px, 2.4vw, 34px);
+    max-width: 31em;
+  }
+
+  @media (max-width: 899px) {
+    .ab-open__copy,
+    .ab-open__photo,
+    .ab-split__head,
+    .ab-split__body,
+    .ab-belief__copy,
+    .ab-belief__photos {
+      grid-column: 1 / -1;
+    }
+    .ab-open__grid {
+      row-gap: clamp(32px, 6vw, 48px);
+    }
+    .ab-open__photo {
+      aspect-ratio: 5 / 4;
+      max-height: none;
+    }
+    .ab-open__photo :global(img) {
+      object-position: 50% 32%;
+    }
+    .ab-split__body {
+      padding-top: 0;
+    }
+    .ab-build__list {
       grid-template-columns: 1fr;
     }
-    .about__stages li {
-      grid-template-columns: 34px 1fr;
+    .ab-build__list li {
+      padding-bottom: clamp(22px, 5vw, 32px);
     }
-    .about__stages em {
-      grid-column: 2;
+    .ab-build__list li:last-child {
+      padding-bottom: 0;
+    }
+    .ab-build__list p {
+      max-width: 30em;
     }
   }
 </style>

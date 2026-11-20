@@ -1,0 +1,189 @@
+---
+// Privacy & Terms: two documents in one reading layout, chosen with two tabs.
+// /privacy and /terms are both real pages that render this component with their own document showing, so direct
+// links, bookmarks, the footer and Back/Forward all behave. With scripting the tabs switch in place.
+// Both documents are DRAFTS: flagged on the page, not indexed, and not approved for publication.
+import Base from '../../layouts/Base.astro';
+import PageIntro from './PageIntro.astro';
+import LegalDocument from './LegalDocument.astro';
+import { PRIVACY } from '../../data/legal/privacy';
+import { TERMS } from '../../data/legal/terms';
+
+interface Props {
+  active: 'privacy' | 'terms';
+}
+const { active } = Astro.props;
+const docs = [
+  { doc: PRIVACY, label: 'Privacy Policy', href: '/privacy', title: 'Privacy Policy | HUMAN' },
+  { doc: TERMS, label: 'Terms of Use', href: '/terms', title: 'Terms of Use | HUMAN' },
+];
+const current = docs.find((d) => d.doc.id === active)!;
+---
+
+<Base
+  title={current.title}
+  description={active === 'privacy'
+    ? 'How HUMAN handles the information you share when you visit the website or join the waitlist. Draft for review; HUMAN is currently in development.'
+    : 'What you can expect from the HUMAN website and what we ask of you when you use it. Draft for review; HUMAN is currently in development.'}
+>
+  <div class="lgp on-light" data-legal={active}>
+    <PageIntro eyebrow="HUMAN" title="Privacy & Terms." lede="Understanding how we handle your information and what you can expect when using HUMAN." id="legal-title">
+      <p class="inf__draft" role="note">Draft for review — not approved for publication</p>
+    </PageIntro>
+
+    <div class="wrap">
+      <nav class="lgp__tabs" aria-label="Documents">
+        <div class="lgp__tablist" data-legal-tabs>
+          {
+            docs.map((d) => (
+              <a class="lgp__tab" href={d.href} id={`legal-tab-${d.doc.id}`} data-legal-tab={d.doc.id} data-title={d.title} aria-current={d.doc.id === active ? 'page' : undefined}>
+                {d.label}
+              </a>
+            ))
+          }
+        </div>
+      </nav>
+    </div>
+
+    {
+      docs.map((d) => (
+        <div class="lgp__panel" id={`legal-panel-${d.doc.id}`} data-legal-panel={d.doc.id} hidden={d.doc.id !== active}>
+          <LegalDocument doc={d.doc} />
+        </div>
+      ))
+    }
+  </div>
+
+  <script>
+    // Tabs switch in place and keep the address in step, so a shared or revisited link opens the same document.
+    const root = document.querySelector<HTMLElement>('[data-legal]');
+    const list = root?.querySelector<HTMLElement>('[data-legal-tabs]');
+    if (root && list) {
+      const tabs = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-legal-tab]'));
+      const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-legal-panel]'));
+      const idFromPath = () => (/terms/.test(location.pathname) ? 'terms' : 'privacy');
+
+      const show = (id: string, opts: { push?: boolean; focus?: boolean } = {}) => {
+        const tab = tabs.find((t) => t.dataset.legalTab === id);
+        if (!tab) return;
+        tabs.forEach((t) => {
+          const on = t === tab;
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+        });
+        panels.forEach((p) => (p.hidden = p.dataset.legalPanel !== id));
+        root.dataset.legal = id;
+        if (tab.dataset.title) document.title = tab.dataset.title;
+        if (opts.push && idFromPath() !== id) {
+          try {
+            history.pushState({ legal: id }, '', tab.href);
+          } catch {
+            /* a file opened from disk cannot change its address: the tab still switches */
+          }
+        }
+        if (opts.focus) tab.focus({ preventScroll: true });
+      };
+
+      list.setAttribute('role', 'tablist');
+      tabs.forEach((t) => {
+        t.setAttribute('role', 'tab');
+        t.removeAttribute('aria-current');
+        t.setAttribute('aria-controls', `legal-panel-${t.dataset.legalTab}`);
+        t.addEventListener('click', (e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // new tab or window: let the link be a link
+          e.preventDefault();
+          show(t.dataset.legalTab!, { push: true });
+        });
+      });
+      panels.forEach((p) => {
+        p.setAttribute('role', 'tabpanel');
+        p.setAttribute('aria-labelledby', `legal-tab-${p.dataset.legalPanel}`);
+      });
+      list.addEventListener('keydown', (e) => {
+        const i = tabs.indexOf(document.activeElement as HTMLAnchorElement);
+        if (i < 0) return;
+        if (e.key === ' ') {
+          e.preventDefault();
+          show(tabs[i].dataset.legalTab!, { push: true });
+          return;
+        }
+        const to = e.key === 'ArrowRight' || e.key === 'ArrowLeft' ? (i + 1) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+        if (to < 0) return;
+        e.preventDefault();
+        show(tabs[to].dataset.legalTab!, { push: true, focus: true });
+      });
+      window.addEventListener('popstate', () => show(idFromPath()));
+      show(root.dataset.legal ?? 'privacy');
+    }
+  </script>
+</Base>
+
+<style is:global>
+  /* the two tabs: one small capsule of the site's clear glass, the chosen document lit with a breath of amber */
+  .lgp__tabs {
+    margin-top: clamp(28px, 3.4vw, 44px);
+    padding-bottom: clamp(8px, 1vw, 12px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .lgp__tablist {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: clamp(14px, 1.6vw, 20px);
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-sheen), var(--glass-bg);
+    background-clip: padding-box;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--glass-shadow);
+    -webkit-backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+    backdrop-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  }
+  .lgp__tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 6px clamp(16px, 2vw, 24px);
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--motion-control) var(--ease-human),
+      border-color var(--motion-control) var(--ease-human),
+      color var(--motion-micro) var(--ease-human);
+  }
+  @media (hover: hover) {
+    .lgp__tab:hover {
+      color: var(--text);
+    }
+  }
+  .lgp__tab[aria-current='page'],
+  .lgp__tab[aria-selected='true'] {
+    color: var(--glass-text);
+    font-weight: 600;
+    border-color: var(--glass-tint-border);
+    background: linear-gradient(var(--glass-tint-hover), var(--glass-tint-hover)), rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
+  }
+  .lgp__tab:focus-visible {
+    outline: 2px solid var(--glass-focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-pill);
+  }
+  html.js-motion .lgp__panel:not([hidden]) {
+    animation: lgp-in 200ms var(--ease-out) both;
+  }
+  @keyframes lgp-in {
+    from {
+      opacity: 0;
+    }
+  }
+</style>

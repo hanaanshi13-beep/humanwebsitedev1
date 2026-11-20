@@ -1,181 +1,315 @@
 ---
+// Frequently asked questions: five categories, 26 questions (data/faq.ts). One category shows at a time; each
+// question expands in place. Every question and answer is in the page's HTML, so it reads in full without scripts.
 import Base from '../layouts/Base.astro';
-import { CONTACT_EMAIL } from '../data/site';
-const faqs = [
-  { g: 'The basics', q: 'What is HUMAN?', a: 'HUMAN is an India-focused preventive-health membership concept that is currently being developed. The intended experience connects six stages: test, understand, act, track, retest and improve.' },
-  { g: 'The basics', q: 'Is HUMAN available yet?', a: 'No. HUMAN is in prelaunch development. Joining the waitlist registers your interest; it does not start any care or service.' },
-  { g: 'The basics', q: 'Is the app ready?', a: 'A prototype is in development. Any preview we share will be illustrative and may change.' },
-  { g: 'Where and when', q: 'Where will HUMAN launch?', a: 'A first pilot is planned for Delhi NCR. That plan is subject to change. We welcome interest from across India.' },
-  { g: 'Where and when', q: 'Can I join the waitlist from anywhere in India?', a: 'Yes — you can express interest from anywhere in India. That does not guarantee that eventual services will be available where you live.' },
-  { g: 'Where and when', q: 'Does joining the waitlist guarantee membership or a place?', a: 'No. It registers interest only.' },
-  { g: 'What it includes', q: 'How much will it cost?', a: 'Pricing is not final, and no memberships are on sale.' },
-  { g: 'What it includes', q: 'What tests or medical services are included?', a: 'The testing, clinician oversight, eligibility and overall scope are still being developed. We are not promising any specific or universal panel.' },
-  { g: 'What it includes', q: 'Is this medical advice or a diagnosis service?', a: 'No. This website describes a planned concept. It does not give individual medical advice or diagnoses. For personal health concerns, please contact a licensed professional.' },
-  { g: 'Your information', q: 'What information is collected when I express interest?', a: 'The waitlist form asks for your name, email, city and state, with an optional WhatsApp number. It does not ask for health information. Registrations are not being accepted yet — the form is a preview until the privacy notice and the system behind it have been reviewed and approved.' },
-  { g: 'Your information', q: 'Will I receive updates?', a: 'Only if you explicitly opt in to updates, and only once we are actually able to send them. Joining the waitlist does not subscribe you to anything by itself.' },
-  { g: 'Your information', q: 'How can I contact HUMAN?', a: CONTACT_EMAIL ? `You can write to ${CONTACT_EMAIL}.` : 'A public contact address is being set up and will be listed here once it is confirmed.' },
-];
-const groups = [...new Set(faqs.map((f) => f.g))];
+import PageIntro from '../components/info/PageIntro.astro';
+import PlansCta from '../components/plans/PlansCta.astro';
+import { FAQ } from '../data/faq';
+import { rich } from '../data/rich';
 ---
 
 <Base
-  title="FAQ — HUMAN"
-  description="Straight answers about HUMAN: what it is, whether it is available, where it will pilot, pricing, medical boundaries and the waitlist."
+  title="Frequently Asked Questions | HUMAN"
+  description="What HUMAN is, the health plans being developed, blood tests and health insights, medical boundaries, and the waitlist. HUMAN is currently in development."
 >
-  <section class="faq-hero on-dark" data-reveal-eager>
-    <div class="wrap">
-      <p class="eyebrow" data-reveal="fade"><span>FAQ</span></p>
-      <h1 class="display" data-reveal="fade">Straight <em>answers.</em></h1>
-      <p class="lede" data-reveal="fade">HUMAN is in development. Here is what that means in practice.</p>
-    </div>
-  </section>
+  <section class="fq on-light" aria-labelledby="faq-title" data-faq={FAQ[0].id}>
+    <PageIntro
+      eyebrow="HUMAN"
+      title="Your questions, answered."
+      lede="Everything you need to know about HUMAN, what we’re building and how we want to help you understand your health."
+      id="faq-title"
+    />
 
-  <section class="section on-light faq">
-    <div class="wrap faq__grid">
+    <div class="wrap">
+      <div class="fq__cats" data-faq-tabs aria-label="Question categories">
+        {
+          FAQ.map((c, i) => (
+            <button class="fq__cat" type="button" id={`faq-tab-${c.id}`} data-faq-tab={c.id} aria-controls={`faq-${c.id}`} aria-selected={i === 0 ? 'true' : 'false'}>
+              {c.name}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="wrap fq__panels">
       {
-        groups.map((g) => (
-          <div class="faq__group">
-            <h2 class="eyebrow no-rule"><span>{g}</span></h2>
-            <div>
-              {faqs
-                .filter((f) => f.g === g)
-                .map((f) => (
-                  <details>
-                    <summary>
+        FAQ.map((c, ci) => (
+          <section class:list={['fq__panel', { 'is-active': ci === 0 }]} id={`faq-${c.id}`} data-faq-panel={c.id}>
+            <h2 class="fq__heading">{c.name}</h2>
+            <div class="fq__list">
+              {c.items.map((f, i) => (
+                <div class:list={['fq__item', { 'is-open': ci === 0 && i === 0 }]} data-faq-item>
+                  <h3 class="fq__q">
+                    <button type="button" id={`faq-${c.id}-q${i + 1}`} data-faq-q aria-expanded="true" aria-controls={`faq-${c.id}-a${i + 1}`}>
                       <span>{f.q}</span>
-                      <span class="faq__ico" aria-hidden="true" />
-                    </summary>
-                    <p>{f.a}</p>
-                  </details>
-                ))}
+                      <span class="fq__ico" aria-hidden="true" />
+                    </button>
+                  </h3>
+                  <div class="fq__a" id={`faq-${c.id}-a${i + 1}`}>
+                    <div>
+                      <p set:html={rich(f.a)} />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          </section>
         ))
       }
-      <div class="faq__group">
-        <h2 class="eyebrow no-rule"><span>More</span></h2>
-        <p class="prose">
-          Policies are in draft and awaiting review: <a class="text-link" href="/privacy">Privacy</a>,
-          <a class="text-link" href="/terms">Terms</a> and the
-          <a class="text-link" href="/medical-disclaimer">Medical disclaimer</a>.
-        </p>
-      </div>
     </div>
   </section>
 
-  <section class="section on-dark cta-band">
-    <div class="wrap">
-      <h2 class="display" data-reveal>Be part of what <em>we’re building.</em></h2>
-      <p class="lede" data-reveal>Register your interest and, if you opt in, hear about HUMAN as it develops.</p>
-      <div class="actions">
-        <a class="btn" href="/waitlist">Join the waitlist <span class="arr" aria-hidden="true">→</span></a>
-      </div>
-    </div>
-  </section>
+  <PlansCta />
+
+  <script>
+    import '../scripts/faq.ts';
+  </script>
 </Base>
 
-<style>
-  .faq-hero {
-    padding-block: calc(var(--header-h) + clamp(56px, 8vw, 104px)) clamp(48px, 6vw, 80px);
+<style is:global>
+  .fq {
+    padding-bottom: clamp(40px, 5vw, 72px);
   }
-  .faq-hero h1 {
-    margin: 20px 0 22px;
+  /* category controls: quiet pills of the site's clear glass; the active one carries a breath of amber */
+  .fq__cats {
+    display: flex;
+    gap: 8px;
+    margin: clamp(30px, 3.6vw, 48px) calc(-1 * var(--gutter)) 0;
+    padding: 6px var(--gutter) 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
-  .faq {
-    padding-top: clamp(48px, 6vw, 88px);
+  .fq__cats::-webkit-scrollbar {
+    display: none;
   }
-  .faq__group {
+  .fq__cat {
+    flex: none;
+    min-height: 44px;
+    padding: 8px 18px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-sheen), var(--glass-bg);
+    background-clip: padding-box;
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
+    color: var(--muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color var(--motion-control) var(--ease-human),
+      border-color var(--motion-control) var(--ease-human),
+      box-shadow var(--motion-control) var(--ease-human),
+      color var(--motion-micro) var(--ease-human);
+  }
+  @media (hover: hover) {
+    .fq__cat:hover {
+      color: var(--text);
+      border-color: var(--glass-border-hover);
+    }
+  }
+  .fq__cat[aria-selected='true'] {
+    color: var(--glass-text);
+    font-weight: 600;
+    border-color: var(--glass-tint-border);
+    background:
+      var(--glass-sheen),
+      linear-gradient(var(--glass-tint-hover), var(--glass-tint-hover)),
+      var(--glass-bg);
+    background-clip: padding-box;
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--glass-shadow);
+  }
+  .fq__cat:focus-visible {
+    outline: 2px solid var(--glass-focus);
+    outline-offset: 3px;
+    border-radius: var(--radius-pill);
+  }
+  /* without scripting every category is written out below, so the switcher is not shown */
+  html:not(.js) .fq__cats {
+    display: none;
+  }
+
+  .fq__panels {
+    margin-top: clamp(28px, 3.4vw, 52px);
+  }
+  .fq__panel {
     display: grid;
-    grid-template-columns: 4fr 8fr;
-    gap: 16px clamp(20px, 3vw, 48px);
-    padding-block: clamp(24px, 3vw, 40px);
+    grid-template-columns: repeat(12, 1fr);
+    column-gap: var(--col-gap);
+    row-gap: clamp(14px, 2vw, 22px);
+    align-items: start;
+  }
+  .fq__panel + .fq__panel {
+    margin-top: clamp(48px, 6vw, 88px);
+  }
+  html.js .fq__panel {
+    margin-top: 0;
+  }
+  html.js .fq__panel:not(.is-active) {
+    display: none;
+  }
+  .fq__heading {
+    grid-column: 1 / span 4;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.875rem, 3vw, 2.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .fq__list {
+    grid-column: 5 / -1;
     border-top: 1px solid var(--text);
   }
-  .faq__group h2 {
-    padding-top: 22px;
+  @media (min-width: 900px) {
+    .fq__heading {
+      position: sticky;
+      top: calc(var(--header-h) + 24px);
+      padding-top: 18px;
+    }
   }
-  details {
+  @media (max-width: 899px) {
+    .fq__heading,
+    .fq__list {
+      grid-column: 1 / -1;
+    }
+  }
+  .fq__item {
     border-bottom: 1px solid var(--rule);
   }
-  summary {
+  .fq__q button {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    min-height: 64px;
-    padding: 14px 0;
-    cursor: pointer;
-    list-style: none;
-    font-size: clamp(1.125rem, 1.6vw, 1.375rem);
+    width: 100%;
+    min-height: 68px;
+    padding: 16px 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    font-size: clamp(1.0625rem, 1.45vw, 1.3125rem);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    line-height: 1.3;
+    letter-spacing: -0.008em;
+    color: var(--text);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  summary::-webkit-details-marker {
-    display: none;
+  html:not(.js) .fq__q button {
+    cursor: default;
   }
-  summary:hover span:first-child {
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    text-decoration-thickness: 1px;
+  .fq__q button:focus-visible {
+    outline: 3px solid #14191c;
+    outline-offset: 2px;
+    border-radius: 6px;
   }
-  .faq__ico {
+  /* plus becomes minus: the upright bar turns and fades */
+  .fq__ico {
     position: relative;
     flex: none;
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: 1px solid color-mix(in srgb, currentColor 26%, transparent);
-    background: linear-gradient(180deg, color-mix(in srgb, currentColor 10%, transparent), color-mix(in srgb, currentColor 3%, transparent));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-sheen), var(--glass-bg);
+    background-clip: padding-box;
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
     transition:
-      transform 260ms var(--ease-human),
-      border-color 260ms var(--ease-human);
+      border-color var(--motion-control) var(--ease-human),
+      background-color var(--motion-control) var(--ease-human);
   }
-  summary:hover .faq__ico {
-    border-color: color-mix(in srgb, currentColor 55%, transparent);
-  }
-  details[open] > summary .faq__ico {
-    border-color: var(--accent);
-  }
-  .faq__ico::before,
-  .faq__ico::after {
+  .fq__ico::before,
+  .fq__ico::after {
     content: '';
     position: absolute;
-    left: 10px;
-    right: 10px;
-    top: 16.5px;
+    left: 50%;
+    top: 50%;
+    width: 12px;
     height: 1.5px;
+    margin: -0.75px 0 0 -6px;
     border-radius: 1px;
     background: currentColor;
+    transition:
+      transform 300ms var(--ease-human),
+      opacity 300ms var(--ease-human);
   }
-  .faq__ico::after {
+  .fq__ico::after {
     transform: rotate(90deg);
   }
-  details[open] .faq__ico {
-    transform: rotate(45deg);
+  html.js .fq__item.is-open .fq__ico::after {
+    transform: rotate(180deg);
+    opacity: 0;
   }
-  details p {
-    padding: 0 40px 24px 0;
-    color: var(--muted);
-    max-width: 40em;
+  html:not(.js) .fq__ico {
+    display: none;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    details[open] p {
-      animation: faq-in 220ms var(--ease-out);
+  @media (hover: hover) {
+    html.js .fq__q button:hover .fq__ico {
+      border-color: var(--glass-border-hover);
+      --glass-bg: var(--glass-bg-hover);
     }
   }
-  @keyframes faq-in {
+  /* the answer opens by height and opacity; while closed it is out of the tab order and hidden from assistive tech */
+  .fq__a {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  .fq__a > div {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .fq__a p {
+    max-width: 38em;
+    padding: 0 56px clamp(20px, 2.2vw, 28px) 0;
+    font-size: clamp(1rem, 1.15vw, 1.125rem);
+    line-height: 1.62;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  html.js .fq__a {
+    transition:
+      grid-template-rows 320ms var(--ease-human),
+      opacity 320ms var(--ease-human),
+      visibility 0s linear 0s;
+  }
+  html.js .fq__item:not(.is-open) .fq__a {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows 320ms var(--ease-human),
+      opacity 220ms var(--ease-human),
+      visibility 0s linear 320ms;
+  }
+  /* changing category: the new list arrives with a short fade */
+  html.js-motion .fq__panel.is-active {
+    animation: fq-in 260ms var(--ease-out) both;
+  }
+  @keyframes fq-in {
     from {
       opacity: 0;
-      transform: translateY(-4px);
+      transform: translateY(6px);
     }
   }
-  @media (max-width: 767px) {
-    .faq__group {
-      grid-template-columns: 1fr;
+  @media (max-width: 599px) {
+    .fq__a p {
+      padding-right: 8px;
     }
-    .faq__group h2 {
-      padding-top: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fq__a,
+    .fq__ico::before,
+    .fq__ico::after {
+      transition: none !important;
     }
   }
 </style>
