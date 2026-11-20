@@ -926,7 +926,7 @@ await test('HER-01', 'HUMAN for Her: six sections with the approved copy word fo
 
 await test('HER-02', 'HUMAN for Her: site typography reused, links work, mobile layout holds', async () => {
   const p = await ctx({ reducedMotion: 'reduce' });
-  await go(p, '/faq');
+  await go(p, '/404'); // reference page for the site's display heading
   const ref = await p.evaluate(() => { const h = getComputedStyle(document.querySelector('main .display')); const e = getComputedStyle(document.querySelector('main .display em')); return [h.fontFamily, h.fontWeight, h.textTransform, e.fontFamily, e.fontStyle].join('|'); });
   await go(p, '/women');
   const all = await p.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => { const c = getComputedStyle(h); const e = getComputedStyle(h.querySelector('em')); return [c.fontFamily, c.fontWeight, c.textTransform, e.fontFamily, e.fontStyle].join('|'); }));
@@ -990,7 +990,7 @@ await test('HIM-02', 'HUMAN for Him and for Her: same structure and hierarchy, s
   const shape = async (r) => { await go(p, r); return p.evaluate(() => [...document.querySelectorAll('main > section')].map((s) => [s.className.replace(/\s+/g, ' '), s.querySelectorAll('h1, h2').length, s.querySelectorAll('h3').length, s.querySelectorAll('a.btn').length].join(':')).join(' | ')); };
   const [a, b] = [await shape('/women'), await shape('/men')];
   assert(a === b, `structure differs:\n${a}\n${b}`);
-  await go(p, '/faq');
+  await go(p, '/404'); // reference page for the site's display heading
   const ref = await p.evaluate(() => { const h = getComputedStyle(document.querySelector('main .display')); const e = getComputedStyle(document.querySelector('main .display em')); return [h.fontFamily, h.fontWeight, h.letterSpacing === 'normal' ? 0 : (parseFloat(h.letterSpacing) / parseFloat(h.fontSize)).toFixed(3), h.textTransform, e.fontFamily, e.fontStyle, e.fontWeight].join('|'); });
   await go(p, '/men');
   const all = await p.evaluate(() => [...document.querySelectorAll('main h1, main h2')].map((h) => { const c = getComputedStyle(h); const e = getComputedStyle(h.querySelector('em')); return [c.fontFamily, c.fontWeight, (parseFloat(c.letterSpacing) / parseFloat(c.fontSize)).toFixed(3), c.textTransform, e.fontFamily, e.fontStyle, e.fontWeight].join('|'); }));
@@ -1671,7 +1671,7 @@ await test('HP-18', 'Portal typography is the main site’s: same families, weig
   const p = await ctx({ reducedMotion: 'reduce' });
   const pick = (sel, props) => p.evaluate(([sel, props]) => { const e = document.querySelector(sel); const c = getComputedStyle(e); const fs = parseFloat(c.fontSize); return Object.fromEntries(props.map((k) => [k, k === 'letterSpacing' ? (parseFloat(c.letterSpacing) / fs).toFixed(3) : k === 'lineHeight' ? (parseFloat(c.lineHeight) / fs).toFixed(2) : c[k]])); }, [sel, props]);
   const T = ['fontFamily', 'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight', 'textTransform', 'color'];
-  await go(p, '/faq');
+  await go(p, '/404'); // reference page for the site's display heading
   const site = {
     h: await pick('main .display', T), em: await pick('main .display em', T), emRatio: await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('main .display em')).fontSize) / parseFloat(getComputedStyle(document.querySelector('main .display')).fontSize)),
     mark: await pick('.site-header .wordmark', ['fontFamily', 'fontWeight', 'letterSpacing', 'fontSize']), btn: await pick('main a.btn', ['fontFamily', 'fontWeight', 'letterSpacing', 'fontSize']),
