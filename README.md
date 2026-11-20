@@ -1,7 +1,10 @@
-# HUMAN — prelaunch website (staging build)
+# HUMAN — investor-facing prototype website
 
-Static site built with Astro. No backend, no analytics, no third-party requests.
-**Not deployed. Not collecting data.** See `docs/HUMAN-RELEASE-GATES.md` before any launch.
+Static site built with Astro 5 and TypeScript. No server, no database, no analytics, no third-party requests.
+The waitlist is a **demonstration**: nothing typed into it is sent or stored.
+**Not deployed.** Hosting, variables and domain steps: `docs/HUMAN-HOSTING.md`.
+
+Needs Node 22 (see `.nvmrc`). No environment variables are needed to run or build it.
 
 ## Run it
 
@@ -45,10 +48,13 @@ npm install --no-save playwright && npx playwright install chromium
 
 | Path | What |
 |---|---|
-| `src/pages/` | Routes: `/`, `/women`, `/men`, `/about`, `/faq`, `/waitlist`, `/privacy`, `/terms`, `/medical-disclaimer`, 404 |
-| `src/components/home/` | Hero and the eight story scenes |
-| `src/scripts/motion.ts` | The whole motion engine (two primitives) |
-| `src/scripts/waitlist.ts` | Waitlist state machine and validation |
-| `src/data/site.ts` | Navigation, six stages, states/UTs, contact and endpoint switches |
-| `docs/` | Status, decisions, assets, motion registry, release gates, test report, review screenshots |
-| `HUMAN-Claude-Master-V3/` | The handoff kit this build follows |
+| `src/pages/` | Routes: `/`, `/women`, `/men`, `/explore-plans`, `/about`, `/faq`, `/waitlist`, `/privacy`, `/terms`, `/medical-disclaimer`, 404 |
+| `src/components/home/` | Homepage: opening film and story scenes |
+| `src/components/plans/` | Explore Plans: card explorer and overlay |
+| `src/components/info/` | Shared layout for FAQ, Privacy & Terms, Medical Disclaimer |
+| `src/data/` | All copy held as data: `site.ts` (navigation, contact, waitlist mode), `plans.ts`, `faq.ts`, `portal.ts`, `legal/` |
+| `src/scripts/` | Behaviour: `motion.ts`, `portal.ts` (waitlist), `plans-explorer.ts`, `plans-overlay.ts`, `faq.ts` |
+| `src/assets/` | Founder-supplied photographs and artwork (originals; web sizes are generated at build) |
+| `public/` | `robots.txt`, `_headers` (no-index header for the host), favicon |
+| `tests/e2e.mjs` | 91 end-to-end checks |
+| `docs/` | Hosting, legal review register, Explore Plans notes, waitlist contract, release gates |
