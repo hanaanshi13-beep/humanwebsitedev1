@@ -7,8 +7,9 @@
 // scrolling: no script is involved in the last act.
 //
 // Writes: transform, opacity and clip-path only. Nothing is measured while scrolling except one bounding box.
-// Off screen, on narrow or short screens, and with reduced motion (or the site's js-motion flag absent) it does
-// nothing at all and leaves the CSS flow layout in charge.
+// Off screen it does nothing. On narrow or short screens, with reduced motion (also when it is switched on while
+// the page is open), or without the site's js-motion flag, it removes .is-film from the section, which hands the
+// layout back to the CSS flow mode, and clears every style it wrote.
 
 /* ---------------------------------------------------------------------------------------------- tunables */
 
@@ -71,6 +72,7 @@ function film(sec: HTMLElement) {
   const para = $<HTMLElement>('[data-the-para]');
   const bar = $<HTMLElement>('[data-the-bar]');
   const label = $<HTMLElement>('[data-the-label]');
+  const hud = label.parentElement!;
 
   const wide = window.matchMedia('(min-width: 1024px) and (min-height: 640px)');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -94,10 +96,14 @@ function film(sec: HTMLElement) {
     travelPx = Math.max(1, travel.offsetHeight);
     const A = HERO.w / HERO.h;
     // end: tall enough to fill the stage top to bottom, and wide enough that no right-hand edge ever shows
-    s1 = Math.max(H * END_HEIGHT * A, (W - END_AT.x * W) / (1 - FACE.x) + 2);
+    // ... and never past MAX_ZOOM: on very tall screens the portrait then stays shorter than the stage and its
+    // top and bottom dissolve into the room (.is-capped) rather than being enlarged until it blurs
+    const cap = HERO.w * MAX_ZOOM;
+    s1 = Math.min(cap, Math.max(H * END_HEIGHT * A, (W - END_AT.x * W) / (1 - FACE.x) + 2));
     // start: as close as the photograph allows, never less than the end size, never past MAX_ZOOM
     const cover = Math.max(W, H * A) * 1.02;
-    s0 = Math.max(s1, cover, Math.min(W * 1.75, HERO.w * MAX_ZOOM));
+    s0 = Math.min(cap, Math.max(s1, cover, W * 1.75));
+    sec.classList.toggle('is-capped', s1 / A < H * 1.01);
     img.style.width = `${s0}px`;
     img.style.height = `${s0 / A}px`;
   }
@@ -109,7 +115,7 @@ function film(sec: HTMLElement) {
     const q = clamp(-top / travelPx);
 
     // entering: the top of the portrait comes out of the dark, and is fully clear by the time the stage pins
-    veil.style.opacity = clamp(top / (H * 0.6)).toFixed(3);
+    veil.style.opacity = clamp(top / (H * 0.3)).toFixed(3); // fully opaque at the edge until nearly pinned: no seam
 
     // 01 — the camera. Interpolate size, the point of the photograph we look at, and where it sits on screen.
     const a = span(q, T.pull);
@@ -119,8 +125,10 @@ function film(sec: HTMLElement) {
     const fy = mix(EYES.y, FACE.y, a);
     let x = mix(START_AT.x * W, END_AT.x * W, a) - fx * s;
     let y = mix(START_AT.y * H, END_AT.y * H, a) - fy * h;
-    x = Math.min(Math.max(x, W - s), Math.max(0, x)); // never leave a gap on the right
-    y = clamp(y, H - h, 0); // or at the top or bottom
+    // never leave a gap on the right (the left edge dissolves into the room); when the portrait is held at its
+    // sharpness limit and is narrower than the screen, it sits against the right edge
+    x = s >= W ? Math.min(Math.max(x, W - s), Math.max(0, x)) : W - s;
+    y = h >= H ? clamp(y, H - h, 0) : clamp(y, 0, H - h); // or at the top or bottom (when capped: stay inside)
     img.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) scale(${(s / s0).toFixed(5)})`;
 
     // the headline, line by line, then away as the triptych opens
@@ -151,11 +159,13 @@ function film(sec: HTMLElement) {
     para.style.opacity = p.toFixed(3);
     para.style.transform = `translate3d(0,${(20 * (1 - p)).toFixed(2)}px,0)`;
 
-    // the quiet progress line, over the whole passage including the editorial page's rise
-    const whole = clamp(-top / (travelPx + H));
-    bar.style.transform = `scaleX(${whole.toFixed(4)})`;
-    const text = q < T.montage[0] ? '01 / Through her eyes' : whole < 0.9 ? '02 / Her world' : '03 / HUMAN’s commitment';
+    // the quiet progress line fills over the film; the editorial page then rises over it
+    bar.style.transform = `scaleX(${q.toFixed(4)})`;
+    const text = q < T.montage[0] ? '01 / Through her eyes' : '02 / Her world';
     if (text !== lastLabel) label.textContent = lastLabel = text;
+    // once the editorial page covers the stage, its skip link must not take keyboard focus behind it
+    const covered = -top > travelPx + 1;
+    if (hud.inert !== covered) hud.inert = covered;
   }
 
   const request = () => {
@@ -181,10 +191,13 @@ function film(sec: HTMLElement) {
     const on = wide.matches && motionAllowed();
     if (on && !active) {
       active = true;
+      sec.classList.add('is-film');
       measure();
       request();
     } else if (!on && active) {
       active = false;
+      sec.classList.remove('is-film', 'is-capped');
+      hud.inert = false;
       clear();
     } else if (on) {
       measure();

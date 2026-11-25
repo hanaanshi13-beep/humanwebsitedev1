@@ -61,6 +61,7 @@ const group = await sized(together, 760);
         />
         <span class="the__hero-shade" data-the-shade aria-hidden="true"></span>
         <span class="the__veil" data-the-veil aria-hidden="true"></span>
+        <span class="the__floor" aria-hidden="true"></span>
       </figure>
 
       <!-- the headline as it arrives beside the portrait (a repeat of the editorial heading below) -->
@@ -120,6 +121,7 @@ const group = await sized(together, 760);
             width={group.w}
             height={group.h}
             alt="Three women of different ages together in warm sunlight: a young woman and an older woman with silver hair sitting, a woman in a burgundy kurta standing between them."
+            data-nav-tone="light"
             loading="lazy"
             decoding="async"
           />
@@ -228,7 +230,8 @@ const group = await sized(together, 760);
   }
   .the__para,
   .the__hud,
-  .the__travel {
+  .the__travel,
+  .the__floor {
     display: none;
   }
   .the__para-lead {
@@ -326,7 +329,8 @@ const group = await sized(together, 760);
     object-position: 54% 34%;
   }
   .the__hero-shade {
-    background: linear-gradient(0deg, rgba(24, 9, 8, 0.94) 0%, rgba(24, 9, 8, 0.62) 30%, rgba(24, 9, 8, 0) 58%);
+    /* ends on exactly the room's colour, so the photograph has no visible bottom edge behind the headline */
+    background: linear-gradient(0deg, var(--the-night) 0%, rgba(27, 9, 8, 0.86) 14%, rgba(27, 9, 8, 0.55) 34%, rgba(27, 9, 8, 0) 60%);
   }
   .the__lead {
     position: relative;
@@ -365,10 +369,11 @@ const group = await sized(together, 760);
 
   /* =========================================================================================================
      FILM: wide screens with motion. The stage is pinned; the script writes transforms and opacity only.
-     Thresholds match the site's other pinned scenes (min 1024 × 640).
+     Thresholds match the site's other pinned scenes (min 1024 × 640). The script adds .is-film only when the
+     film can run (JavaScript, motion allowed, wide enough), and removes it the moment that stops being true.
      ========================================================================================================= */
   @media (min-width: 1024px) and (min-height: 640px) {
-    :global(html.js-motion) .the__stage {
+    .the.is-film .the__stage {
       position: sticky;
       top: 0;
       height: 100vh;
@@ -376,20 +381,20 @@ const group = await sized(together, 760);
     }
     /* 180 stage heights of travel for the portrait and the triptych (the prototype's 0–72 %), then the
        editorial page takes one more stage height to rise over it. */
-    :global(html.js-motion) .the__travel {
+    .the.is-film .the__travel {
       display: block;
       height: 180vh;
       height: 180svh;
     }
-    :global(html.js-motion) .the__hero,
-    :global(html.js-motion) .the__montage {
+    .the.is-film .the__hero,
+    .the.is-film .the__montage {
       position: absolute;
       inset: 0;
       height: auto;
       min-height: 0;
       margin: 0;
     }
-    :global(html.js-motion) .the__hero-img {
+    .the.is-film .the__hero-img {
       inset: 0 auto auto 0;
       width: auto;
       height: auto;
@@ -401,57 +406,74 @@ const group = await sized(together, 760);
       -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 13%);
       mask-image: linear-gradient(90deg, transparent 0, #000 13%);
     }
-    :global(html.js-motion) .the__hero-shade {
+    .the.is-film .the__hero-shade {
       background:
         linear-gradient(90deg, rgba(22, 8, 8, 0.94) 0%, rgba(26, 10, 9, 0.8) 24%, rgba(26, 10, 9, 0.32) 46%, rgba(26, 10, 9, 0) 64%),
         linear-gradient(0deg, rgba(22, 8, 8, 0.55) 0%, rgba(22, 8, 8, 0) 40%);
       will-change: opacity;
     }
     /* while the stage is still rising into view; the script fades this out as it pins */
-    :global(html.js-motion) .the__veil {
+    .the.is-film .the__veil {
       height: 42vh;
       background: linear-gradient(180deg, var(--the-night) 0%, rgba(27, 9, 8, 0.7) 30%, rgba(27, 9, 8, 0) 100%);
       will-change: opacity;
     }
-    :global(html.js-motion) .the__lead {
+    /* a quiet dark floor under the progress line and the skip link, so both stay readable over her shirt */
+    .the.is-film .the__floor {
+      display: block;
+      position: absolute;
+      inset: auto 0 0 0;
+      height: clamp(140px, 24vh, 240px);
+      background: linear-gradient(0deg, rgba(18, 7, 6, 0.82) 0%, rgba(18, 7, 6, 0.5) 45%, rgba(18, 7, 6, 0) 100%);
+      pointer-events: none;
+    }
+    /* on very tall screens the portrait is held at its sharpness limit and may be shorter than the stage:
+       then its top and bottom also dissolve into the room */
+    .the.is-film.is-capped .the__hero-img {
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 13%), linear-gradient(180deg, transparent 0, #000 12%, #000 86%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image: linear-gradient(90deg, transparent 0, #000 13%), linear-gradient(180deg, transparent 0, #000 12%, #000 86%, transparent 100%);
+      mask-composite: intersect;
+    }
+    .the.is-film .the__lead {
       position: absolute;
       inset: 0;
       z-index: 2;
-      margin: 0;
+      margin-block: 0; /* keep .wrap's auto inline margins: the headline stays on the site's content column */
       padding-block: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       pointer-events: none;
     }
-    :global(html.js-motion) .the__lead-head {
+    .the.is-film .the__lead-head {
       font-size: var(--fs-display);
       max-width: 9.5em;
     }
-    :global(html.js-motion) .the__in {
+    .the.is-film .the__in {
       will-change: transform, opacity;
     }
-    :global(html.js-motion) .the__lead-head .the__in {
+    .the.is-film .the__lead-head .the__in {
       display: block;
     }
-    :global(html.js-motion) .the__montage {
+    .the.is-film .the__montage {
       z-index: 3;
       opacity: 0;
       margin: 0;
     }
-    :global(html.js-motion) .the__panel {
+    .the.is-film .the__panel {
       aspect-ratio: auto;
       will-change: transform, clip-path;
     }
-    :global(html.js-motion) .the__panel img {
+    .the.is-film .the__panel img {
       will-change: transform;
     }
-    :global(html.js-motion) .the__montage-shade {
+    .the.is-film .the__montage-shade {
       background:
         linear-gradient(0deg, rgba(22, 14, 16, 0.9) 0%, rgba(27, 19, 19, 0.45) 28%, rgba(27, 19, 19, 0) 56%),
         linear-gradient(180deg, rgba(28, 19, 19, 0.3), rgba(28, 19, 19, 0) 20%);
     }
-    :global(html.js-motion) .the__para {
+    .the.is-film .the__para {
       display: block;
       position: absolute;
       left: 0;
@@ -462,7 +484,7 @@ const group = await sized(together, 760);
       opacity: 0;
       will-change: transform, opacity;
     }
-    :global(html.js-motion) .the__hud {
+    .the.is-film .the__hud {
       display: grid;
       grid-template-columns: auto minmax(60px, 140px) 1fr;
       align-items: center;
@@ -472,7 +494,8 @@ const group = await sized(together, 760);
       right: 0;
       bottom: 18px;
       z-index: 4;
-      color: rgba(243, 239, 230, 0.78);
+      color: rgba(243, 239, 230, 0.86);
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
     }
     .the__hud-label {
       font-size: 0.6875rem;
@@ -501,7 +524,7 @@ const group = await sized(together, 760);
       gap: 8px;
       min-height: 44px;
       padding: 0 4px;
-      color: rgba(243, 239, 230, 0.86);
+      color: rgba(246, 242, 234, 0.94);
       font-size: var(--fs-note);
       font-weight: 600;
       letter-spacing: 0.04em;
@@ -517,17 +540,18 @@ const group = await sized(together, 760);
       height: 14px;
     }
     /* the editorial page: one full stage height, its content centred, never clipped (it simply grows) */
-    :global(html.js-motion) .the__final {
+    .the.is-film .the__final {
       min-height: 100vh;
       min-height: 100svh;
       display: flex;
       align-items: center;
       padding-block: calc(var(--header-h) + clamp(16px, 3vh, 40px)) clamp(36px, 6vh, 72px);
     }
-    :global(html.js-motion) .the__group {
-      max-height: calc(100svh - var(--header-h) - clamp(72px, 12vh, 128px));
-      aspect-ratio: auto;
-      height: min(calc(100svh - var(--header-h) - clamp(72px, 12vh, 128px)), calc((100vw - 2 * var(--gutter)) * 0.5 * 1402 / 1122));
+    .the.is-film .the__group {
+      /* never taller than the screen allows, never cropped: the width follows the photograph's own proportions */
+      --the-group-max-h: calc(100svh - var(--header-h) - clamp(72px, 12vh, 128px));
+      width: min(100%, calc(var(--the-group-max-h) * 1122 / 1402));
+      justify-self: start;
     }
   }
 </style>
