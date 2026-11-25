@@ -2937,6 +2937,238 @@ await test('XP-13', 'Explore Plans: the new HUMAN for Him photograph is on the c
   await p.context().close();
 });
 
+// ---------- Through Her Eyes (homepage, between Scene 03 and Scene 04) ----------
+const THE_COPY = {
+  eyebrow: 'Our approach to women’s health',
+  head: 'Women’s health should never be an afterthought.',
+  p1: 'Being a woman comes with its own set of health challenges. And understanding what’s happening inside your body shouldn’t be this difficult.',
+  p2: 'Whether it’s irregular periods, hormonal changes, unexplained fatigue, PCOS or navigating menopause, your concerns deserve attention.',
+  p3: 'At HUMAN, we’re putting a dedicated focus on women’s health. We’re developing female-specific blood tests, personalised health insights and health plans that take your body’s unique needs into account.',
+};
+const theNorm = (s) => s.replace(/['‘’]/g, '’').replace(/\s+/g, ' ').trim();
+/** scroll so the film is at travel fraction q (0..1), or past it into the editorial rise (q > 1: 1 + share of a stage height) */
+const theAt = async (p, q) => {
+  await p.evaluate((q) => {
+    const film = document.querySelector('[data-the-film]');
+    const T = document.querySelector('[data-the-travel]').offsetHeight;
+    const H = document.querySelector('[data-the-stage]').offsetHeight;
+    const top = film.getBoundingClientRect().top + scrollY;
+    scrollTo({ top: top + (q <= 1 ? q * T : T + (q - 1) * H), behavior: 'instant' });
+  }, q);
+  await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+};
+const theRead = (p) =>
+  p.evaluate(() => {
+    const sec = document.querySelector('[data-the]');
+    const img = sec.querySelector('[data-the-hero]');
+    const r = img.getBoundingClientRect();
+    const st = sec.querySelector('[data-the-stage]').getBoundingClientRect();
+    const op = (el) => Number(getComputedStyle(el).opacity);
+    return {
+      img: { l: r.left, t: r.top, w: r.width, h: r.height, r: r.right, b: r.bottom },
+      stage: { l: st.left, t: st.top, r: st.right, b: st.bottom, w: st.width, h: st.height },
+      eye: { x: r.left + 0.465 * r.width, y: r.top + 0.375 * r.height },
+      zoom: r.width / 1672,
+      heroOp: op(img.parentElement),
+      montageOp: op(sec.querySelector('[data-the-montage]')),
+      lines: [...sec.querySelectorAll('[data-the-line]')].map((l) => Number(l.style.opacity || getComputedStyle(l).opacity)),
+      linesRight: Math.max(0, ...[...sec.querySelectorAll('[data-the-line]')].filter((l) => Number(l.style.opacity) > 0.05).map((l) => { const g = document.createRange(); g.selectNodeContents(l); return g.getBoundingClientRect().right; })),
+      panels: [...sec.querySelectorAll('[data-the-panel]')].map((el) => el.style.clipPath),
+      para: op(sec.querySelector('[data-the-para]')),
+      finalTop: sec.querySelector('#the-message').getBoundingClientRect().top,
+      tone: document.querySelector('[data-header]').dataset.tone,
+      label: sec.querySelector('[data-the-label]').textContent,
+    };
+  });
+
+await test('THE-01', 'Through Her Eyes: placed right after "The side you can’t see", approved copy word for word, one heading, five supplied photographs with alt text, duplicates hidden from screen readers, numbering continues', async () => {
+  const p = await ctx({ reducedMotion: 'reduce' });
+  const failed = [];
+  p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
+  await go(p, '/');
+  const d = await p.evaluate(() => {
+    const sec = document.querySelector('[data-the]');
+        const final = sec.querySelector('#the-message');
+    const t = (e) => e.textContent.replace(/\s+/g, ' ').trim();
+    return {
+      // the sections immediately before and after, ignoring the style and script elements between them
+      prev: [...document.querySelectorAll('main section[id]')].filter((e) => e.compareDocumentPosition(sec) & Node.DOCUMENT_POSITION_FOLLOWING && !sec.contains(e) && !e.contains(sec)).at(-1)?.id,
+      next: [...document.querySelectorAll('main section[id]')].find((e) => sec.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_FOLLOWING && !sec.contains(e))?.id,
+      id: sec.id, label: sec.getAttribute('aria-labelledby'),
+      h2: [...sec.querySelectorAll('h1, h2, h3, h4, [role=heading]')].map((h) => h.tagName + ':' + t(h)),
+      eyebrow: t(final.querySelector('.eyebrow')),
+      head: t(final.querySelector('h2')),
+      paras: [...final.querySelectorAll('.the__prose p')].map(t),
+      imgs: [...sec.querySelectorAll('img')].map((i) => ({ src: i.currentSrc || i.src, alt: i.alt, hidden: !!i.closest('[aria-hidden="true"]') })),
+      hiddenDupes: [...sec.querySelectorAll('.the__lead, [data-the-para]')].every((e) => e.getAttribute('aria-hidden') === 'true'),
+      visibleText: [...sec.querySelectorAll('h2, p')].filter((e) => !e.closest('[aria-hidden="true"]')).map(t),
+      nums: [...document.querySelectorAll('main .eyebrow .num')].filter((n) => !n.closest('[aria-hidden="true"]')).map((n) => n.textContent.trim()),
+      s3Title: t(document.querySelector('#s3-title')), s4Title: t(document.querySelector('#s4-title')),
+    };
+  });
+  assert(d.prev === 'scene-03' && d.next === 'scene-04' && d.id === 'through-her-eyes' && d.label === 'the-title', `placement: ${d.prev} → ${d.id} → ${d.next}`);
+  assert(/The side\s*you can’t see\./.test(d.s3Title) && /Feeling fine/.test(d.s4Title), 'neighbouring sections changed');
+  assert(d.h2.length === 1 && theNorm(d.h2[0]) === 'H2:' + THE_COPY.head, 'headings: ' + d.h2.join(' | '));
+  assert(theNorm(d.eyebrow.replace(/^04/, '04 ')) === '04 ' + THE_COPY.eyebrow, 'eyebrow: ' + d.eyebrow);
+  assert(theNorm(d.head) === THE_COPY.head, 'headline: ' + d.head);
+  assert(d.paras.map(theNorm).join('|') === [THE_COPY.p1, THE_COPY.p2, THE_COPY.p3].join('|'), 'paragraphs: ' + d.paras.join(' | '));
+  assert(d.visibleText.map((x) => theNorm(x.replace(/^04(?=\S)/, '04 '))).join('|') === ['04 ' + THE_COPY.eyebrow, THE_COPY.head, THE_COPY.p1, THE_COPY.p2, THE_COPY.p3].join('|'), 'text exposed to screen readers: ' + d.visibleText.join(' | '));
+  assert(d.hiddenDupes, 'the repeated headline or paragraph is not hidden from screen readers');
+  const want = ['01-hero', '02-window', '03-walkway', '04-garden', '05-together'];
+  assert(d.imgs.length === 5 && d.imgs.every((im, i) => new RegExp(`through-her-eyes-${want[i]}\\.`).test(im.src)), 'photographs: ' + d.imgs.map((i) => i.src.split('/').pop()).join(', '));
+  assert(d.imgs.every((im) => im.alt.length > 30 && !im.hidden), 'alt text missing or images hidden');
+  assert(d.nums.join() === '01,02,03,04,05,06,07,08', 'section numbers: ' + d.nums.join());
+  const body = theNorm(await p.locator('[data-the]').innerText());
+  assert(!/\b\d+\s?%|statistic|available now|book now|diagnos|cure|treat|women only|testimonial/i.test(body), 'unapproved claim in the section');
+  assert(failed.length === 0 && p.consoleErrors.length === 0, [...failed, ...p.consoleErrors].join(' | '));
+  await p.context().close();
+});
+
+await test('THE-02', 'Through Her Eyes film at 1440×900: close portrait that never passes 1.3× its pixels, pullback to the right with the headline clear of her eyes, triptych in order, paragraph, editorial page rises, navigation tone follows, reverses exactly', async () => {
+  const p = await ctx({ viewport: { width: 1440, height: 900 } });
+  const failed = [];
+  p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
+  await go(p, '/');
+  assert((await p.locator('[data-the-stage]').evaluate((e) => getComputedStyle(e).position)) === 'sticky', 'stage is not pinned');
+  // warm the section so lazy photographs are in
+  for (let q = 0; q <= 1.6; q += 0.2) await theAt(p, q);
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-the] img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
+  await theAt(p, 0);
+  let s = await theRead(p);
+  assert(s.zoom > 1.2 && s.zoom <= 1.301, `start zoom ${s.zoom.toFixed(3)} (cap 1.3)`);
+  assert(Math.abs(s.eye.x - 720) < 140 && Math.abs(s.eye.y - 900 * 0.47) < 80, `eyes not at the centre: ${JSON.stringify(s.eye)}`);
+  assert(s.lines.every((o) => o < 0.05) && s.montageOp < 0.01, 'text or triptych visible on the opening frame');
+  // sweep: headline never over her eyes, portrait never shows an edge, the image never grows past the cap
+  let worst = 1e9;
+  for (let q = 0; q <= 0.6; q += 0.02) {
+    await theAt(p, q);
+    s = await theRead(p);
+    assert(s.zoom <= 1.301, `zoom ${s.zoom.toFixed(3)} at q=${q.toFixed(2)}`);
+    assert(s.img.r >= s.stage.r - 1 && s.img.t <= s.stage.t + 1 && s.img.b >= s.stage.b - 1, `portrait edge shows at q=${q.toFixed(2)}`);
+    if (s.heroOp > 0.3 && s.linesRight > 0) worst = Math.min(worst, s.eye.x - s.linesRight);
+  }
+  assert(worst > 24, `headline comes within ${Math.round(worst)}px of her eye`);
+  await theAt(p, 0.46);
+  s = await theRead(p);
+  assert(s.lines.every((o) => o > 0.95) && s.eye.x > 1440 * 0.6, `pullback end: lines ${s.lines}, eye at ${Math.round(s.eye.x)}`);
+  assert(s.tone === 'dark', 'navigation is not in its dark treatment over the film');
+  // triptych
+  await theAt(p, 0.6);
+  const mid = await theRead(p);
+  assert(mid.panels.length === 3 && mid.montageOp > 0.1 && mid.montageOp < 0.95, 'triptych not mid-reveal at q=0.6');
+  const open = mid.panels.map((c) => Number((c.match(/inset\(([\d.]+)%/) || [])[1]));
+  assert(open[0] < open[1] && open[1] < open[2], `panels do not open left to right: ${open}`);
+  const order = await p.evaluate(() => [...document.querySelectorAll('[data-the-panel] img')].map((i) => (i.currentSrc || i.src).match(/through-her-eyes-(\d\d)/)[1]).join());
+  assert(order === '02,03,04', 'panel order ' + order);
+  await theAt(p, 0.98);
+  s = await theRead(p);
+  assert(s.montageOp > 0.99 && s.heroOp < 0.01 && s.panels.every((c) => /^inset\(0(\.00)?%( 0(\.00)?%)?\)$/.test(c)) && s.para > 0.99, 'triptych or paragraph not complete: ' + JSON.stringify(s.panels) + ' para ' + s.para);
+  assert(s.label === '02 / Her world', 'label ' + s.label);
+  // editorial page rises over the pinned stage and lands with no gap
+  await theAt(p, 1.5);
+  s = await theRead(p);
+  assert(s.finalTop > 300 && s.finalTop < 600 && s.stage.t === 0, `editorial page at ${s.finalTop}, stage at ${s.stage.t}`);
+  await theAt(p, 2);
+  s = await theRead(p);
+  assert(Math.abs(s.finalTop) < 2, 'editorial page did not reach the top: ' + s.finalTop);
+  await p.waitForTimeout(1200); // the site's own entrance reveals on the editorial page
+  assert((await theRead(p)).tone === 'light', 'navigation is not in its light treatment over the editorial page');
+  const fin = await p.evaluate(() => { const f = document.querySelector('#the-message'); const r = f.getBoundingClientRect(); const els = [...f.querySelectorAll('h2, p, img')]; return { inView: els.every((e) => { const b = e.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight + 1 && Number(getComputedStyle(e.closest('[data-reveal]') || e).opacity) > 0.99; }), clipped: els.filter((e) => e.scrollWidth > e.clientWidth + 1).length, h: r.height }; });
+  assert(fin.inView && fin.clipped === 0, 'editorial page: content not all visible at 1440×900 ' + JSON.stringify(fin));
+  // reversing lands on exactly the same frame
+  await theAt(p, 0.3);
+  const a = await theRead(p);
+  await theAt(p, 0.9); await theAt(p, 0.1); await theAt(p, 0.3);
+  const b = await theRead(p);
+  assert(JSON.stringify({ ...a, tone: 0 }) === JSON.stringify({ ...b, tone: 0 }), 'the film does not reverse to the same frame');
+  // released into the next section
+  await p.evaluate(() => document.querySelector('#scene-04').scrollIntoView({ behavior: 'instant' }));
+  await p.waitForTimeout(300);
+  const rel = await p.evaluate(() => ({ stage: document.querySelector('[data-the-stage]').getBoundingClientRect().bottom, next: document.querySelector('#scene-04').getBoundingClientRect().top }));
+  assert(rel.stage <= rel.next + 1, 'the stage did not release: ' + JSON.stringify(rel));
+  assert(failed.length === 0 && p.consoleErrors.length === 0, [...failed, ...p.consoleErrors].join(' | '));
+  await p.context().close();
+});
+
+await test('THE-03', 'Through Her Eyes at 1920×1080, 1366×768, 1280×720 and 1024×768: no overflow, headline clear of her eyes, no edge of the portrait, closest zoom ≤ 1.3×, the editorial page complete and readable', async () => {
+  for (const [w, h] of [[1920, 1080], [1366, 768], [1280, 720], [1024, 768]]) {
+    const p = await ctx({ viewport: { width: w, height: h } });
+    await go(p, '/');
+    let worst = 1e9;
+    for (let q = 0; q <= 0.6; q += 0.03) {
+      await theAt(p, q);
+      const s = await theRead(p);
+      assert(s.zoom <= 1.301 && s.img.r >= s.stage.r - 1 && s.img.t <= s.stage.t + 1 && s.img.b >= s.stage.b - 1, `${w}×${h} q=${q.toFixed(2)}: ${JSON.stringify({ z: s.zoom, img: s.img })}`);
+      if (s.heroOp > 0.3 && s.linesRight > 0) worst = Math.min(worst, s.eye.x - s.linesRight);
+    }
+    assert(worst > 24, `${w}×${h}: headline within ${Math.round(worst)}px of her eye`);
+    await theAt(p, 2.2);
+    await p.waitForTimeout(700);
+    const fin = await p.evaluate(() => {
+      const f = document.querySelector('#the-message');
+      const els = [...f.querySelectorAll('h2, p')];
+      return { over: document.documentElement.scrollWidth - innerWidth, clipped: els.filter((e) => e.scrollWidth > e.clientWidth + 1).length, small: Math.min(...[...f.querySelectorAll('.the__prose p')].map((e) => parseFloat(getComputedStyle(e).fontSize))), right: Math.max(...els.map((e) => e.getBoundingClientRect().right)) };
+    });
+    assert(fin.over <= 0 && fin.clipped === 0 && fin.small >= 16 && fin.right <= w, `${w}×${h} editorial page: ${JSON.stringify(fin)}`);
+    assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+    await p.context().close();
+  }
+});
+
+await test('THE-04', 'Through Her Eyes flow layout (phones, portrait tablet, short screen, reduced motion): nothing pinned, nothing scripted, all three parts in order, no overflow, copy complete', async () => {
+  for (const [w, h, opts] of [[390, 844, {}], [375, 812, {}], [360, 800, {}], [430, 932, {}], [768, 1024, {}], [1280, 600, {}], [1440, 900, { reducedMotion: 'reduce' }]]) {
+    const p = await ctx({ viewport: { width: w, height: h }, ...opts });
+    await go(p, '/');
+    await p.evaluate(() => document.querySelector('[data-the]').scrollIntoView({ behavior: 'instant' }));
+    await p.waitForTimeout(300);
+    for (let y = 0; y < 6; y++) { await p.mouse.wheel(0, h * 0.8); await p.waitForTimeout(120); }
+    await p.waitForTimeout(500);
+    const d = await p.evaluate(() => {
+      const sec = document.querySelector('[data-the]');
+      const stage = sec.querySelector('[data-the-stage]');
+      const hero = sec.querySelector('.the__hero').getBoundingClientRect(), mont = sec.querySelector('[data-the-montage]').getBoundingClientRect(), fin = sec.querySelector('#the-message').getBoundingClientRect();
+      const inline = [...sec.querySelectorAll('[style]')].filter((e) => /transform|opacity|clip-path/.test(e.getAttribute('style')) && !e.matches('[data-the-panel] img, .mask, [data-reveal]')).length;
+      const els = [...sec.querySelectorAll('#the-message h2, #the-message p, .the__lead .display')];
+      return { pos: getComputedStyle(stage).position, travel: getComputedStyle(sec.querySelector('[data-the-travel]')).display, hud: getComputedStyle(sec.querySelector('.the__hud')).display, skipFocusable: sec.querySelector('.the__skip').checkVisibility?.() ?? false, inline, order: hero.top < mont.top && mont.top < fin.top, over: document.documentElement.scrollWidth - innerWidth, clipped: els.filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.className), panels: [...sec.querySelectorAll('[data-the-panel]')].map((e) => Math.round(e.getBoundingClientRect().height)), heroH: Math.round(hero.height) };
+    });
+    assert(d.pos !== 'sticky' && d.travel === 'none' && d.hud === 'none' && !d.skipFocusable, `${w}×${h}: film parts active ${JSON.stringify(d)}`);
+    assert(d.inline === 0, `${w}×${h}: scripted styles present in the flow layout (${d.inline})`);
+    assert(d.order && d.over <= 0 && d.clipped.length === 0, `${w}×${h}: ${JSON.stringify(d)}`);
+    assert(d.panels.every((x) => x > 150) && d.heroH > 400, `${w}×${h}: photographs too small ${JSON.stringify(d)}`);
+    const t = theNorm(await p.locator('#the-message').innerText());
+    for (const k of ['p1', 'p2', 'p3']) assert(t.includes(THE_COPY[k]), `${w}×${h}: ${k} missing`);
+    assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+    await p.context().close();
+  }
+});
+
+await test('THE-05', 'Through Her Eyes: keyboard "Skip to the message" lands on the editorial page with focus; resizing between film and flow leaves no stray styles; works without JavaScript', async () => {
+  const p = await ctx({ viewport: { width: 1440, height: 900 } });
+  await go(p, '/');
+  await theAt(p, 0.2);
+  await p.locator('.the__skip').focus();
+  const ring = await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle + parseFloat(getComputedStyle(document.activeElement).outlineWidth));
+  assert(/solid[2-9]/.test(ring), 'no focus ring on the skip link: ' + ring);
+  await p.keyboard.press('Enter');
+  await p.waitForTimeout(900);
+  const d = await p.evaluate(() => ({ top: document.querySelector('#the-message').getBoundingClientRect().top, focus: document.activeElement?.id }));
+  assert(Math.abs(d.top) < 4 && d.focus === 'the-message', 'skip link: ' + JSON.stringify(d));
+  await p.setViewportSize({ width: 390, height: 844 });
+  await p.waitForTimeout(500);
+  const stray = await p.evaluate(() => [...document.querySelectorAll('[data-the] [style]')].filter((e) => /transform|opacity|clip-path|width/.test(e.getAttribute('style')) && !e.matches('[data-the-panel] img, .mask')).length);
+  assert(stray === 0, `${stray} scripted styles left after switching to the phone layout`);
+  await p.setViewportSize({ width: 1440, height: 900 });
+  await p.waitForTimeout(500);
+  await theAt(p, 0);
+  assert((await theRead(p)).zoom > 1.2, 'film did not resume after switching back');
+  await p.context().close();
+  const n = await ctx({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+  await go(n, '/');
+  const nd = await n.evaluate(() => { const sec = document.querySelector('[data-the]'); return { pos: getComputedStyle(sec.querySelector('[data-the-stage]').position ? sec.querySelector('[data-the-stage]') : sec).position, text: sec.querySelector('#the-message').innerText, vis: [...sec.querySelectorAll('#the-message h2, #the-message p, img')].every((e) => Number(getComputedStyle(e.closest('[data-reveal]') || e).opacity) > 0.99) }; });
+  assert(nd.pos !== 'sticky' && nd.vis && theNorm(nd.text).includes(THE_COPY.p3), 'without JavaScript: ' + JSON.stringify({ pos: nd.pos, vis: nd.vis }));
+  await n.context().close();
+});
+
 await test('ZOOM', '200% text size at 390px: hero, waitlist and the informational pages grow vertically, no clipping or overflow', async () => {
   const p = await ctx({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
   for (const r of ['/', '/waitlist', '/faq', '/about', '/privacy', '/terms', '/medical-disclaimer', '/explore-plans']) {

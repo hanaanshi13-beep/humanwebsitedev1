@@ -256,7 +256,7 @@ const group = await sized(together, 760);
     z-index: 2;
     background: var(--paper);
     color: var(--text-on-light);
-    scroll-margin-top: 0; /* land with the page, not under the header gap */
+    scroll-margin-top: calc(-1 * (var(--header-h) + 12px)); /* land flush with the top: the page has its own header room */
     outline: none;
   }
   .the__grid {
