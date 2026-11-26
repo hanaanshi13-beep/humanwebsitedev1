@@ -159,6 +159,7 @@ function film(sec: HTMLElement) {
 
   const prepare = () =>
     (preparing ??= (async () => {
+      img.loading = 'eager'; // in case the film only began after the page loaded (a resize from the phone layout)
       try {
         if (!img.complete) {
           await new Promise<void>((res, rej) => {
@@ -171,10 +172,13 @@ function film(sec: HTMLElement) {
         if (!canvas.getContext('2d')) throw new Error('no 2d canvas');
         paint(floating);
       } catch {
+        // the photograph itself did not arrive (offline, blocked): the room simply stays dark around the headline
+        if (!img.naturalWidth) return;
+        // it arrived but a canvas could not be used: the camera moves the <img> instead
         useImageInstead();
       }
       sec.classList.add('is-ready');
-      request();
+      pose();
       // then the triptych and the group photograph, quietly, one after another, long before they are reached
       for (const im of later) {
         await new Promise<void>((r) => idle(() => r(), 2500));
@@ -242,18 +246,38 @@ function film(sec: HTMLElement) {
   // a style or layout pass) and when the section comes near; the frame itself only writes
   let top = 0;
   const readTop = () => (top = filmEl.getBoundingClientRect().top);
+  // whether the section is on or near the screen is also decided here, in the scroll event itself: a jump (scrollbar
+  // drag, Page Down, find in page) then draws the right frame before it is first shown, instead of a frame later
   const onScroll = () => {
-    if (active && near) {
-      readTop();
-      request();
+    if (!active) return;
+    const r = sec.getBoundingClientRect();
+    const isNear = r.bottom > -0.5 * innerHeight && r.top < 1.5 * innerHeight;
+    if (!isNear) {
+      near = false;
+      return;
     }
+    if (!near) {
+      near = true;
+      snap = true;
+    }
+    readTop();
+    request();
   };
 
-  function frame(now: number) {
+  // draw the current position at once, even while the section is not near (cheap): it is then right whenever it shows
+  function pose() {
+    if (!active) return;
+    readTop();
+    snap = true;
+    frame(performance.now(), true);
+  }
+
+  function frame(now: number, force = false) {
     queued = false;
-    if (!active || !near) return;
+    if (!active || (!near && !force)) return;
     const target = clamp(-top / travelPx);
-    const dt = Math.min(0.064, Math.max(0, (now - lastT) / 1000));
+    // a frame that starts the loop again after it went still counts as one ordinary frame, not the whole pause
+    const dt = lastT ? Math.min(0.064, Math.max(0, (now - lastT) / 1000)) : 1 / 60;
     lastT = now;
     if (snap || FOLLOW <= 0) {
       q = target;
@@ -275,7 +299,8 @@ function film(sec: HTMLElement) {
     const settled = q === target && v === 0;
     const s = settled ? '1' : '0';
     if (s !== still) sec.dataset.theStill = still = s;
-    if (!settled) request();
+    if (settled) lastT = 0;
+    else request();
   }
 
   function render(p: number) {
@@ -348,10 +373,7 @@ function film(sec: HTMLElement) {
       measure();
       const r = sec.getBoundingClientRect();
       near = r.bottom > -0.5 * innerHeight && r.top < 1.5 * innerHeight;
-      if (near) {
-        readTop();
-        frame(performance.now());
-      }
+      pose();
       // the portrait is prepared once the page has finished loading and the browser is idle (or at once, if the
       // visitor is already close)
       if (document.readyState === 'complete') idle(prepare);
@@ -365,8 +387,11 @@ function film(sec: HTMLElement) {
       clear();
     } else if (on) {
       measure();
-      if (near) readTop();
-      request();
+      pose();
+    } else {
+      // never active: clear the layout the page decided on while it was being read (reduced motion switched on in
+      // between, for instance)
+      sec.classList.remove('is-film', 'is-capped');
     }
   }
 
@@ -375,11 +400,8 @@ function film(sec: HTMLElement) {
     (entries) => {
       const was = near;
       near = entries.some((e) => e.isIntersecting);
-      if (near && !was) {
-        snap = true;
-        readTop();
-      }
-      if (near) request();
+      if (near && !was) pose();
+      else if (near) request();
     },
     { rootMargin: '50% 0px 50% 0px' },
   ).observe(sec);
@@ -402,4 +424,8 @@ function film(sec: HTMLElement) {
 }
 
 const sec = document.querySelector<HTMLElement>('[data-the]');
-if (sec) film(sec);
+if (sec) {
+  // tells the page's own safety check (in ThroughHerEyes.astro) that the film is being driven
+  sec.dataset.theLive = '';
+  film(sec);
+}

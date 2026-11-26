@@ -50,8 +50,9 @@ const group = await sized(together, 760);
     <span class="the__dusk" data-nav-tone="dark" aria-hidden="true"></span>
     <div class="the__stage on-dark" data-the-stage>
       <figure class="the__hero" data-the-portrait data-nav-tone="dark">
-        <!-- downloaded with the page at low priority; on wide screens it is decoded early and painted once into the
-             canvas below, which is what the camera moves (see src/scripts/through-her-eyes.ts) -->
+        <!-- on wide screens (the film) it is downloaded with the page at low priority, decoded early and painted once
+             into the canvas below, which is what the camera moves (see src/scripts/through-her-eyes.ts); elsewhere it
+             is an ordinary lazily loaded photograph -->
         <img
           class="the__hero-img"
           data-the-hero
@@ -59,7 +60,7 @@ const group = await sized(together, 760);
           width={hero.width}
           height={hero.height}
           alt="A young woman with dark hair, in a linen shirt, looking directly at the camera against a deep burgundy background."
-          loading="eager"
+          loading="lazy"
           fetchpriority="low"
           decoding="async"
           draggable="false"
@@ -160,6 +161,13 @@ const group = await sized(together, 760);
     var html = document.documentElement;
     if (s && html.classList.contains('js-motion') && window.matchMedia('(min-width: 1024px) and (min-height: 640px)').matches) {
       s.classList.add('is-film');
+      // the film needs the portrait early: fetch it now, at low priority
+      var im = s.querySelector('[data-the-hero]');
+      if (im) im.loading = 'eager';
+      // safety net: if the film's script never ran (a failed download, for instance), fall back to the plain layout
+      window.addEventListener('load', function () {
+        if (!s.hasAttribute('data-the-live')) s.classList.remove('is-film');
+      });
     }
   })();
 </script>
@@ -450,10 +458,11 @@ const group = await sized(together, 760);
     /* the canvas is shown once the portrait is decoded and painted into it: before that the room is simply dark */
     .the.is-film .the__hero-canvas {
       opacity: 0;
-      transition: opacity 0.7s ease;
     }
+    /* the fade belongs to this one moment only, never to a change of layout */
     .the.is-film.is-ready .the__hero-canvas {
       opacity: 1;
+      transition: opacity 0.7s ease;
     }
     .the.is-film.is-fallback .the__hero-canvas {
       display: none;

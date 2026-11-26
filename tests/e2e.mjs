@@ -3176,7 +3176,8 @@ await test('THE-05', 'Through Her Eyes: keyboard "Skip to the message" lands on 
   await p.setViewportSize({ width: 1440, height: 900 });
   await p.waitForTimeout(500);
   await theAt(p, 0);
-  assert((await theRead(p)).zoom > 1.2, 'film did not resume after switching back');
+  const back = await p.evaluate((cam) => ({ tf: eval(cam).style.transform, still: document.querySelector('[data-the]').dataset.theStill }), THE_CAM);
+  assert((await theRead(p)).zoom > 1.2 && /translate3d/.test(back.tf) && back.still === '1', 'film did not resume after switching back: ' + JSON.stringify(back));
   await p.context().close();
   const n = await ctx({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
   await go(n, '/');
@@ -3219,7 +3220,7 @@ await test('THE-07', 'Through Her Eyes after "What HUMAN is": nothing overlaps t
     const p = await ctx({ viewport: { width: w, height: h } });
     await go(p, '/');
     // the introduction's foot at the bottom of the screen, then half a screen further
-    for (const off of [1, 0.55]) {
+    for (const off of [0.98, 0.55]) {
       await p.evaluate((off) => { const b = document.querySelector('#what-is-human'); scrollTo({ top: b.getBoundingClientRect().bottom + scrollY - innerHeight * off, behavior: 'instant' }); }, off);
       await p.waitForTimeout(400);
       const d = await p.evaluate(() => {
@@ -3231,13 +3232,15 @@ await test('THE-07', 'Through Her Eyes after "What HUMAN is": nothing overlaps t
         return {
           gap: the.getBoundingClientRect().top - brief.bottom,
           toggle: tr && tr.bottom > 0 && tr.top < innerHeight ? document.elementFromPoint(tr.left + tr.width / 2, tr.top + tr.height / 2)?.closest('.pathway__toggle') === tg : null,
-          above: brief.bottom > 4 && brief.bottom < innerHeight ? hit(innerWidth * 0.6, brief.bottom - 3) : 'n/a',
+          above: brief.bottom > 4 && brief.bottom < innerHeight ? [0.05, 0.25, 0.5, 0.75, 0.95].map((f) => hit(innerWidth * f, brief.bottom - 3)).find((x) => x !== 'brief') || 'brief' : 'n/a',
+          track: (() => { const t = document.querySelector('[data-pathway]'); if (!t) return 'none'; const r = t.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return 'n/a'; const y = Math.min(innerHeight - 2, Math.max(1, r.top + r.height / 2)); return [0.05, 0.3, 0.5, 0.7, 0.95].map((f) => hit(innerWidth * f, y)).find((x) => x !== 'brief') || 'brief'; })(),
           bg: getComputedStyle(the).backgroundImage,
         };
       });
       assert(Math.abs(d.gap) < 0.5, `${w}×${h}: the section does not start exactly at the introduction's foot (${d.gap}px)`);
       assert(d.toggle !== false, `${w}×${h}: the pathway's pause control is covered`);
       assert(d.above === 'brief' || d.above === 'n/a', `${w}×${h}: something is drawn over the introduction's foot: ${d.above}`);
+      assert(d.track === 'brief' || d.track === 'n/a', `${w}×${h}: something is drawn over the pathway: ${d.track}`);
       assert(/^linear-gradient\(rgb\(11, 13, 15\)/.test(d.bg) && d.bg.includes('rgb(27, 9, 8)'), `${w}×${h}: lead-in ${d.bg}`);
     }
     // out: the editorial page and "Where it starts" are on the same paper, with no gap or overlap
@@ -3277,29 +3280,67 @@ await test('THE-08', 'Through Her Eyes camera: decoded and painted before the vi
     for (const k of [0, 1, 2]) {
       const moving = steps.filter((d) => Math.abs(d[k]) > 0.05);
       assert(moving.every((d) => Math.sign(d[k]) === Math.sign(moving[0][k])), `${w}×${h}: axis ${k} reverses during the pullback`);
+      // an axis that moves must keep moving through the body of the pullback (q 0.08–0.38): no part-way freeze
+      const total = Math.abs(path.at(-1)[k] - path[0][k]);
+      if (total > 20) {
+        const body = steps.slice(8, 38).map((d) => Math.abs(d[k]));
+        const peak = Math.max(...body);
+        assert(body.every((x) => x > 0.1 * peak), `${w}×${h}: axis ${k} stalls part-way (${body.map((x) => x.toFixed(1)).join(' ')})`);
+      }
     }
-    // stopped: nothing moves on its own
-    await theAt(p, 0.27);
-    const a = await p.evaluate((cam) => eval(cam).style.transform, THE_CAM);
-    await p.waitForTimeout(600);
-    assert((await p.evaluate((cam) => eval(cam).style.transform, THE_CAM)) === a, `${w}×${h}: the portrait moved after the scroll stopped`);
+    // one wheel notch from rest: the camera glides there (no big first step, no overshoot), settles quickly, then stays
+    await theAt(p, 0.2);
+    const glide = await p.evaluate((cam) => new Promise((res) => {
+      const c = eval(cam);
+      const sc = () => Number((c.style.transform.match(/scale\(([\d.]+)\)/) || [])[1]);
+      const s0 = sc(); const xs = []; const t0 = performance.now();
+      scrollBy({ top: 100, behavior: 'instant' });
+      const tick = () => { xs.push(sc()); performance.now() - t0 < 1100 ? requestAnimationFrame(tick) : res({ s0, xs, t: performance.now() - t0 }); };
+      requestAnimationFrame(tick);
+    }), THE_CAM);
+    const total = Math.abs(glide.xs.at(-1) - glide.s0);
+    const first = Math.abs(glide.xs.find((x) => x !== glide.s0) - glide.s0);
+    const lastMove = glide.xs.findLastIndex((x, i) => i > 0 && x !== glide.xs[i - 1]);
+    const over = glide.xs.some((x) => (x - glide.xs.at(-1)) * (glide.s0 - glide.xs.at(-1)) < -1e-6);
+    assert(total > 0 && first < 0.2 * total, `${w}×${h}: the first frame after a notch covers ${(100 * first / total).toFixed(0)}% of it`);
+    assert(!over, `${w}×${h}: the camera overshoots after a notch`);
+    assert(lastMove < glide.xs.length * 0.6, `${w}×${h}: the camera keeps moving long after the scroll (${lastMove}/${glide.xs.length} frames)`);
     assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
     await p.context().close();
   }
-  // a deep link straight into the section: the first frame is already the opening (no headline flash)
+  // the layout is decided while the page is read, before the film's script runs: with that script held back, a deep
+  // link's first frame is already the film's opening (stage pinned, no headline flash, portrait requested early)
   const d = await ctx({ viewport: { width: 1440, height: 900 } });
-  await d.goto(BASE + '/#through-her-eyes', { waitUntil: 'domcontentloaded' });
-  const first = await d.evaluate(() => new Promise((r) => requestAnimationFrame(() => r([...document.querySelectorAll('[data-the-line]')].map((l) => Number(getComputedStyle(l).opacity))))));
-  assert(first.every((o) => o < 0.05), 'headline visible on the first frame of a deep link: ' + first);
+  let release;
+  const held = new Promise((r) => (release = r));
+  await d.route(/ThroughHerEyes\.astro_astro_type_script/, async (route) => { await held; await route.abort(); });
+  await d.goto(BASE + '/#through-her-eyes', { waitUntil: 'commit' });
+  await d.waitForSelector('[data-the-film]', { state: 'attached' });
+  const first = await d.evaluate(() => new Promise((r) => requestAnimationFrame(() => { const s = document.querySelector('[data-the]'); r({ film: s.classList.contains('is-film'), pos: getComputedStyle(s.querySelector('[data-the-stage]')).position, lines: [...s.querySelectorAll('[data-the-line]')].map((l) => Number(getComputedStyle(l).opacity)), eager: s.querySelector('[data-the-hero]').loading }); })));
+  assert(first.film && first.pos === 'sticky' && first.lines.every((o) => o < 0.05) && first.eager === 'eager', 'first frame before the script: ' + JSON.stringify(first));
+  // and if that script never arrives, the plain layout returns once the page has loaded (nothing stuck in a dark room)
+  release();
+  await d.waitForLoadState('load');
+  await d.waitForTimeout(300);
+  const fallback = await d.evaluate(() => { const s = document.querySelector('[data-the]'); return { film: s.classList.contains('is-film'), pos: getComputedStyle(s.querySelector('[data-the-stage]')).position }; });
+  assert(!fallback.film && fallback.pos !== 'sticky', 'film layout stuck without its script: ' + JSON.stringify(fallback));
   await d.context().close();
+  // phones never download the portrait early (it stays lazy there)
+  const m = await ctx({ viewport: { width: 390, height: 844 } });
+  await m.goto(BASE + '/', { waitUntil: 'load' });
+  assert((await m.evaluate(() => document.querySelector('[data-the-hero]').loading)) === 'lazy', 'phone layout loads the portrait eagerly');
+  await m.context().close();
   // a slow connection: until the portrait is decoded the room is dark (no half-drawn picture), then it fades in
   const s = await ctx({ viewport: { width: 1440, height: 900 } });
-  await s.route(/through-her-eyes-01-hero/, async (route) => { await new Promise((r) => setTimeout(r, 2500)); await route.continue(); });
+  let arrive;
+  const late = new Promise((r) => (arrive = r));
+  await s.route(/through-her-eyes-01-hero/, async (route) => { await late; await route.continue(); });
   await s.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await s.evaluate(() => { const f = document.querySelector('[data-the-film]'); scrollTo({ top: f.getBoundingClientRect().top + scrollY + 100, behavior: 'instant' }); });
   await s.waitForTimeout(400);
   const before = await s.evaluate(() => ({ ready: document.querySelector('[data-the]').classList.contains('is-ready'), op: Number(getComputedStyle(document.querySelector('[data-the-canvas]')).opacity) }));
   assert(!before.ready && before.op < 0.01, 'portrait shown before it was ready: ' + JSON.stringify(before));
+  arrive();
   await s.waitForFunction(() => document.querySelector('[data-the]').classList.contains('is-ready'), null, { timeout: 15000 });
   await s.waitForTimeout(900);
   assert(Number(await s.evaluate(() => getComputedStyle(document.querySelector('[data-the-canvas]')).opacity)) > 0.99, 'portrait did not appear once ready');
