@@ -2937,7 +2937,7 @@ await test('XP-13', 'Explore Plans: the new HUMAN for Him photograph is on the c
   await p.context().close();
 });
 
-// ---------- Through Her Eyes (homepage, between Scene 03 and Scene 04) ----------
+// ---------- Through Her Eyes (homepage, between What HUMAN is and Scene 01) ----------
 const THE_COPY = {
   eyebrow: 'Our approach to women’s health',
   head: 'Women’s health should never be an afterthought.',
@@ -2956,12 +2956,17 @@ const theAt = async (p, q) => {
     scrollTo({ top: top + (q <= 1 ? q * T : T + (q - 1) * H), behavior: 'instant' });
   }, q);
   await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  // the film follows the scroll through a short spring: wait until it has settled
+  await p.waitForFunction(() => document.querySelector('[data-the]').dataset.theStill !== '0', null, { timeout: 5000 });
 };
+/** the element the camera moves: the canvas, or the <img> where the canvas is not used */
+const THE_CAM = `(() => { const s = document.querySelector('[data-the]'); const c = s.querySelector('[data-the-canvas]'); return c && getComputedStyle(c).display !== 'none' ? c : s.querySelector('[data-the-hero]'); })()`;
 const theRead = (p) =>
   p.evaluate(() => {
     const sec = document.querySelector('[data-the]');
     const img = sec.querySelector('[data-the-hero]');
-    const r = img.getBoundingClientRect();
+    const c = sec.querySelector('[data-the-canvas]');
+    const r = (c && getComputedStyle(c).display !== 'none' ? c : img).getBoundingClientRect();
     const st = sec.querySelector('[data-the-stage]').getBoundingClientRect();
     const op = (el) => Number(getComputedStyle(el).opacity);
     return {
@@ -2981,7 +2986,7 @@ const theRead = (p) =>
     };
   });
 
-await test('THE-01', 'Through Her Eyes: placed right after "The side you can’t see", approved copy word for word, one heading, five supplied photographs with alt text, duplicates hidden from screen readers, numbering continues', async () => {
+await test('THE-01', 'Through Her Eyes: placed right after "What HUMAN is" and before "Where it starts", approved copy word for word, one heading, five supplied photographs with alt text, duplicates hidden from screen readers, unnumbered like the introduction, production numbering unchanged', async () => {
   const p = await ctx({ reducedMotion: 'reduce' });
   const failed = [];
   p.on('response', (r) => r.status() >= 400 && failed.push(r.url()));
@@ -3003,21 +3008,21 @@ await test('THE-01', 'Through Her Eyes: placed right after "The side you can’t
       hiddenDupes: [...sec.querySelectorAll('.the__lead, [data-the-para]')].every((e) => e.getAttribute('aria-hidden') === 'true'),
       visibleText: [...sec.querySelectorAll('h2, p')].filter((e) => !e.closest('[aria-hidden="true"]')).map(t),
       nums: [...document.querySelectorAll('main .eyebrow .num')].filter((n) => !n.closest('[aria-hidden="true"]')).map((n) => n.textContent.trim()),
-      s3Title: t(document.querySelector('#s3-title')), s4Title: t(document.querySelector('#s4-title')),
+      briefTitle: t(document.querySelector('#brief-title')), s1Title: t(document.querySelector('#s1-title')), hasNum: !!sec.querySelector('.num'),
     };
   });
-  assert(d.prev === 'scene-03' && d.next === 'scene-04' && d.id === 'through-her-eyes' && d.label === 'the-title', `placement: ${d.prev} → ${d.id} → ${d.next}`);
-  assert(/The side\s*you can’t see\./.test(d.s3Title) && /Feeling fine/.test(d.s4Title), 'neighbouring sections changed');
+  assert(d.prev === 'what-is-human' && d.next === 'scene-01' && d.id === 'through-her-eyes' && d.label === 'the-title', `placement: ${d.prev} → ${d.id} → ${d.next}`);
+  assert(/A preventive healthcare company\./.test(d.briefTitle) && /You take care/.test(d.s1Title), 'neighbouring sections changed');
   assert(d.h2.length === 1 && theNorm(d.h2[0]) === 'H2:' + THE_COPY.head, 'headings: ' + d.h2.join(' | '));
-  assert(theNorm(d.eyebrow.replace(/^04/, '04 ')) === '04 ' + THE_COPY.eyebrow, 'eyebrow: ' + d.eyebrow);
+  assert(theNorm(d.eyebrow) === THE_COPY.eyebrow && !d.hasNum, 'eyebrow: ' + d.eyebrow);
   assert(theNorm(d.head) === THE_COPY.head, 'headline: ' + d.head);
   assert(d.paras.map(theNorm).join('|') === [THE_COPY.p1, THE_COPY.p2, THE_COPY.p3].join('|'), 'paragraphs: ' + d.paras.join(' | '));
-  assert(d.visibleText.map((x) => theNorm(x.replace(/^04(?=\S)/, '04 '))).join('|') === ['04 ' + THE_COPY.eyebrow, THE_COPY.head, THE_COPY.p1, THE_COPY.p2, THE_COPY.p3].join('|'), 'text exposed to screen readers: ' + d.visibleText.join(' | '));
+  assert(d.visibleText.map(theNorm).join('|') === [THE_COPY.eyebrow, THE_COPY.head, THE_COPY.p1, THE_COPY.p2, THE_COPY.p3].join('|'), 'text exposed to screen readers: ' + d.visibleText.join(' | '));
   assert(d.hiddenDupes, 'the repeated headline or paragraph is not hidden from screen readers');
   const want = ['01-hero', '02-window', '03-walkway', '04-garden', '05-together'];
   assert(d.imgs.length === 5 && d.imgs.every((im, i) => new RegExp(`through-her-eyes-${want[i]}\\.`).test(im.src)), 'photographs: ' + d.imgs.map((i) => i.src.split('/').pop()).join(', '));
   assert(d.imgs.every((im) => im.alt.length > 30 && !im.hidden), 'alt text missing or images hidden');
-  assert(d.nums.join() === '01,02,03,04,05,06,07,08', 'section numbers: ' + d.nums.join());
+  assert(d.nums.join() === '01,02,03,04,06,07,08', 'section numbers (as in production): ' + d.nums.join());
   const body = theNorm(await p.locator('[data-the]').innerText());
   assert(!/\b\d+\s?%|statistic|available now|book now|diagnos|cure|treat|women only|testimonial/i.test(body), 'unapproved claim in the section');
   assert(failed.length === 0 && p.consoleErrors.length === 0, [...failed, ...p.consoleErrors].join(' | '));
@@ -3033,6 +3038,7 @@ await test('THE-02', 'Through Her Eyes film at 1440×900: close portrait that ne
   // warm the section so lazy photographs are in
   for (let q = 0; q <= 1.6; q += 0.2) await theAt(p, q);
   await p.waitForFunction(() => [...document.querySelectorAll('[data-the] img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
+  await p.waitForFunction(() => document.querySelector('[data-the]').classList.contains('is-ready'), null, { timeout: 15000 });
   await theAt(p, 0);
   let s = await theRead(p);
   assert(s.zoom > 1.2 && s.zoom <= 1.301, `start zoom ${s.zoom.toFixed(3)} (cap 1.3)`);
@@ -3063,7 +3069,7 @@ await test('THE-02', 'Through Her Eyes film at 1440×900: close portrait that ne
   await theAt(p, 0.98);
   s = await theRead(p);
   assert(s.montageOp > 0.99 && s.heroOp < 0.01 && s.panels.every((c) => /^inset\(0(\.00)?%( 0(\.00)?%)?\)$/.test(c)) && s.para > 0.99, 'triptych or paragraph not complete: ' + JSON.stringify(s.panels) + ' para ' + s.para);
-  assert(s.label === '02 / Her world', 'label ' + s.label);
+  assert(s.label === 'Her world', 'label ' + s.label);
   // editorial page rises over the pinned stage and lands with no gap
   await theAt(p, 1.5);
   s = await theRead(p);
@@ -3082,9 +3088,9 @@ await test('THE-02', 'Through Her Eyes film at 1440×900: close portrait that ne
   const b = await theRead(p);
   assert(JSON.stringify({ ...a, tone: 0 }) === JSON.stringify({ ...b, tone: 0 }), 'the film does not reverse to the same frame');
   // released into the next section
-  await p.evaluate(() => document.querySelector('#scene-04').scrollIntoView({ behavior: 'instant' }));
+  await p.evaluate(() => document.querySelector('#scene-01').scrollIntoView({ behavior: 'instant' }));
   await p.waitForTimeout(300);
-  const rel = await p.evaluate(() => ({ stage: document.querySelector('[data-the-stage]').getBoundingClientRect().bottom, next: document.querySelector('#scene-04').getBoundingClientRect().top }));
+  const rel = await p.evaluate(() => ({ stage: document.querySelector('[data-the-stage]').getBoundingClientRect().bottom, next: document.querySelector('#scene-01').getBoundingClientRect().top }));
   assert(rel.stage <= rel.next + 1, 'the stage did not release: ' + JSON.stringify(rel));
   assert(failed.length === 0 && p.consoleErrors.length === 0, [...failed, ...p.consoleErrors].join(' | '));
   await p.context().close();
@@ -3096,15 +3102,16 @@ await test('THE-03', 'Through Her Eyes at 2560×1440, 1920×1200, 1920×1080, 13
     await go(p, '/');
     // the headline column starts where the next section's content starts (the site grid)
     await theAt(p, 0.46);
-    const grid = await p.evaluate(() => ({ lead: document.querySelector('[data-the] .the__lead').getBoundingClientRect().left + parseFloat(getComputedStyle(document.querySelector('[data-the] .the__lead')).paddingLeft), next: (() => { const w = document.querySelector('#scene-04 .wrap'); return w.getBoundingClientRect().left + parseFloat(getComputedStyle(w).paddingLeft); })() }));
+    const grid = await p.evaluate(() => ({ lead: document.querySelector('[data-the] .the__lead').getBoundingClientRect().left + parseFloat(getComputedStyle(document.querySelector('[data-the] .the__lead')).paddingLeft), next: (() => { const w = document.querySelector('#scene-01 .wrap'); return w.getBoundingClientRect().left + parseFloat(getComputedStyle(w).paddingLeft); })() }));
     assert(Math.abs(grid.lead - grid.next) < 2, `${w}×${h}: headline off the site grid ${JSON.stringify(grid)}`);
     let worst = 1e9;
     for (let q = 0; q <= 0.6; q += 0.03) {
       await theAt(p, q);
       const s = await theRead(p);
       const capped = await p.evaluate(() => document.querySelector('[data-the]').classList.contains('is-capped'));
-      // capped (very tall screens): the portrait stays at its sharpness limit, inside the stage, its top and bottom masked into the room
-      const edges = capped ? s.img.r >= s.stage.r - 1 && s.img.t >= s.stage.t - 1 && s.img.b <= s.stage.b + 1 : s.img.r >= s.stage.r - 1 && s.img.t <= s.stage.t + 1 && s.img.b >= s.stage.b - 1;
+      // capped (very tall or very large screens): the portrait stays at its sharpness limit and floats in the room, its top
+      // and bottom dissolving into it (baked into the picture), so only the right-hand edge must stay off screen
+      const edges = capped ? s.img.r >= s.stage.r - 1 : s.img.r >= s.stage.r - 1 && s.img.t <= s.stage.t + 1 && s.img.b >= s.stage.b - 1;
       assert(s.zoom <= 1.301 && edges, `${w}×${h} q=${q.toFixed(2)}: ${JSON.stringify({ z: s.zoom, capped, img: s.img })}`);
       if (s.heroOp > 0.3 && s.linesRight > 0) worst = Math.min(worst, s.eye.x - s.linesRight);
     }
@@ -3205,6 +3212,99 @@ await test('THE-06', 'Through Her Eyes: covered skip link leaves the tab order, 
     assert(tone === 'light', `${w}×${h}: navigation tone over the group photograph is ${tone}`);
     await t.context().close();
   }
+});
+
+await test('THE-07', 'Through Her Eyes after "What HUMAN is": nothing overlaps the introduction, its pathway and pause control stay visible and usable, the colour runs on from its black, the portrait is uncovered (never drawn over the introduction), and the editorial page runs on into "Where it starts"', async () => {
+  for (const [w, h] of [[1440, 900], [1366, 768], [390, 844], [768, 1024]]) {
+    const p = await ctx({ viewport: { width: w, height: h } });
+    await go(p, '/');
+    // the introduction's foot at the bottom of the screen, then half a screen further
+    for (const off of [1, 0.55]) {
+      await p.evaluate((off) => { const b = document.querySelector('#what-is-human'); scrollTo({ top: b.getBoundingClientRect().bottom + scrollY - innerHeight * off, behavior: 'instant' }); }, off);
+      await p.waitForTimeout(400);
+      const d = await p.evaluate(() => {
+        const brief = document.querySelector('#what-is-human').getBoundingClientRect();
+        const the = document.querySelector('#through-her-eyes');
+        const tg = document.querySelector('.pathway__toggle');
+        const hit = (x, y) => { const e = document.elementFromPoint(x, y); return e ? (e.closest('#what-is-human') ? 'brief' : e.closest('#through-her-eyes') ? 'the' : e.tagName) : null; };
+        const tr = tg && tg.offsetParent ? tg.getBoundingClientRect() : null;
+        return {
+          gap: the.getBoundingClientRect().top - brief.bottom,
+          toggle: tr && tr.bottom > 0 && tr.top < innerHeight ? document.elementFromPoint(tr.left + tr.width / 2, tr.top + tr.height / 2)?.closest('.pathway__toggle') === tg : null,
+          above: brief.bottom > 4 && brief.bottom < innerHeight ? hit(innerWidth * 0.6, brief.bottom - 3) : 'n/a',
+          bg: getComputedStyle(the).backgroundImage,
+        };
+      });
+      assert(Math.abs(d.gap) < 0.5, `${w}×${h}: the section does not start exactly at the introduction's foot (${d.gap}px)`);
+      assert(d.toggle !== false, `${w}×${h}: the pathway's pause control is covered`);
+      assert(d.above === 'brief' || d.above === 'n/a', `${w}×${h}: something is drawn over the introduction's foot: ${d.above}`);
+      assert(/^linear-gradient\(rgb\(11, 13, 15\)/.test(d.bg) && d.bg.includes('rgb(27, 9, 8)'), `${w}×${h}: lead-in ${d.bg}`);
+    }
+    // out: the editorial page and "Where it starts" are on the same paper, with no gap or overlap
+    const out = await p.evaluate(() => { const f = document.querySelector('#the-message').getBoundingClientRect(); const n = document.querySelector('#scene-01'); return { gap: n.getBoundingClientRect().top - f.bottom, a: getComputedStyle(document.querySelector('#the-message')).backgroundColor, b: getComputedStyle(n).backgroundColor }; });
+    assert(Math.abs(out.gap) < 0.5 && out.a === out.b, `${w}×${h}: exit ${JSON.stringify(out)}`);
+    assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+    await p.context().close();
+  }
+  // the pause control still works where the film begins
+  const p = await ctx({ viewport: { width: 1440, height: 900 } });
+  await go(p, '/');
+  await p.evaluate(() => { const b = document.querySelector('#what-is-human'); scrollTo({ top: b.getBoundingClientRect().bottom + scrollY - innerHeight, behavior: 'instant' }); });
+  await p.waitForTimeout(300);
+  await p.locator('.pathway__toggle').click();
+  assert((await p.locator('[data-pathway]').getAttribute('data-state')) === 'paused', 'pathway did not pause');
+  await p.context().close();
+});
+
+await test('THE-08', 'Through Her Eyes camera: decoded and painted before the visitor arrives; one continuous move with no jump or frozen axis at 1903×937, 1920×1080, 1440×900 and 1280×720; never moves on its own after the scroll stops; correct first frame on a deep link; graceful while the portrait is still loading', async () => {
+  for (const [w, h] of [[1903, 937], [1920, 1080], [1440, 900], [1280, 720]]) {
+    const p = await ctx({ viewport: { width: w, height: h } });
+    await go(p, '/');
+    // prepared during idle time after load, before the section is reached
+    await p.waitForFunction(() => document.querySelector('[data-the]').classList.contains('is-ready'), null, { timeout: 8000 });
+    const far = await p.evaluate(() => document.querySelector('[data-the-film]').getBoundingClientRect().top / innerHeight);
+    assert(far > 0.9, `${w}×${h}: the portrait was only ready once the section was on screen (${far.toFixed(2)} screens away)`);
+    // the eyes' path through the pullback in fine steps: no jumps, each axis moves one way only
+    const path = [];
+    for (let q = 0; q <= 0.5; q += 0.01) {
+      await theAt(p, q);
+      path.push(await p.evaluate((cam) => { const c = eval(cam); const r = c.getBoundingClientRect(); return [r.left + 0.52 * r.width, r.top + 0.38 * r.height, r.width]; }, THE_CAM));
+    }
+    const steps = path.slice(1).map((b, i) => [b[0] - path[i][0], b[1] - path[i][1], b[2] - path[i][2]]);
+    const med = steps.map((d) => Math.hypot(d[0], d[1])).sort((a, b) => a - b)[steps.length >> 1];
+    const worst = Math.max(...steps.map((d) => Math.hypot(d[0], d[1])));
+    assert(worst < Math.max(12, med * 2.6), `${w}×${h}: the camera jumps ${worst.toFixed(1)}px in one step (typical ${med.toFixed(1)}px)`);
+    for (const k of [0, 1, 2]) {
+      const moving = steps.filter((d) => Math.abs(d[k]) > 0.05);
+      assert(moving.every((d) => Math.sign(d[k]) === Math.sign(moving[0][k])), `${w}×${h}: axis ${k} reverses during the pullback`);
+    }
+    // stopped: nothing moves on its own
+    await theAt(p, 0.27);
+    const a = await p.evaluate((cam) => eval(cam).style.transform, THE_CAM);
+    await p.waitForTimeout(600);
+    assert((await p.evaluate((cam) => eval(cam).style.transform, THE_CAM)) === a, `${w}×${h}: the portrait moved after the scroll stopped`);
+    assert(p.consoleErrors.length === 0, p.consoleErrors.join(' | '));
+    await p.context().close();
+  }
+  // a deep link straight into the section: the first frame is already the opening (no headline flash)
+  const d = await ctx({ viewport: { width: 1440, height: 900 } });
+  await d.goto(BASE + '/#through-her-eyes', { waitUntil: 'domcontentloaded' });
+  const first = await d.evaluate(() => new Promise((r) => requestAnimationFrame(() => r([...document.querySelectorAll('[data-the-line]')].map((l) => Number(getComputedStyle(l).opacity))))));
+  assert(first.every((o) => o < 0.05), 'headline visible on the first frame of a deep link: ' + first);
+  await d.context().close();
+  // a slow connection: until the portrait is decoded the room is dark (no half-drawn picture), then it fades in
+  const s = await ctx({ viewport: { width: 1440, height: 900 } });
+  await s.route(/through-her-eyes-01-hero/, async (route) => { await new Promise((r) => setTimeout(r, 2500)); await route.continue(); });
+  await s.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+  await s.evaluate(() => { const f = document.querySelector('[data-the-film]'); scrollTo({ top: f.getBoundingClientRect().top + scrollY + 100, behavior: 'instant' }); });
+  await s.waitForTimeout(400);
+  const before = await s.evaluate(() => ({ ready: document.querySelector('[data-the]').classList.contains('is-ready'), op: Number(getComputedStyle(document.querySelector('[data-the-canvas]')).opacity) }));
+  assert(!before.ready && before.op < 0.01, 'portrait shown before it was ready: ' + JSON.stringify(before));
+  await s.waitForFunction(() => document.querySelector('[data-the]').classList.contains('is-ready'), null, { timeout: 15000 });
+  await s.waitForTimeout(900);
+  assert(Number(await s.evaluate(() => getComputedStyle(document.querySelector('[data-the-canvas]')).opacity)) > 0.99, 'portrait did not appear once ready');
+  assert(s.consoleErrors.length === 0, s.consoleErrors.join(' | '));
+  await s.context().close();
 });
 
 await test('ZOOM', '200% text size at 390px: hero, waitlist and the informational pages grow vertically, no clipping or overflow', async () => {
